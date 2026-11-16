@@ -1,0 +1,3979 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=no, viewport-fit=cover" />
+  <title>DocScan Pro v8.0 — Quét Tài Liệu Chuẩn A4</title>
+  <meta name="theme-color" content="#0a467d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="Ứng dụng quét tài liệu chuyên nghiệp trên điện thoại: Triệt nền sạch trắng quanh chữ, Đen trắng Sauvola không vết loang bóng đổ, mượt 60 FPS, hỗ trợ chụm 2 ngón phóng to/thu nhỏ." />
+  <style>
+    :root {
+      --primary: #0a467d;
+      --primary-dark: #073259;
+      --primary-light: #e6f0fa;
+      --accent: #0284c7;
+      --success: #15803d;
+      --danger: #b91c1c;
+      --bg: #0f172a;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --border: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #475569;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* 1. COMPACT MOBILE HEADER (46px) */
+    .app-header {
+      height: 46px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #ffffff;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+      z-index: 40;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.16);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .badge-pro {
+      font-size: 0.62rem;
+      background: #38bdf8;
+      color: #082f49;
+      padding: 1px 5px;
+      border-radius: 999px;
+      font-weight: 800;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    /* Touch-Friendly Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 7px 11px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.1s ease, background 0.12s ease;
+      white-space: nowrap;
+      line-height: 1.1;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary-dark);
+    }
+
+    .btn-light {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-outline {
+      background: #ffffff;
+      color: var(--primary);
+      border-color: var(--border);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #ffffff;
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+
+    /* 2. UNOBSTRUCTED DOCUMENT VIEWPORT (Supports Smooth Pinch-to-Zoom & Pan) */
+    .workspace {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .stage-panel {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background:
+        linear-gradient(45deg, #1e293b 25%, transparent 25%),
+        linear-gradient(-45deg, #1e293b 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #1e293b 75%),
+        linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+      background-color: #0f172a;
+      overflow: hidden;
+    }
+
+    /* Compact Floating Corner Pills (Never block the document!) */
+    .stage-floating-bar {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .stage-floating-bar > * {
+      pointer-events: auto;
+    }
+
+    .hold-compare-btn {
+      background: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .hold-compare-btn:active, .hold-compare-btn.holding {
+      background: #38bdf8;
+      color: #082f49;
+    }
+
+    .zoom-control-pill {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 2px 5px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      gap: 2px;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .zoom-icon-btn {
+      width: 26px;
+      height: 26px;
+      border: none;
+      background: transparent;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: 999px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .zoom-icon-btn:active {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .zoom-pct-btn {
+      border: none;
+      background: rgba(255, 255, 255, 0.12);
+      color: #38bdf8;
+      font-size: 0.71rem;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 999px;
+      cursor: pointer;
+      min-width: 44px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stage-container {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 14px 14px 40px 14px;
+      touch-action: none;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      max-width: 100%;
+      max-height: 100%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      border-radius: 3px;
+      transform-origin: center center;
+      will-change: transform;
+    }
+
+    #mainCanvas {
+      display: block;
+      max-width: 100%;
+      max-height: calc(100dvh - 255px);
+      width: auto;
+      height: auto;
+      touch-action: none;
+    }
+
+    /* Smart Magnifier Loupe (Docked to Top Corner, Never Blocked by Finger) */
+    .magnifier-loupe {
+      position: absolute;
+      width: 122px;
+      height: 122px;
+      border-radius: 50%;
+      border: 3px solid #38bdf8;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      pointer-events: none;
+      overflow: hidden;
+      display: none;
+      z-index: 30;
+      background: #000;
+    }
+
+    .magnifier-loupe canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .magnifier-label {
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10, 70, 125, 0.94);
+      color: #fff;
+      font-size: 0.63rem;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 99px;
+      white-space: nowrap;
+    }
+
+    /* 3. UNIFIED ERGONOMIC BOTTOM DOCK (Everything in Thumb Reach, Zero Scroll!) */
+    .bottom-dock {
+      flex-shrink: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 7px 10px calc(7px + env(safe-area-inset-bottom, 0px));
+      z-index: 35;
+      box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    /* 3-Step Workflow Switcher inside Bottom Dock */
+    .step-switcher {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: #e2e8f0;
+      padding: 3px;
+      border-radius: 9px;
+      gap: 3px;
+      max-width: 680px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .step-tab {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 6px 4px;
+      border-radius: 7px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .step-tab.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(10, 70, 125, 0.25);
+    }
+
+    .dock-pane {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      max-width: 680px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .dock-pane.active {
+      display: flex;
+    }
+
+    /* Horizontal Ribbon of Scan Modes */
+    .chip-ribbon {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 1px;
+    }
+    .chip-ribbon::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-chip {
+      flex: 1 0 auto;
+      padding: 7px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text);
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .filter-chip.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary-dark);
+    }
+
+    .filter-chip.alpha-chip.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0369a1;
+    }
+
+    /* 3 Clear Parameter Pills + Live 60FPS Slider */
+    .param-control-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .param-pill-bar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .param-pill-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .param-pill {
+      flex: 1 0 auto;
+      padding: 5px 8px;
+      border-radius: 7px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .param-pill b {
+      color: var(--primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .param-pill.active {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .active-slider-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-alt);
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .active-slider-name {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      min-width: 82px;
+      white-space: nowrap;
+    }
+
+    .active-slider-bar input[type="range"] {
+      flex: 1;
+      accent-color: var(--primary);
+      height: 7px;
+      cursor: pointer;
+    }
+
+    .active-slider-val {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--primary);
+      min-width: 36px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Crop Action Grid */
+    .crop-action-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+    }
+
+    /* Pages & Export Row */
+    .pages-strip-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 1px 0;
+    }
+    .pages-strip-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .page-chip-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 7px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .page-chip-card.active {
+      border: 2px solid var(--primary);
+      background: var(--primary-light);
+    }
+
+    .page-chip-thumb {
+      width: 24px;
+      height: 32px;
+      border-radius: 3px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      object-fit: contain;
+    }
+
+    .page-chip-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      max-width: 82px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .export-Primary-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 6px;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.86);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 8px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      border-radius: 12px;
+      max-width: 640px;
+      width: 100%;
+      max-height: 95dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+    }
+
+    .modal-header {
+      padding: 10px 14px;
+      background: var(--primary);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-body {
+      padding: 10px;
+      overflow-y: auto;
+      font-size: 0.82rem;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .camera-video-wrap {
+      position: relative;
+      background: #090d16;
+      border-radius: 8px;
+      overflow: hidden;
+      width: 100%;
+      height: 68dvh;
+      max-height: 600px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+    }
+
+    #cameraVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    #cameraOverlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    .zoom-pill-bar {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.82);
+      padding: 3px 7px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      border: 1px solid rgba(255,255,255,0.22);
+      z-index: 10;
+    }
+
+    .zoom-pill {
+      background: transparent;
+      color: #e2e8f0;
+      border: none;
+      font-size: 0.73rem;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .zoom-pill.active {
+      background: #38bdf8;
+      color: #082f49;
+    }
+
+    .export-grid-modal {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .export-grid-modal label {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .export-grid-modal select, .export-grid-modal input {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .toast-box {
+      position: fixed;
+      top: 54px;
+      left: 16px;
+      right: 16px;
+      max-width: 360px;
+      margin: 0 auto;
+      background: rgba(7, 50, 89, 0.96);
+      color: #ffffff;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-align: center;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+      transition: all 0.18s ease;
+      z-index: 200;
+    }
+
+    .toast-box.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- 1. COMPACT TOP HEADER -->
+    <header class="app-header">
+      <div class="brand-group">
+        <div class="brand-logo" aria-hidden="true">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <path d="M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3"/>
+            <rect x="7" y="7" width="10" height="10" rx="1.5"/>
+          </svg>
+        </div>
+        <div class="brand-title">
+          DocScan
+          <span class="badge-pro">v8.0</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <input type="file" id="fileInput" accept="image/*" multiple style="display:none" />
+        <button type="button" class="btn btn-light" id="btnOpenCamera">
+          📸 Camera
+        </button>
+        <button type="button" class="btn btn-light" id="btnTriggerUpload">
+          📁 Chọn ảnh
+        </button>
+        <button type="button" class="btn btn-light" id="btnOpenGuide" title="Hướng dẫn">
+          ❓
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. UNOBSTRUCTED INTERACTIVE DOCUMENT STAGE -->
+    <main class="workspace">
+      <section class="stage-panel" id="panelStage" aria-label="Khung tài liệu">
+        <div class="stage-container" id="stageContainer">
+          <div class="canvas-wrapper" id="canvasWrapper">
+            <canvas id="mainCanvas" width="800" height="1130"></canvas>
+          </div>
+          <div class="magnifier-loupe" id="magnifierLoupe">
+            <canvas id="loupeCanvas" width="122" height="122"></canvas>
+            <div class="magnifier-label" id="loupeLabel">Góc TL</div>
+          </div>
+        </div>
+
+        <!-- Floating Bottom Bar: Hold-to-Compare Original + Zoom Controls -->
+        <div class="stage-floating-bar">
+          <button type="button" class="hold-compare-btn" id="btnHoldCompare">
+            👁 Giữ xem gốc
+          </button>
+
+          <div class="zoom-control-pill" aria-label="Thu phóng">
+            <button type="button" class="zoom-icon-btn" id="btnZoomOut" title="Thu nhỏ">−</button>
+            <button type="button" class="zoom-pct-btn" id="btnZoomReset" title="Đặt lại 100%">100%</button>
+            <button type="button" class="zoom-icon-btn" id="btnZoomIn" title="Phóng to">+</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. ERGONOMIC BOTTOM THUMB DOCK (3-STEP WORKFLOW, ZERO PAGE SCROLL) -->
+      <section class="bottom-dock" id="panelControls" aria-label="Bảng điều khiển">
+
+        <!-- 3-Step Segmented Bar Right Under the Thumb -->
+        <div class="step-switcher" role="tablist">
+          <button type="button" class="step-tab" id="tabStepCrop" role="tab">
+            📐 1. Cắt góc
+          </button>
+          <button type="button" class="step-tab active" id="tabStepColor" role="tab">
+            ✨ 2. Làm sạch
+          </button>
+          <button type="button" class="step-tab" id="tabStepExport" role="tab">
+            ⬇ 3. Lưu (<span id="pageCountText">1</span>)
+          </button>
+        </div>
+
+        <!-- PANE 1: CẮT GÓC & XOAY (4-CORNER ADJUSTMENT) -->
+        <div class="dock-pane" id="paneCrop">
+          <div class="crop-action-row">
+            <button type="button" class="btn btn-outline" id="btnAutoDetectCorners">🎯 Tự bắt</button>
+            <button type="button" class="btn btn-outline" id="btnFullFrameCorners">⛶ Đầy khung</button>
+            <button type="button" class="btn btn-outline" id="btnRotateLeft">↺ Trái</button>
+            <button type="button" class="btn btn-outline" id="btnRotateRight">↻ Phải</button>
+            <button type="button" class="btn btn-outline" id="btnSplitTwoPagesOptional">✂ Tách 2</button>
+          </div>
+          <button type="button" class="btn btn-primary" id="btnApplyCropNow" style="width:100%; padding:9px;">
+            ✓ Cắt lấy vùng chọn →
+          </button>
+        </div>
+
+        <!-- PANE 2: LÀM SẠCH NỀN & CHẾ ĐỘ MÀU (60 FPS CACHED ENGINE) -->
+        <div class="dock-pane active" id="paneColor">
+          <div class="chip-ribbon" id="colorPresetGrid">
+            <button type="button" class="filter-chip active" data-mode="magic_color">✨ Rõ nét</button>
+            <button type="button" class="filter-chip" data-mode="bw_sauvola">📄 Đen trắng</button>
+            <button type="button" class="filter-chip" data-mode="faint_boost">✏️ Chữ mờ</button>
+            <button type="button" class="filter-chip" data-mode="true_color">📷 Tự nhiên</button>
+            <button type="button" class="filter-chip" data-mode="grayscale">🪨 Xám</button>
+            <button type="button" class="filter-chip" data-mode="original">🖼 Gốc</button>
+            <button type="button" class="filter-chip alpha-chip" id="btnToggleAlpha">🔲 Tách nền</button>
+          </div>
+
+          <div class="param-control-row">
+            <div class="param-pill-bar" id="paramPillBar">
+              <button type="button" class="param-pill active" data-param="bgSuppress" data-label="Làm sạch nền" data-min="0" data-max="100" data-suffix="%">
+                Sạch nền <b id="valBgSuppress">68%</b>
+              </button>
+              <button type="button" class="param-pill" data-param="contrast" data-label="Độ đậm chữ" data-min="0" data-max="100" data-suffix="%">
+                Đậm chữ <b id="valContrast">55%</b>
+              </button>
+              <button type="button" class="param-pill" data-param="shadowRemoval" data-label="Khử bóng" data-min="0" data-max="100" data-suffix="%">
+                Khử bóng <b id="valShadow">100%</b>
+              </button>
+            </div>
+            <button type="button" class="btn btn-outline" id="btnResetFilters" style="padding:5px 8px; font-size:0.71rem;">Mặc định</button>
+          </div>
+
+          <div class="active-slider-bar">
+            <span class="active-slider-name" id="activeSliderName">Làm sạch nền</span>
+            <input type="range" id="activeParamSlider" min="0" max="100" value="68" />
+            <span class="active-slider-val" id="activeSliderVal">68%</span>
+          </div>
+        </div>
+
+        <!-- PANE 3: LƯU NHANH & DANH SÁCH TRANG / MẪU THỬ -->
+        <div class="dock-pane" id="paneExport">
+          <div class="pages-strip-row">
+            <button type="button" class="filter-chip active" id="btnSampleWhiteOnWhite" style="padding:5px 8px; font-size:0.71rem;">Mẫu: Nền trắng</button>
+            <button type="button" class="filter-chip" id="btnSampleWoodA4" style="padding:5px 8px; font-size:0.71rem;">Mẫu: Bàn gỗ</button>
+            <button type="button" class="filter-chip" id="btnSampleBleed" style="padding:5px 8px; font-size:0.71rem;">Mẫu: Bóng đổ nặng</button>
+            <div id="pageListContainer" style="display:inline-flex; gap:5px;"></div>
+          </div>
+
+          <div class="export-Primary-row">
+            <button type="button" class="btn btn-success" id="btnQuickPdf" style="padding:9px;">
+              📄 Lưu PDF
+            </button>
+            <button type="button" class="btn btn-primary" id="btnQuickJpg" style="padding:9px;">
+              🖼 Lưu Ảnh JPG
+            </button>
+            <button type="button" class="btn btn-outline" id="btnOpenExportModal" style="padding:9px;">
+              ⚙️ Tùy chọn
+            </button>
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <!-- WIDE-ANGLE PORTRAIT A4 CAMERA MODAL -->
+  <div class="modal-backdrop" id="cameraModal" role="dialog" aria-modal="true" aria-labelledby="cameraModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span id="cameraModalTitle">Camera Quét A4 (Góc Rộng 4:3)</span>
+        <button type="button" class="btn btn-light" id="btnCloseCamera">Đóng ✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="camera-video-wrap" id="cameraVideoWrap">
+          <video id="cameraVideo" autoplay playsinline muted></video>
+          <canvas id="cameraOverlay"></canvas>
+          <div class="zoom-pill-bar" id="zoomPillBar">
+            <button type="button" class="zoom-pill active" data-zoom="min" id="btnZoomMin">0.5x</button>
+            <button type="button" class="zoom-pill" data-zoom="1" id="btnZoom1x">1.0x</button>
+            <button type="button" class="zoom-pill" data-zoom="1.5" id="btnZoom15x">1.5x</button>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+          <select id="cameraDeviceSelect" style="width:auto; flex:1; padding:7px; border-radius:7px; border:1px solid var(--border); font-size:0.78rem;">
+            <option value="environment">Camera sau (4:3)</option>
+            <option value="user">Camera trước</option>
+          </select>
+          <button type="button" class="btn btn-outline" id="btnSwitchCamera">Đổi cam</button>
+          <button type="button" class="btn btn-primary" id="btnCapturePhoto" style="flex:1.2; padding:9px;">
+            📸 Chụp &amp; Cắt
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADVANCED EXPORT OPTIONS MODAL (PNG, WEBP, TIFF, SVG, DPI, QUALITY) -->
+  <div class="modal-backdrop" id="exportModal" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span id="exportModalTitle">Tùy Chọn Xuất File Nâng Cao</span>
+        <button type="button" class="btn btn-light" id="btnCloseExportModal">Đóng ✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="export-grid-modal">
+          <div>
+            <label for="exportFormat">Định dạng tệp</label>
+            <select id="exportFormat">
+              <option value="pdf">PDF Tài liệu (.pdf)</option>
+              <option value="jpeg" selected>Ảnh JPEG (.jpg)</option>
+              <option value="png">Ảnh PNG (.png)</option>
+              <option value="webp">Ảnh WebP (.webp)</option>
+              <option value="tiff">Ảnh TIFF In ấn (.tif)</option>
+              <option value="svg">Ảnh SVG (.svg)</option>
+            </select>
+          </div>
+          <div>
+            <label for="exportPaperSize">Khổ giấy</label>
+            <select id="exportPaperSize">
+              <option value="auto">Tự động theo trang</option>
+              <option value="a4_portrait">Chuẩn A4 Dọc</option>
+              <option value="a4_landscape">Chuẩn A4 Ngang</option>
+              <option value="letter">Chuẩn Letter</option>
+              <option value="a5">Chuẩn A5</option>
+            </select>
+          </div>
+          <div>
+            <label for="exportScale">Độ phân giải (DPI)</label>
+            <select id="exportScale">
+              <option value="0.75">150 DPI (Nhẹ)</option>
+              <option value="1" selected>200 DPI (Chuẩn)</option>
+              <option value="1.5">300 DPI (In rõ)</option>
+              <option value="2">600 DPI (Siêu nét)</option>
+            </select>
+          </div>
+          <div>
+            <label for="exportFilename">Tên tệp</label>
+            <input type="text" id="exportFilename" value="Tai_Lieu_Scan" />
+          </div>
+        </div>
+
+        <div class="active-slider-bar">
+          <span class="active-slider-name">Chất lượng nén</span>
+          <input type="range" id="sliderQuality" min="20" max="100" value="94" />
+          <span class="active-slider-val" id="valQuality">94%</span>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:var(--primary-dark); background:var(--primary-light); padding:7px 10px; border-radius:7px;">
+          <span>Kích thước: <b id="exportDimText">-- × -- px</b></span>
+          <span>Ước tính: <b id="exportSizeText">~180 KB</b></span>
+        </div>
+
+        <div style="display:flex; gap:6px;">
+          <button type="button" class="btn btn-primary" id="btnDownloadCurrent" style="flex:1; padding:9px;">
+            ⬇ Tải trang hiện tại
+          </button>
+          <button type="button" class="btn btn-success" id="btnDownloadAllPdf" style="flex:1; padding:9px;">
+            📑 Xuất PDF tất cả trang
+          </button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:4px; border-top:1px solid var(--border);">
+          <button type="button" class="btn btn-outline" id="btnApplyFiltersAll" style="font-size:0.74rem;">Đồng bộ lọc cho mọi trang</button>
+          <button type="button" class="btn btn-danger" id="btnClearPages" style="font-size:0.74rem;">Xóa &amp; Làm mới</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPACT GUIDE MODAL -->
+  <div class="modal-backdrop" id="guideModal" role="dialog" aria-modal="true" aria-labelledby="guideModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span id="guideModalTitle">Điểm Mới Trên DocScan Pro v8.0</span>
+        <button type="button" class="btn btn-light" id="btnCloseGuide">Đóng ✕</button>
+      </div>
+      <div class="modal-body">
+        <ol style="padding-left:18px; display:flex; flex-direction:column; gap:6px; line-height:1.45;">
+          <li><strong>Triệt sạch hoàn toàn quầng xám quanh chữ:</strong> Thuật toán đóng hình thái học mịn (Fine-Scale Closing) kết hợp triệt halo tương đối (Relative Halo Suppression) làm trắng sạch <code>100%</code> vùng giấy sát chân chữ về mức trắng tinh <code>#FFFFFF</code> mà không làm mất chữ chì mờ.</li>
+          <li><strong>Chế độ Đen Trắng Sauvola không còn vết loang đen:</strong> Chuẩn hóa ánh sáng phản xạ thực trước khi tính ngưỡng thích nghi cục bộ Sauvola <code>31×31</code>, triệt tiêu hoàn toàn hiện tượng vùng bóng đổ bị biến thành vết loang màu đen.</li>
+          <li><strong>Mượt 60 FPS &amp; Cảm ứng thông minh trên điện thoại:</strong> Bộ nhớ đệm ánh sáng giúp kéo thanh trượt phản hồi tức thì (<code>&lt; 6ms</code>). Hỗ trợ chụm 2 ngón phóng to/thu nhỏ không bị xung đột với thao tác kéo góc, giữ nút <strong>👁 Giữ xem gốc</strong> để so sánh Trước/Sau tức thì.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast-box" id="toastBox" role="status" aria-live="polite">Đã xử lý xong!</div>
+
+  <script>
+    (function() {
+      "use strict";
+
+      // =========================================================================
+      // 1. APPLICATION STATE (v8.0 60FPS CACHED FILTER & CONFLICT-FREE TOUCH)
+      // =========================================================================
+      const state = {
+        pages: [],
+        currentPageIndex: 0,
+        viewMode: "result", // 'result' | 'crop'
+        holdingCompare: false,
+        draggingHandle: null,
+        preTouchCorners: null,
+        pinchState: null,
+        pinchCooldownUntil: 0,
+        stageZoom: 1.0,
+        stagePanX: 0,
+        stagePanY: 0,
+        lastTapTime: 0,
+        lastTapX: 0,
+        lastTapY: 0,
+        activeParamKey: "bgSuppress",
+        sliderRafId: null,
+        cameraStream: null,
+        cameraAnimId: null,
+        lastCameraCorners: null,
+        activeStep: "color", // 'crop' | 'color' | 'export'
+        defaultSettings: {
+          colorMode: "magic_color",
+          bgSuppress: 68,
+          contrast: 55,
+          shadowRemoval: 100,
+          transparentBg: false,
+          paperSize: "auto"
+        }
+      };
+
+      const PARAM_META = {
+        bgSuppress:    { label: "Làm sạch nền", min: 0, max: 100, suffix: "%" },
+        contrast:      { label: "Độ đậm chữ", min: 0, max: 100, suffix: "%" },
+        shadowRemoval: { label: "Khử bóng", min: 0, max: 100, suffix: "%" }
+      };
+
+      const el = {
+        fileInput: document.getElementById("fileInput"),
+        btnTriggerUpload: document.getElementById("btnTriggerUpload"),
+        btnOpenCamera: document.getElementById("btnOpenCamera"),
+        btnOpenGuide: document.getElementById("btnOpenGuide"),
+        btnSampleWhiteOnWhite: document.getElementById("btnSampleWhiteOnWhite"),
+        btnSampleWoodA4: document.getElementById("btnSampleWoodA4"),
+        btnSampleBleed: document.getElementById("btnSampleBleed"),
+        btnClearPages: document.getElementById("btnClearPages"),
+        pageListContainer: document.getElementById("pageListContainer"),
+        pageCountText: document.getElementById("pageCountText"),
+        tabStepCrop: document.getElementById("tabStepCrop"),
+        tabStepColor: document.getElementById("tabStepColor"),
+        tabStepExport: document.getElementById("tabStepExport"),
+        paneCrop: document.getElementById("paneCrop"),
+        paneColor: document.getElementById("paneColor"),
+        paneExport: document.getElementById("paneExport"),
+        btnHoldCompare: document.getElementById("btnHoldCompare"),
+        btnZoomIn: document.getElementById("btnZoomIn"),
+        btnZoomOut: document.getElementById("btnZoomOut"),
+        btnZoomReset: document.getElementById("btnZoomReset"),
+        btnAutoDetectCorners: document.getElementById("btnAutoDetectCorners"),
+        btnFullFrameCorners: document.getElementById("btnFullFrameCorners"),
+        btnRotateLeft: document.getElementById("btnRotateLeft"),
+        btnRotateRight: document.getElementById("btnRotateRight"),
+        btnApplyCropNow: document.getElementById("btnApplyCropNow"),
+        btnSplitTwoPagesOptional: document.getElementById("btnSplitTwoPagesOptional"),
+        stageContainer: document.getElementById("stageContainer"),
+        canvasWrapper: document.getElementById("canvasWrapper"),
+        mainCanvas: document.getElementById("mainCanvas"),
+        magnifierLoupe: document.getElementById("magnifierLoupe"),
+        loupeCanvas: document.getElementById("loupeCanvas"),
+        loupeLabel: document.getElementById("loupeLabel"),
+        colorPresetGrid: document.getElementById("colorPresetGrid"),
+        btnToggleAlpha: document.getElementById("btnToggleAlpha"),
+        paramPillBar: document.getElementById("paramPillBar"),
+        activeSliderName: document.getElementById("activeSliderName"),
+        activeParamSlider: document.getElementById("activeParamSlider"),
+        activeSliderVal: document.getElementById("activeSliderVal"),
+        valBgSuppress: document.getElementById("valBgSuppress"),
+        valContrast: document.getElementById("valContrast"),
+        valShadow: document.getElementById("valShadow"),
+        btnResetFilters: document.getElementById("btnResetFilters"),
+        btnApplyFiltersAll: document.getElementById("btnApplyFiltersAll"),
+        btnQuickPdf: document.getElementById("btnQuickPdf"),
+        btnQuickJpg: document.getElementById("btnQuickJpg"),
+        btnOpenExportModal: document.getElementById("btnOpenExportModal"),
+        exportModal: document.getElementById("exportModal"),
+        btnCloseExportModal: document.getElementById("btnCloseExportModal"),
+        exportFormat: document.getElementById("exportFormat"),
+        exportPaperSize: document.getElementById("exportPaperSize"),
+        exportScale: document.getElementById("exportScale"),
+        exportFilename: document.getElementById("exportFilename"),
+        sliderQuality: document.getElementById("sliderQuality"),
+        valQuality: document.getElementById("valQuality"),
+        exportDimText: document.getElementById("exportDimText"),
+        exportSizeText: document.getElementById("exportSizeText"),
+        btnDownloadCurrent: document.getElementById("btnDownloadCurrent"),
+        btnDownloadAllPdf: document.getElementById("btnDownloadAllPdf"),
+        cameraModal: document.getElementById("cameraModal"),
+        cameraVideoWrap: document.getElementById("cameraVideoWrap"),
+        btnCloseCamera: document.getElementById("btnCloseCamera"),
+        cameraVideo: document.getElementById("cameraVideo"),
+        cameraOverlay: document.getElementById("cameraOverlay"),
+        cameraDeviceSelect: document.getElementById("cameraDeviceSelect"),
+        btnSwitchCamera: document.getElementById("btnSwitchCamera"),
+        btnCapturePhoto: document.getElementById("btnCapturePhoto"),
+        btnZoomMin: document.getElementById("btnZoomMin"),
+        btnZoom1x: document.getElementById("btnZoom1x"),
+        btnZoom15x: document.getElementById("btnZoom15x"),
+        guideModal: document.getElementById("guideModal"),
+        btnCloseGuide: document.getElementById("btnCloseGuide"),
+        toastBox: document.getElementById("toastBox")
+      };
+
+      let toastTimer = null;
+      function showToast(msg) {
+        el.toastBox.textContent = msg;
+        el.toastBox.classList.add("show");
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          el.toastBox.classList.remove("show");
+        }, 2000);
+      }
+
+      function cloneSettings(s) {
+        return JSON.parse(JSON.stringify(s || state.defaultSettings));
+      }
+
+      function getCurrentPage() {
+        return state.pages[state.currentPageIndex] || null;
+      }
+
+      // =========================================================================
+      // 2. STAGE PINCH-TO-ZOOM & PAN ENGINE
+      // =========================================================================
+      function clampStagePan() {
+        if (Math.abs(state.stageZoom - 1.0) < 0.02) {
+          state.stageZoom = 1.0;
+          state.stagePanX = 0;
+          state.stagePanY = 0;
+          return;
+        }
+        const stRect = el.stageContainer.getBoundingClientRect();
+        const maxPanX = Math.max(50, stRect.width * Math.abs(state.stageZoom - 1) * 0.6);
+        const maxPanY = Math.max(50, stRect.height * Math.abs(state.stageZoom - 1) * 0.6);
+        state.stagePanX = Math.max(-maxPanX, Math.min(maxPanX, state.stagePanX));
+        state.stagePanY = Math.max(-maxPanY, Math.min(maxPanY, state.stagePanY));
+      }
+
+      function applyStageTransform() {
+        clampStagePan();
+        el.canvasWrapper.style.transform = `translate3d(${state.stagePanX.toFixed(1)}px, ${state.stagePanY.toFixed(1)}px, 0) scale(${state.stageZoom.toFixed(3)})`;
+        el.btnZoomReset.textContent = `${Math.round(state.stageZoom * 100)}%`;
+      }
+
+      function resetStageZoom() {
+        state.stageZoom = 1.0;
+        state.stagePanX = 0;
+        state.stagePanY = 0;
+        applyStageTransform();
+      }
+
+      function setStageZoomByFactor(factor) {
+        state.stageZoom = Math.max(0.8, Math.min(5.0, state.stageZoom * factor));
+        applyStageTransform();
+      }
+
+      function switchStep(stepName) {
+        state.activeStep = stepName;
+        [el.tabStepCrop, el.tabStepColor, el.tabStepExport].forEach((b) => b.classList.remove("active"));
+        [el.paneCrop, el.paneColor, el.paneExport].forEach((p) => p.classList.remove("active"));
+
+        if (stepName === "crop") {
+          el.tabStepCrop.classList.add("active");
+          el.paneCrop.classList.add("active");
+          state.viewMode = "crop";
+          el.btnHoldCompare.style.display = "none";
+          resetStageZoom();
+        } else if (stepName === "color") {
+          el.tabStepColor.classList.add("active");
+          el.paneColor.classList.add("active");
+          if (state.viewMode === "crop") {
+            state.viewMode = "result";
+            resetStageZoom();
+          }
+          el.btnHoldCompare.style.display = "inline-flex";
+        } else if (stepName === "export") {
+          el.tabStepExport.classList.add("active");
+          el.paneExport.classList.add("active");
+          if (state.viewMode === "crop") {
+            state.viewMode = "result";
+            resetStageZoom();
+          }
+          el.btnHoldCompare.style.display = "inline-flex";
+        }
+        renderStage();
+      }
+
+      // =========================================================================
+      // 3. REALISTIC TEST SAMPLES (WHITE-ON-WHITE, WOOD DESK & HEAVY SHADOW)
+      // =========================================================================
+      function drawWoodDeskBackground(ctx, w, h, c1, c2) {
+        const img = ctx.createImageData(w, h);
+        const d = img.data;
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const grain = 0.5 + 0.5 * Math.sin(y * 0.13 + 3.2 * Math.sin(x * 0.014 + y * 0.007));
+            const t = 0.36 * grain;
+            const idx = (y * w + x) * 4;
+            d[idx]     = Math.round(c1[0] * (1 - t) + c2[0] * t);
+            d[idx + 1] = Math.round(c1[1] * (1 - t) + c2[1] * t);
+            d[idx + 2] = Math.round(c1[2] * (1 - t) + c2[2] * t);
+            d[idx + 3] = 255;
+          }
+        }
+        ctx.putImageData(img, 0, 0);
+      }
+
+      function buildExamSheetCanvas(bgColor) {
+        const docW = 800;
+        const docH = 1130;
+        const docCanvas = document.createElement("canvas");
+        docCanvas.width = docW;
+        docCanvas.height = docH;
+        const dctx = docCanvas.getContext("2d");
+
+        dctx.fillStyle = bgColor || "#f7f6f2";
+        dctx.fillRect(0, 0, docW, docH);
+
+        dctx.fillStyle = "#0a467d";
+        dctx.font = "bold 19px Arial";
+        dctx.fillText("TRƯỜNG THPT HAI BÀ TRƯNG - TỔ HÓA - SINH - CNNN", 55, 65);
+        dctx.fillStyle = "#0f172a";
+        dctx.font = "bold 24px Arial";
+        dctx.fillText("ĐỀ KIỂM TRA CHUYÊN ĐỀ ESTE – LIPIT (MÃ ĐỀ 104)", 55, 105);
+        dctx.strokeStyle = "#0a467d";
+        dctx.lineWidth = 2.2;
+        dctx.beginPath();
+        dctx.moveTo(55, 122);
+        dctx.lineTo(745, 122);
+        dctx.stroke();
+
+        dctx.fillStyle = "#1e293b";
+        dctx.font = "17px Arial";
+        const examLines = [
+          "Câu 1: Thủy phân este X có công thức phân tử C4H8O2 trong dung dịch NaOH",
+          "thu được muối Y và ancol Z (bậc hai). Công thức cấu tạo thu gọn của X là:",
+          "   A. HCOOCH(CH3)2       B. CH3COOC2H5       C. C2H5COOCH3       D. HCOOCH2CH2CH3",
+          "",
+          "Câu 2: Đốt cháy hoàn toàn 0,15 mol hỗn hợp hai este no, đơn chức, mạch hở",
+          "cần vừa đủ 10,08 lít O2 (đktc), thu được 17,6 gam CO2. Khối lượng este là:",
+          "   A. 11,4 gam           B. 10,2 gam         C. 12,6 gam         D. 9,8 gam",
+          "",
+          "Câu 3: Cho 8,8 gam CH3COOC2H5 phản ứng hết với dung dịch NaOH (dư), đun nóng.",
+          "Khối lượng muối CH3COONa thu được sau khi cô cạn dung dịch phản ứng là:",
+          "   A. 8,2 gam            B. 4,1 gam          C. 12,3 gam         D. 16,4 gam"
+        ];
+        examLines.forEach((line, idx) => {
+          dctx.fillText(line, 55, 165 + idx * 34);
+        });
+
+        dctx.strokeStyle = "#475569";
+        dctx.lineWidth = 1.6;
+        dctx.strokeRect(55, 565, 690, 175);
+        dctx.fillStyle = "#0369a1";
+        dctx.font = "bold 17px Arial";
+        dctx.fillText("Hướng dẫn giải nhanh & Ghi chú bút chì:", 75, 598);
+        dctx.fillStyle = "#334155";
+        dctx.font = "16px Arial";
+        dctx.fillText("• Câu 1: Ancol bậc hai là CH3-CH(OH)-CH3 => Chọn đáp án A.", 75, 634);
+        dctx.fillStyle = "#64748b";
+        dctx.font = "italic 16px Arial";
+        dctx.fillText("• Ghi chú chì mờ: Bảo toàn khối lượng m(este) = m(CO2) + m(H2O) - m(O2) = 10,2g.", 75, 670);
+        dctx.fillText("• Câu 3: n(este) = 0,1 mol => n(CH3COONa) = 0,1 mol => m(muối) = 8,2 gam.", 75, 706);
+
+        dctx.save();
+        dctx.translate(570, 910);
+        dctx.rotate(-0.10);
+        dctx.strokeStyle = "#dc2626";
+        dctx.lineWidth = 3.2;
+        dctx.strokeRect(-120, -45, 240, 90);
+        dctx.fillStyle = "#dc2626";
+        dctx.font = "bold 18px Arial";
+        dctx.fillText("NHÓM HÓA HỌC THPT", -98, -10);
+        dctx.font = "bold 15px Arial";
+        dctx.fillText("ĐỀ CHUẨN KIỂM TRA 45 PHÚT", -108, 20);
+        dctx.restore();
+
+        return docCanvas;
+      }
+
+      function createProceduralSample(type) {
+        const c = document.createElement("canvas");
+        const ctx = c.getContext("2d");
+        c.width = 960;
+        c.height = 1160;
+
+        if (type === "white_on_white") {
+          ctx.fillStyle = "#ecece8";
+          ctx.fillRect(0, 0, c.width, c.height);
+
+          const underSheet = buildExamSheetCanvas("#f1f1ed");
+          const underCorners = [
+            { x: 65, y: 115 },
+            { x: 865, y: 65 },
+            { x: 905, y: 1085 },
+            { x: 105, y: 1110 }
+          ];
+          renderWarpedQuadToCanvas(underSheet, c, underCorners, 0, true);
+
+          const topSheet = buildExamSheetCanvas("#f8f8f5");
+          const topCorners = [
+            { x: 155, y: 115 },
+            { x: 815, y: 165 },
+            { x: 755, y: 1015 },
+            { x: 95, y: 965 }
+          ];
+          renderWarpedQuadToCanvas(topSheet, c, topCorners, 0.28, true);
+          return { canvas: c, name: "Giay_Trang_Nen_Trang" };
+        }
+
+        if (type === "wood_a4") {
+          drawWoodDeskBackground(ctx, c.width, c.height, [196, 148, 92], [166, 118, 66]);
+          const topSheet = buildExamSheetCanvas("#f7f5ee");
+          const dstCorners = [
+            { x: 165, y: 95 },
+            { x: 825, y: 145 },
+            { x: 765, y: 1045 },
+            { x: 85, y: 985 }
+          ];
+          renderWarpedQuadToCanvas(topSheet, c, dstCorners, 0.44, false);
+          return { canvas: c, name: "A4_Ban_Go" };
+        }
+
+        drawWoodDeskBackground(ctx, c.width, c.height, [142, 68, 42], [108, 46, 26]);
+        const topSheet = buildExamSheetCanvas("#efe4c8");
+        const dstCorners = [
+          { x: 145, y: 110 },
+          { x: 790, y: 82 },
+          { x: 855, y: 1025 },
+          { x: 110, y: 1055 }
+        ];
+        renderWarpedQuadToCanvas(topSheet, c, dstCorners, 0.52, false);
+        return { canvas: c, name: "Bong_Do_Nang" };
+      }
+
+      function renderWarpedQuadToCanvas(srcCanvas, dstCanvas, corners, shadowStrength, addPaperDropShadow) {
+        const sW = srcCanvas.width;
+        const sH = srcCanvas.height;
+        const dW = dstCanvas.width;
+        const dH = dstCanvas.height;
+        const dCtx = dstCanvas.getContext("2d");
+
+        if (addPaperDropShadow) {
+          dCtx.save();
+          for (let off = 4; off >= 1; off--) {
+            dCtx.strokeStyle = `rgba(15, 23, 42, ${0.06 * (5 - off)})`;
+            dCtx.lineWidth = off * 1.5;
+            dCtx.beginPath();
+            dCtx.moveTo(corners[0].x, corners[0].y);
+            dCtx.lineTo(corners[1].x, corners[1].y);
+            dCtx.lineTo(corners[2].x, corners[2].y);
+            dCtx.lineTo(corners[3].x, corners[3].y);
+            dCtx.closePath();
+            dCtx.stroke();
+          }
+          dCtx.restore();
+        }
+
+        const sData = srcCanvas.getContext("2d").getImageData(0, 0, sW, sH).data;
+        const dImg = dCtx.getImageData(0, 0, dW, dH);
+        const dData = dImg.data;
+
+        const srcPts = [
+          { x: 0, y: 0 },
+          { x: sW, y: 0 },
+          { x: sW, y: sH },
+          { x: 0, y: sH }
+        ];
+        const Hinv = computeHomography(corners, srcPts);
+
+        for (let y = 0; y < dH; y++) {
+          for (let x = 0; x < dW; x++) {
+            const denom = Hinv[6] * x + Hinv[7] * y + 1;
+            const di = (y * dW + x) * 4;
+            if (Math.abs(denom) > 1e-8) {
+              const sx = (Hinv[0] * x + Hinv[1] * y + Hinv[2]) / denom;
+              const sy = (Hinv[3] * x + Hinv[4] * y + Hinv[5]) / denom;
+
+              if (sx >= 0 && sx < sW - 1 && sy >= 0 && sy < sH - 1) {
+                const x0 = sx | 0;
+                const y0 = sy | 0;
+                const dx = sx - x0;
+                const dy = sy - y0;
+                const i00 = (y0 * sW + x0) * 4;
+                const i10 = i00 + 4;
+                const i01 = i00 + sW * 4;
+                const i11 = i01 + 4;
+
+                const w00 = (1 - dx) * (1 - dy);
+                const w10 = dx * (1 - dy);
+                const w01 = (1 - dx) * dy;
+                const w11 = dx * dy;
+
+                dData[di]     = sData[i00] * w00 + sData[i10] * w10 + sData[i01] * w01 + sData[i11] * w11;
+                dData[di + 1] = sData[i00 + 1] * w00 + sData[i10 + 1] * w10 + sData[i01 + 1] * w01 + sData[i11 + 1] * w11;
+                dData[di + 2] = sData[i00 + 2] * w00 + sData[i10 + 2] * w10 + sData[i01 + 2] * w01 + sData[i11 + 2] * w11;
+                dData[di + 3] = 255;
+              }
+            }
+
+            if (shadowStrength > 0) {
+              const sig = 1.0 / (1.0 + Math.exp(-((x - dW * 0.44) * 0.009 + (y - dH * 0.48) * 0.009)));
+              const blob = 0.22 * Math.exp(-(((x - dW * 0.62) * (x - dW * 0.62)) / 32000 + ((y - dH * 0.68) * (y - dH * 0.68)) / 42000));
+              const shFactor = Math.max(0.38, 1.0 - shadowStrength * sig - blob);
+              dData[di]     = Math.round(dData[di] * shFactor);
+              dData[di + 1] = Math.round(dData[di + 1] * shFactor);
+              dData[di + 2] = Math.round(dData[di + 2] * shFactor);
+            }
+          }
+        }
+        dCtx.putImageData(dImg, 0, 0);
+      }
+
+      // =========================================================================
+      // 4. VERIFIED v6.0 HYBRID 4-CORNER DETECTOR (PRESERVED EXACTLY)
+      // =========================================================================
+      function getPercentile(arr, p) {
+        if (!arr.length) return 0;
+        const copy = Float32Array.from(arr);
+        copy.sort();
+        const idx = Math.min(copy.length - 1, Math.max(0, Math.floor(copy.length * p)));
+        return copy[idx];
+      }
+
+      function morphDilateFloat(arr, w, h, rad) {
+        const out = new Float32Array(w * h);
+        for (let y = 0; y < h; y++) {
+          const y0 = Math.max(0, y - rad), y1 = Math.min(h - 1, y + rad);
+          for (let x = 0; x < w; x++) {
+            const x0 = Math.max(0, x - rad), x1 = Math.min(w - 1, x + rad);
+            let mv = -Infinity;
+            for (let ny = y0; ny <= y1; ny++) {
+              const rOff = ny * w;
+              for (let nx = x0; nx <= x1; nx++) {
+                const v = arr[rOff + nx];
+                if (v > mv) mv = v;
+              }
+            }
+            out[y * w + x] = mv;
+          }
+        }
+        return out;
+      }
+
+      function morphErodeFloat(arr, w, h, rad) {
+        const out = new Float32Array(w * h);
+        for (let y = 0; y < h; y++) {
+          const y0 = Math.max(0, y - rad), y1 = Math.min(h - 1, y + rad);
+          for (let x = 0; x < w; x++) {
+            const x0 = Math.max(0, x - rad), x1 = Math.min(w - 1, x + rad);
+            let mv = Infinity;
+            for (let ny = y0; ny <= y1; ny++) {
+              const rOff = ny * w;
+              for (let nx = x0; nx <= x1; nx++) {
+                const v = arr[rOff + nx];
+                if (v < mv) mv = v;
+              }
+            }
+            out[y * w + x] = mv;
+          }
+        }
+        return out;
+      }
+
+      function fitSingleIrlsLine(ptsK) {
+        const nK = ptsK.length;
+        if (nK < 2) return { a: 0, b: 1, c: 0 };
+        const weights = new Float64Array(nK);
+        weights.fill(1.0);
+        let a = 0, b = 1, c = 0;
+        for (let it = 0; it < 4; it++) {
+          let wSum = 0, mx = 0, my = 0;
+          for (let i = 0; i < nK; i++) {
+            wSum += weights[i];
+            mx += weights[i] * ptsK[i].x;
+            my += weights[i] * ptsK[i].y;
+          }
+          mx /= (wSum || 1);
+          my /= (wSum || 1);
+          let sxx = 0, syy = 0, sxy = 0;
+          for (let i = 0; i < nK; i++) {
+            const dx = ptsK[i].x - mx;
+            const dy = ptsK[i].y - my;
+            sxx += weights[i] * dx * dx;
+            syy += weights[i] * dy * dy;
+            sxy += weights[i] * dx * dy;
+          }
+          const theta = 0.5 * Math.atan2(2 * sxy, sxx - syy);
+          a = -Math.sin(theta);
+          b = Math.cos(theta);
+          c = -(a * mx + b * my);
+          for (let i = 0; i < nK; i++) {
+            const res = Math.abs(a * ptsK[i].x + b * ptsK[i].y + c);
+            weights[i] = 1.0 / Math.max(0.5, res);
+          }
+        }
+        return { a, b, c };
+      }
+
+      function intersectAbc(L1, L2) {
+        const det = L1.a * L2.b - L2.a * L1.b;
+        if (Math.abs(det) < 1e-6) return null;
+        return {
+          x: (L1.b * L2.c - L2.b * L1.c) / det,
+          y: (L1.c * L2.a - L2.c * L1.a) / det
+        };
+      }
+
+      function detectDocumentCorners(srcCanvas) {
+        const origW = srcCanvas.width;
+        const origH = srcCanvas.height;
+
+        const maxDim = 380;
+        const scale = Math.min(1, maxDim / Math.max(origW, origH));
+        const w = Math.max(72, Math.round(origW * scale));
+        const h = Math.max(72, Math.round(origH * scale));
+
+        const tmp = document.createElement("canvas");
+        tmp.width = w;
+        tmp.height = h;
+        const tctx = tmp.getContext("2d");
+        tctx.drawImage(srcCanvas, 0, 0, w, h);
+        const imgData = tctx.getImageData(0, 0, w, h).data;
+
+        const nPix = w * h;
+        const L = new Float32Array(nPix);
+        const rn = new Float32Array(nPix);
+        const gn = new Float32Array(nPix);
+        const bn = new Float32Array(nPix);
+        const sat = new Float32Array(nPix);
+        const warmth = new Float32Array(nPix);
+
+        for (let i = 0; i < nPix; i++) {
+          const idx = i * 4;
+          const R = imgData[idx];
+          const G = imgData[idx + 1];
+          const B = imgData[idx + 2];
+          L[i] = 0.299 * R + 0.587 * G + 0.114 * B;
+          const maxC = Math.max(R, G, B);
+          const minC = Math.min(R, G, B);
+          sat[i] = (maxC - minC) / (maxC + 20.0);
+          warmth[i] = (R - B) / (maxC + 20.0);
+          const sumRGB = R + G + B + 30.0;
+          rn[i] = R / sumRGB;
+          gn[i] = G / sumRGB;
+          bn[i] = B / sumRGB;
+        }
+
+        const L_surf = morphErodeFloat(morphDilateFloat(L, w, h, 2), w, h, 2);
+        const L_env = morphDilateFloat(L_surf, w, h, 4);
+        const L_norm = new Float32Array(nPix);
+        for (let i = 0; i < nPix; i++) {
+          L_norm[i] = Math.min(255, L_surf[i] * (245.0 / Math.max(85.0, L_env[i])));
+        }
+
+        const cy0 = Math.floor(h * 0.32), cy1 = Math.ceil(h * 0.68);
+        const cx0 = Math.floor(w * 0.32), cx1 = Math.ceil(w * 0.68);
+        const cRn = [], cGn = [], cBn = [], cSat = [], cWarm = [];
+        for (let y = cy0; y < cy1; y++) {
+          for (let x = cx0; x < cx1; x++) {
+            const i = y * w + x;
+            if (L_norm[i] >= 218.0) {
+              cRn.push(rn[i]); cGn.push(gn[i]); cBn.push(bn[i]);
+              cSat.push(sat[i]); cWarm.push(warmth[i]);
+            }
+          }
+        }
+        const paperRn = getPercentile(cRn, 0.5);
+        const paperGn = getPercentile(cGn, 0.5);
+        const paperBn = getPercentile(cBn, 0.5);
+        const paperSat = getPercentile(cSat, 0.5);
+        const paperWarmth = getPercentile(cWarm, 0.5);
+
+        const chromaDist = new Float32Array(nPix);
+        for (let i = 0; i < nPix; i++) {
+          const dr = rn[i] - paperRn;
+          const dg = gn[i] - paperGn;
+          const db = bn[i] - paperBn;
+          const ds = sat[i] - paperSat;
+          const dw = warmth[i] - paperWarmth;
+          chromaDist[i] = Math.sqrt(dr * dr + dg * dg + db * db + 0.5 * ds * ds + 0.5 * dw * dw);
+        }
+
+        const bd = Math.max(2, Math.floor(Math.min(w, h) * 0.04));
+        const borderChroma = [];
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            if (x < bd || x >= w - bd || y < bd || y >= h - bd) {
+              borderChroma.push(chromaDist[y * w + x]);
+            }
+          }
+        }
+        const borderChromaP75 = getPercentile(borderChroma, 0.75);
+
+        // ENGINE 1: Chromaticity Blob + Max-Area Convex Hull + 4-Line IRLS
+        if (borderChromaP75 > 0.042) {
+          const denom = borderChromaP75 * 0.65;
+          const scoreU8 = new Uint8Array(nPix);
+          const hist = new Int32Array(256);
+          for (let i = 0; i < nPix; i++) {
+            const cScore = Math.max(0.0, 1.0 - chromaDist[i] / denom);
+            const lGuard = Math.min(1.0, L_env[i] / 85.0);
+            const v = Math.min(255, Math.max(0, Math.round(cScore * lGuard * 255)));
+            scoreU8[i] = v;
+            hist[v]++;
+          }
+
+          let sumAll = 0;
+          for (let t = 0; t < 256; t++) sumAll += t * hist[t];
+          let sumB = 0, wB = 0, maxVar = 0, otsuT = 128;
+          for (let t = 0; t < 256; t++) {
+            wB += hist[t];
+            if (wB === 0) continue;
+            const wF = nPix - wB;
+            if (wF === 0) break;
+            sumB += t * hist[t];
+            const mB = sumB / wB;
+            const mF = (sumAll - sumB) / wF;
+            const vBtw = wB * wF * (mB - mF) * (mB - mF);
+            if (vBtw > maxVar) { maxVar = vBtw; otsuT = t; }
+          }
+
+          const cutoff = Math.max(85, Math.floor(otsuT * 0.92));
+          const maskF = new Float32Array(nPix);
+          for (let i = 0; i < nPix; i++) maskF[i] = scoreU8[i] >= cutoff ? 1.0 : 0.0;
+
+          const closed = morphErodeFloat(morphDilateFloat(maskF, w, h, 2), w, h, 2);
+          const cleaned = morphDilateFloat(morphErodeFloat(closed, w, h, 1), w, h, 1);
+
+          const visited = new Int32Array(nPix);
+          const queue = new Int32Array(nPix);
+          let bestLabel = -1, bestScore = -1, currLabel = 0;
+
+          for (let y = 2; y < h - 2; y++) {
+            for (let x = 2; x < w - 2; x++) {
+              const startIdx = y * w + x;
+              if (cleaned[startIdx] > 0.5 && !visited[startIdx]) {
+                currLabel++;
+                let head = 0, tail = 0;
+                queue[tail++] = startIdx;
+                visited[startIdx] = currLabel;
+                let area = 0, cHits = 0;
+                while (head < tail) {
+                  const curr = queue[head++];
+                  area++;
+                  const cy = (curr / w) | 0;
+                  const cx = curr - cy * w;
+                  if (cx > w * 0.25 && cx < w * 0.75 && cy > h * 0.25 && cy < h * 0.75) cHits++;
+                  const nbs = [curr - 1, curr + 1, curr - w, curr + w];
+                  for (let k = 0; k < 4; k++) {
+                    const nb = nbs[k];
+                    if (nb >= 0 && nb < nPix && cleaned[nb] > 0.5 && !visited[nb]) {
+                      visited[nb] = currLabel;
+                      queue[tail++] = nb;
+                    }
+                  }
+                }
+                const sc = area + cHits * 3;
+                if (cHits > 10 && sc > bestScore) { bestScore = sc; bestLabel = currLabel; }
+              }
+            }
+          }
+
+          const bPts = [];
+          if (bestLabel !== -1) {
+            for (let y = 1; y < h - 1; y++) {
+              for (let x = 1; x < w - 1; x++) {
+                const idx = y * w + x;
+                if (visited[idx] === bestLabel) {
+                  if (
+                    visited[idx - 1] !== bestLabel || visited[idx + 1] !== bestLabel ||
+                    visited[idx - w] !== bestLabel || visited[idx + w] !== bestLabel
+                  ) {
+                    bPts.push({ x, y });
+                  }
+                }
+              }
+            }
+          }
+
+          if (bPts.length >= 24 && bestScore < nPix * 3.80) {
+            const sortedPts = bPts.slice().sort((a, b) => (a.x !== b.x ? a.x - b.x : a.y - b.y));
+            const cross = (o, a, b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+            const lower = [], upper = [];
+            for (let i = 0; i < sortedPts.length; i++) {
+              const p = sortedPts[i];
+              while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+              lower.push(p);
+            }
+            for (let i = sortedPts.length - 1; i >= 0; i--) {
+              const p = sortedPts[i];
+              while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+              upper.push(p);
+            }
+            lower.pop(); upper.pop();
+            const hull = lower.concat(upper);
+
+            if (hull.length >= 4) {
+              const HLen = hull.length;
+              let idx = [0, Math.floor(HLen / 4), Math.floor(HLen / 2), Math.floor((3 * HLen) / 4)];
+              const quadArea = (i0, i1, i2, i3) => {
+                const p0 = hull[i0], p1 = hull[i1], p2 = hull[i2], p3 = hull[i3];
+                return 0.5 * Math.abs(
+                  (p0.x * p1.y - p1.x * p0.y) + (p1.x * p2.y - p2.x * p1.y) +
+                  (p2.x * p3.y - p3.x * p2.y) + (p3.x * p0.y - p0.x * p3.y)
+                );
+              };
+              let improved = true, iter = 0;
+              while (improved && iter < 15) {
+                improved = false; iter++;
+                let bestA = quadArea(idx[0], idx[1], idx[2], idx[3]);
+                for (let ck = 0; ck < 4; ck++) {
+                  for (let cand = 0; cand < HLen; cand++) {
+                    if (cand === idx[0] || cand === idx[1] || cand === idx[2] || cand === idx[3]) continue;
+                    const tIdx = [idx[0], idx[1], idx[2], idx[3]];
+                    tIdx[ck] = cand;
+                    tIdx.sort((a, b) => a - b);
+                    const a = quadArea(tIdx[0], tIdx[1], tIdx[2], tIdx[3]);
+                    if (a > bestA + 1e-2) { bestA = a; idx = tIdx; improved = true; }
+                  }
+                }
+              }
+
+              const hullCorners = [hull[idx[0]], hull[idx[1]], hull[idx[2]], hull[idx[3]]];
+              const hCx = (hullCorners[0].x + hullCorners[1].x + hullCorners[2].x + hullCorners[3].x) * 0.25;
+              const hCy = (hullCorners[0].y + hullCorners[1].y + hullCorners[2].y + hullCorners[3].y) * 0.25;
+              hullCorners.sort((a, b) => Math.atan2(a.y - hCy, a.x - hCx) - Math.atan2(b.y - hCy, b.x - hCx));
+              let tlIdx = 0, minDiag = Infinity;
+              for (let i = 0; i < 4; i++) {
+                const d = hullCorners[i].x / w + hullCorners[i].y / h;
+                if (d < minDiag) { minDiag = d; tlIdx = i; }
+              }
+              const orderedHull = [
+                hullCorners[tlIdx], hullCorners[(tlIdx + 1) % 4],
+                hullCorners[(tlIdx + 2) % 4], hullCorners[(tlIdx + 3) % 4]
+              ];
+
+              const edgePts = [[], [], [], []];
+              for (let i = 0; i < bPts.length; i++) {
+                const bx = bPts[i].x, by = bPts[i].y;
+                for (let k = 0; k < 4; k++) {
+                  const p1 = orderedHull[k], p2 = orderedHull[(k + 1) % 4];
+                  const vx = p2.x - p1.x, vy = p2.y - p1.y;
+                  const segLen2 = vx * vx + vy * vy;
+                  if (segLen2 < 16) continue;
+                  const t = ((bx - p1.x) * vx + (by - p1.y) * vy) / segLen2;
+                  if (t >= 0.15 && t <= 0.85) {
+                    if (Math.hypot(bx - (p1.x + t * vx), by - (p1.y + t * vy)) <= 4.5) {
+                      edgePts[k].push({ x: bx, y: by });
+                    }
+                  }
+                }
+              }
+
+              const lines = [];
+              for (let k = 0; k < 4; k++) {
+                if (edgePts[k].length >= 6) {
+                  lines.push(fitSingleIrlsLine(edgePts[k]));
+                } else {
+                  const p1 = orderedHull[k], p2 = orderedHull[(k + 1) % 4];
+                  let a = p1.y - p2.y, b = p2.x - p1.x;
+                  const norm = Math.hypot(a, b) || 1.0;
+                  a /= norm; b /= norm;
+                  lines.push({ a, b, c: -(a * p1.x + b * p1.y) });
+                }
+              }
+
+              const pairs = [[3, 0], [0, 1], [1, 2], [2, 3]];
+              const finalCorners = [];
+              for (let k = 0; k < 4; k++) {
+                const pt = intersectAbc(lines[pairs[k][0]], lines[pairs[k][1]]);
+                if (pt && Math.hypot(pt.x - orderedHull[k].x, pt.y - orderedHull[k].y) < 28) {
+                  finalCorners.push({
+                    x: Math.max(0, Math.min(origW, Math.round(pt.x / scale))),
+                    y: Math.max(0, Math.min(origH, Math.round(pt.y / scale)))
+                  });
+                } else {
+                  finalCorners.push({
+                    x: Math.max(0, Math.min(origW, Math.round(orderedHull[k].x / scale))),
+                    y: Math.max(0, Math.min(origH, Math.round(orderedHull[k].y / scale)))
+                  });
+                }
+              }
+              return finalCorners;
+            }
+          }
+        }
+
+        // ENGINE 2: White-on-White / Paper-on-Paper / White-Desk Radon Crease Detector
+        const rawLeft = new Float32Array(nPix);
+        const rawRight = new Float32Array(nPix);
+        const rawTop = new Float32Array(nPix);
+        const rawBot = new Float32Array(nPix);
+        const eLeft = new Float32Array(nPix);
+        const eRight = new Float32Array(nPix);
+        const eTop = new Float32Array(nPix);
+        const eBot = new Float32Array(nPix);
+
+        for (let y = 4; y < h - 4; y++) {
+          for (let x = 4; x < w - 4; x++) {
+            const i = y * w + x;
+            const cVal = L[i];
+            const minXCrease = Math.min(cVal, L[i - 1], L[i + 1]);
+            const minYCrease = Math.min(cVal, L[i - w], L[i + w]);
+
+            const outLeftL = Math.min(L[i - 2], L[i - 4]);
+            const outRightL = Math.min(L[i + 2], L[i + 4]);
+            const outTopL = Math.min(L[i - 2 * w], L[i - 4 * w]);
+            const outBotL = Math.min(L[i + 2 * w], L[i + 4 * w]);
+
+            const inLeftL = L[i + 3];
+            const inRightL = L[i - 3];
+            const inTopL = L[i + 3 * w];
+            const inBotL = L[i - 3 * w];
+
+            const chL = Math.max(0, (chromaDist[i - 3] - chromaDist[i + 3]) * 320);
+            const chR = Math.max(0, (chromaDist[i + 3] - chromaDist[i - 3]) * 320);
+            const chT = Math.max(0, (chromaDist[i - 3 * w] - chromaDist[i + 3 * w]) * 320);
+            const chB = Math.max(0, (chromaDist[i + 3 * w] - chromaDist[i - 3 * w]) * 320);
+
+            const gyAbs = Math.abs(L[i + w] - L[i - w]);
+            const gxAbs = Math.abs(L[i + 1] - L[i - 1]);
+
+            if (L_norm[i + 3] > 215.0 && gxAbs >= gyAbs * 0.6) {
+              const v = Math.max(0, inLeftL - Math.min(minXCrease, outLeftL)) + chL;
+              rawLeft[i] = v;
+              eLeft[i] = Math.tanh(v / 4.5);
+            }
+            if (L_norm[i - 3] > 215.0 && gxAbs >= gyAbs * 0.6) {
+              const v = Math.max(0, inRightL - Math.min(minXCrease, outRightL)) + chR;
+              rawRight[i] = v;
+              eRight[i] = Math.tanh(v / 4.5);
+            }
+            if (L_norm[i + 3 * w] > 215.0 && gyAbs >= gxAbs * 0.6) {
+              const v = Math.max(0, inTopL - Math.min(minYCrease, outTopL)) + chT;
+              rawTop[i] = v;
+              eTop[i] = Math.tanh(v / 4.5);
+            }
+            if (L_norm[i - 3 * w] > 215.0 && gyAbs >= gxAbs * 0.6) {
+              const v = Math.max(0, inBotL - Math.min(minYCrease, outBotL)) + chB;
+              rawBot[i] = v;
+              eBot[i] = Math.tanh(v / 4.5);
+            }
+          }
+        }
+
+        function findBestVLines(emap, xMinR, xMaxR, isLeft) {
+          const x0Min = Math.floor(w * xMinR), x0Max = Math.floor(w * xMaxR);
+          const candidates = [];
+          const N = 60;
+          const yStart = Math.floor(h * 0.16), ySpan = Math.floor(h * 0.68);
+          for (let xt = x0Min; xt < x0Max; xt += 2) {
+            const xbMin = Math.max(x0Min, xt - Math.floor(w * 0.25));
+            const xbMax = Math.min(x0Max, xt + Math.floor(w * 0.25));
+            for (let xb = xbMin; xb < xbMax; xb += 2) {
+              let sumV = 0, hits = 0;
+              for (let k = 0; k < N; k++) {
+                const t = k / (N - 1);
+                const y = Math.round(yStart + t * ySpan);
+                const x = Math.round(xt * (1 - t) + xb * t);
+                const idx = y * w + x;
+                const v = Math.max(emap[idx], emap[idx - 1], emap[idx + 1]);
+                sumV += v;
+                if (v > 0.35) hits++;
+              }
+              const meanSc = sumV / N;
+              const cont = hits / N;
+              if (cont > 0.58) {
+                const innerPos = isLeft ? (xt + xb) / (2 * w) : 1.0 - (xt + xb) / (2 * w);
+                const totalSc = meanSc * 0.55 + cont * 0.45 + innerPos * 0.35;
+                candidates.push({ sc: totalSc, xt, xb });
+              }
+            }
+          }
+          candidates.sort((a, b) => b.sc - a.sc);
+          const kept = [];
+          for (let i = 0; i < candidates.length; i++) {
+            const c = candidates[i];
+            if (kept.every((k) => Math.abs(c.xt - k.xt) + Math.abs(c.xb - k.xb) > 8)) {
+              kept.push(c);
+              if (kept.length >= 6) break;
+            }
+          }
+          return kept;
+        }
+
+        function findBestHLines(emap, yMinR, yMaxR, isTop) {
+          const y0Min = Math.floor(h * yMinR), y0Max = Math.floor(h * yMaxR);
+          const candidates = [];
+          const N = 60;
+          const xStart = Math.floor(w * 0.16), xSpan = Math.floor(w * 0.68);
+          for (let yl = y0Min; yl < y0Max; yl += 2) {
+            const yrMin = Math.max(y0Min, yl - Math.floor(h * 0.25));
+            const yrMax = Math.min(y0Max, yl + Math.floor(h * 0.25));
+            for (let yr = yrMin; yr < yrMax; yr += 2) {
+              let sumV = 0, hits = 0;
+              for (let k = 0; k < N; k++) {
+                const t = k / (N - 1);
+                const x = Math.round(xStart + t * xSpan);
+                const y = Math.round(yl * (1 - t) + yr * t);
+                const idx = y * w + x;
+                const v = Math.max(emap[idx], emap[idx - w], emap[idx + w]);
+                sumV += v;
+                if (v > 0.35) hits++;
+              }
+              const meanSc = sumV / N;
+              const cont = hits / N;
+              if (cont > 0.58) {
+                const innerPos = isTop ? (yl + yr) / (2 * h) : 1.0 - (yl + yr) / (2 * h);
+                const totalSc = meanSc * 0.55 + cont * 0.45 + innerPos * 0.35;
+                candidates.push({ sc: totalSc, yl, yr });
+              }
+            }
+          }
+          candidates.sort((a, b) => b.sc - a.sc);
+          const kept = [];
+          for (let i = 0; i < candidates.length; i++) {
+            const c = candidates[i];
+            if (kept.every((k) => Math.abs(c.yl - k.yl) + Math.abs(c.yr - k.yr) > 8)) {
+              kept.push(c);
+              if (kept.length >= 6) break;
+            }
+          }
+          return kept;
+        }
+
+        const leftCands = findBestVLines(eLeft, 0.02, 0.42, true);
+        const rightCands = findBestVLines(eRight, 0.58, 0.98, false);
+        const topCands = findBestHLines(eTop, 0.02, 0.42, true);
+        const botCands = findBestHLines(eBot, 0.58, 0.98, false);
+
+        function vlineToAbc(xt, xb) {
+          const p1x = xt, p1y = h * 0.16, p2x = xb, p2y = h * 0.84;
+          let a = p1y - p2y, b = p2x - p1x;
+          const n = Math.hypot(a, b) || 1.0;
+          a /= n; b /= n;
+          return { a, b, c: -(a * p1x + b * p1y) };
+        }
+
+        function hlineToAbc(yl, yr) {
+          const p1x = w * 0.16, p1y = yl, p2x = w * 0.84, p2y = yr;
+          let a = p1y - p2y, b = p2x - p1x;
+          const n = Math.hypot(a, b) || 1.0;
+          a /= n; b /= n;
+          return { a, b, c: -(a * p1x + b * p1y) };
+        }
+
+        function segmentSupport(p1, p2, emap) {
+          const N = 50;
+          let sumV = 0, hits = 0;
+          for (let k = 0; k < N; k++) {
+            const t = 0.06 + (k / (N - 1)) * 0.88;
+            const x = Math.min(w - 2, Math.max(1, Math.round(p1.x * (1 - t) + p2.x * t)));
+            const y = Math.min(h - 2, Math.max(1, Math.round(p1.y * (1 - t) + p2.y * t)));
+            const idx = y * w + x;
+            const v = Math.max(emap[idx], emap[idx - 1], emap[idx + 1], emap[idx - w], emap[idx + w]);
+            sumV += v;
+            if (v > 0.35) hits++;
+          }
+          return (sumV / N) * 0.5 + (hits / N) * 0.5;
+        }
+
+        let bestQuad = null;
+        let bestQScore = -1.0;
+
+        for (let iL = 0; iL < leftCands.length; iL++) {
+          const LL = vlineToAbc(leftCands[iL].xt, leftCands[iL].xb);
+          for (let iR = 0; iR < rightCands.length; iR++) {
+            const LR = vlineToAbc(rightCands[iR].xt, rightCands[iR].xb);
+            for (let iT = 0; iT < topCands.length; iT++) {
+              const LT = hlineToAbc(topCands[iT].yl, topCands[iT].yr);
+              for (let iB = 0; iB < botCands.length; iB++) {
+                const LB = hlineToAbc(botCands[iB].yl, botCands[iB].yr);
+                const tl = intersectAbc(LT, LL);
+                const tr = intersectAbc(LT, LR);
+                const br = intersectAbc(LB, LR);
+                const bl = intersectAbc(LB, LL);
+                if (!tl || !tr || !br || !bl) continue;
+                if (
+                  tl.x < 2 || tl.x > w - 3 || tl.y < 2 || tl.y > h - 3 ||
+                  tr.x < 2 || tr.x > w - 3 || tr.y < 2 || tr.y > h - 3 ||
+                  br.x < 2 || br.x > w - 3 || br.y < 2 || br.y > h - 3 ||
+                  bl.x < 2 || bl.x > w - 3 || bl.y < 2 || bl.y > h - 3
+                ) continue;
+
+                const vTx = tr.x - tl.x, vTy = tr.y - tl.y;
+                const vBx = br.x - bl.x, vBy = br.y - bl.y;
+                const vLx = bl.x - tl.x, vLy = bl.y - tl.y;
+                const vRx = br.x - tr.x, vRy = br.y - tr.y;
+                const lenT = Math.hypot(vTx, vTy), lenB = Math.hypot(vBx, vBy);
+                const lenL = Math.hypot(vLx, vLy), lenR = Math.hypot(vRx, vRy);
+                if (Math.min(lenT, lenB, lenL, lenR) < Math.min(w, h) * 0.35) continue;
+
+                const cosTL = Math.abs(vTx * vLx + vTy * vLy) / (lenT * lenL + 1e-5);
+                const cosBR = Math.abs(vBx * vRx + vBy * vRy) / (lenB * lenR + 1e-5);
+                if (cosTL > 0.36 || cosBR > 0.36) continue;
+
+                const supT = segmentSupport(tl, tr, eTop);
+                const supB = segmentSupport(bl, br, eBot);
+                const supL = segmentSupport(tl, bl, eLeft);
+                const supR = segmentSupport(tr, br, eRight);
+
+                const minSup = Math.min(supT, supB, supL, supR);
+                const orthoBonus = (1.0 - cosTL) * 0.4 + (1.0 - cosBR) * 0.4;
+                const areaRatio = (lenT + lenB) * (lenL + lenR) * 0.25 / (w * h);
+                const innerPref = (1.0 - areaRatio) * 0.35;
+
+                const qScore = (supT + supB + supL + supR) + minSup * 1.2 + orthoBonus + innerPref;
+                if (qScore > bestQScore) {
+                  bestQScore = qScore;
+                  bestQuad = [tl, tr, br, bl];
+                }
+              }
+            }
+          }
+        }
+
+        if (bestQuad) {
+          const pairsPts = [
+            { p1: bestQuad[0], p2: bestQuad[1], emap: rawTop, isH: true },
+            { p1: bestQuad[1], p2: bestQuad[2], emap: rawRight, isH: false },
+            { p1: bestQuad[2], p2: bestQuad[3], emap: rawBot, isH: true },
+            { p1: bestQuad[3], p2: bestQuad[0], emap: rawLeft, isH: false }
+          ];
+          const refinedLines = pairsPts.map((item) => {
+            const ptsK = [];
+            for (let k = 0; k < 44; k++) {
+              const t = 0.12 + (k / 43) * 0.76;
+              const px = item.p1.x * (1 - t) + item.p2.x * t;
+              const py = item.p1.y * (1 - t) + item.p2.y * t;
+              const ix = Math.round(px), iy = Math.round(py);
+              let bestOff = 0, bestVal = -1;
+              for (let d = -3; d <= 3; d++) {
+                const nx = item.isH ? ix : Math.min(w - 1, Math.max(0, ix + d));
+                const ny = item.isH ? Math.min(h - 1, Math.max(0, iy + d)) : iy;
+                const val = item.emap[ny * w + nx];
+                if (val > bestVal) { bestVal = val; bestOff = d; }
+              }
+              ptsK.push(item.isH ? { x: px, y: iy + bestOff } : { x: ix + bestOff, y: py });
+            }
+            return fitSingleIrlsLine(ptsK);
+          });
+
+          const idxPairs = [[3, 0], [0, 1], [1, 2], [2, 3]];
+          return idxPairs.map((pair, k) => {
+            const pt = intersectAbc(refinedLines[pair[0]], refinedLines[pair[1]]);
+            if (pt && Math.hypot(pt.x - bestQuad[k].x, pt.y - bestQuad[k].y) < 16) {
+              return {
+                x: Math.max(0, Math.min(origW, Math.round(pt.x / scale))),
+                y: Math.max(0, Math.min(origH, Math.round(pt.y / scale)))
+              };
+            }
+            return {
+              x: Math.max(0, Math.min(origW, Math.round(bestQuad[k].x / scale))),
+              y: Math.max(0, Math.min(origH, Math.round(bestQuad[k].y / scale)))
+            };
+          });
+        }
+
+        return [
+          { x: Math.round(origW * 0.06), y: Math.round(origH * 0.06) },
+          { x: Math.round(origW * 0.94), y: Math.round(origH * 0.06) },
+          { x: Math.round(origW * 0.94), y: Math.round(origH * 0.94) },
+          { x: Math.round(origW * 0.06), y: Math.round(origH * 0.94) }
+        ];
+      }
+
+      // =========================================================================
+      // 5. v8.0 CACHED ILLUMINATION SURFACE, RELATIVE HALO SUPPRESSION & SAUVOLA B&W
+      // =========================================================================
+      function computeHomography(srcPts, dstPts) {
+        const A = [];
+        const b = [];
+        for (let i = 0; i < 4; i++) {
+          const x = srcPts[i].x;
+          const y = srcPts[i].y;
+          const u = dstPts[i].x;
+          const v = dstPts[i].y;
+          A.push([x, y, 1, 0, 0, 0, -x * u, -y * u]);
+          b.push(u);
+          A.push([0, 0, 0, x, y, 1, -x * v, -y * v]);
+          b.push(v);
+        }
+
+        const n = 8;
+        for (let i = 0; i < n; i++) {
+          let maxRow = i;
+          let maxVal = Math.abs(A[i][i]);
+          for (let k = i + 1; k < n; k++) {
+            if (Math.abs(A[k][i]) > maxVal) {
+              maxVal = Math.abs(A[k][i]);
+              maxRow = k;
+            }
+          }
+          const tmpRow = A[i]; A[i] = A[maxRow]; A[maxRow] = tmpRow;
+          const tmpB = b[i]; b[i] = b[maxRow]; b[maxRow] = tmpB;
+
+          const pivot = A[i][i] || 1e-12;
+          for (let j = i; j < n; j++) A[i][j] /= pivot;
+          b[i] /= pivot;
+
+          for (let k = 0; k < n; k++) {
+            if (k !== i) {
+              const factor = A[k][i];
+              for (let j = i; j < n; j++) A[k][j] -= factor * A[i][j];
+              b[k] -= factor * b[i];
+            }
+          }
+        }
+        return [b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], 1];
+      }
+
+      function dewarpQuad(srcCanvas, quadCorners, paperSizeMode) {
+        const topW = Math.hypot(quadCorners[1].x - quadCorners[0].x, quadCorners[1].y - quadCorners[0].y);
+        const botW = Math.hypot(quadCorners[2].x - quadCorners[3].x, quadCorners[2].y - quadCorners[3].y);
+        const leftH = Math.hypot(quadCorners[3].x - quadCorners[0].x, quadCorners[3].y - quadCorners[0].y);
+        const rightH = Math.hypot(quadCorners[2].x - quadCorners[1].x, quadCorners[2].y - quadCorners[1].y);
+
+        let dstW = Math.round(Math.max(topW, botW));
+        let dstH = Math.round(Math.max(leftH, rightH));
+
+        if (paperSizeMode === "a4_portrait" || paperSizeMode === "a5") {
+          dstH = Math.round(dstW * 1.4142);
+        } else if (paperSizeMode === "a4_landscape") {
+          dstH = Math.round(dstW / 1.4142);
+        } else if (paperSizeMode === "letter") {
+          dstH = Math.round(dstW * (11 / 8.5));
+        }
+
+        const maxSide = 1400;
+        if (Math.max(dstW, dstH) > maxSide) {
+          const sc = maxSide / Math.max(dstW, dstH);
+          dstW = Math.round(dstW * sc);
+          dstH = Math.round(dstH * sc);
+        }
+        dstW = Math.max(120, dstW);
+        dstH = Math.max(120, dstH);
+
+        const dstPts = [
+          { x: 0, y: 0 },
+          { x: dstW - 1, y: 0 },
+          { x: dstW - 1, y: dstH - 1 },
+          { x: 0, y: dstH - 1 }
+        ];
+
+        const H = computeHomography(dstPts, quadCorners);
+        const sW = srcCanvas.width;
+        const sH = srcCanvas.height;
+        const sData = srcCanvas.getContext("2d").getImageData(0, 0, sW, sH).data;
+
+        const outCanvas = document.createElement("canvas");
+        outCanvas.width = dstW;
+        outCanvas.height = dstH;
+        const outCtx = outCanvas.getContext("2d");
+        const outImg = outCtx.createImageData(dstW, dstH);
+        const dData = outImg.data;
+
+        for (let v = 0; v < dstH; v++) {
+          for (let u = 0; u < dstW; u++) {
+            const denom = H[6] * u + H[7] * v + 1;
+            const sx = (H[0] * u + H[1] * v + H[2]) / denom;
+            const sy = (H[3] * u + H[4] * v + H[5]) / denom;
+
+            const di = (v * dstW + u) * 4;
+            if (sx >= 0 && sx < sW - 1 && sy >= 0 && sy < sH - 1) {
+              const x0 = sx | 0;
+              const y0 = sy | 0;
+              const dx = sx - x0;
+              const dy = sy - y0;
+
+              const i00 = (y0 * sW + x0) * 4;
+              const i10 = i00 + 4;
+              const i01 = i00 + sW * 4;
+              const i11 = i01 + 4;
+
+              const w00 = (1 - dx) * (1 - dy);
+              const w10 = dx * (1 - dy);
+              const w01 = (1 - dx) * dy;
+              const w11 = dx * dy;
+
+              dData[di]     = sData[i00] * w00 + sData[i10] * w10 + sData[i01] * w01 + sData[i11] * w11;
+              dData[di + 1] = sData[i00 + 1] * w00 + sData[i10 + 1] * w10 + sData[i01 + 1] * w01 + sData[i11 + 1] * w11;
+              dData[di + 2] = sData[i00 + 2] * w00 + sData[i10 + 2] * w10 + sData[i01 + 2] * w01 + sData[i11 + 2] * w11;
+              dData[di + 3] = 255;
+            } else {
+              dData[di] = 255;
+              dData[di + 1] = 255;
+              dData[di + 2] = 255;
+              dData[di + 3] = 255;
+            }
+          }
+        }
+
+        outCtx.putImageData(outImg, 0, 0);
+        return outCanvas;
+      }
+
+      // Fast 1D separable morphological & box filters for Fine-Scale Paper Surface Estimation
+      function sepMaxFilter(arr, w, h, rad) {
+        const tmp = new Float32Array(w * h);
+        const out = new Float32Array(w * h);
+        for (let y = 0; y < h; y++) {
+          const rOff = y * w;
+          for (let x = 0; x < w; x++) {
+            const x0 = Math.max(0, x - rad), x1 = Math.min(w - 1, x + rad);
+            let m = -Infinity;
+            for (let nx = x0; nx <= x1; nx++) {
+              const v = arr[rOff + nx];
+              if (v > m) m = v;
+            }
+            tmp[rOff + x] = m;
+          }
+        }
+        for (let y = 0; y < h; y++) {
+          const y0 = Math.max(0, y - rad), y1 = Math.min(h - 1, y + rad);
+          for (let x = 0; x < w; x++) {
+            let m = -Infinity;
+            for (let ny = y0; ny <= y1; ny++) {
+              const v = tmp[ny * w + x];
+              if (v > m) m = v;
+            }
+            out[y * w + x] = m;
+          }
+        }
+        return out;
+      }
+
+      function sepMinFilter(arr, w, h, rad) {
+        const tmp = new Float32Array(w * h);
+        const out = new Float32Array(w * h);
+        for (let y = 0; y < h; y++) {
+          const rOff = y * w;
+          for (let x = 0; x < w; x++) {
+            const x0 = Math.max(0, x - rad), x1 = Math.min(w - 1, x + rad);
+            let m = Infinity;
+            for (let nx = x0; nx <= x1; nx++) {
+              const v = arr[rOff + nx];
+              if (v < m) m = v;
+            }
+            tmp[rOff + x] = m;
+          }
+        }
+        for (let y = 0; y < h; y++) {
+          const y0 = Math.max(0, y - rad), y1 = Math.min(h - 1, y + rad);
+          for (let x = 0; x < w; x++) {
+            let m = Infinity;
+            for (let ny = y0; ny <= y1; ny++) {
+              const v = tmp[ny * w + x];
+              if (v < m) m = v;
+            }
+            out[y * w + x] = m;
+          }
+        }
+        return out;
+      }
+
+      function sepBoxBlur(arr, w, h, rad) {
+        const tmp = new Float32Array(w * h);
+        const out = new Float32Array(w * h);
+        for (let y = 0; y < h; y++) {
+          const rOff = y * w;
+          for (let x = 0; x < w; x++) {
+            const x0 = Math.max(0, x - rad), x1 = Math.min(w - 1, x + rad);
+            let s = 0;
+            for (let nx = x0; nx <= x1; nx++) s += arr[rOff + nx];
+            tmp[rOff + x] = s / (x1 - x0 + 1);
+          }
+        }
+        for (let y = 0; y < h; y++) {
+          const y0 = Math.max(0, y - rad), y1 = Math.min(h - 1, y + rad);
+          const cnt = y1 - y0 + 1;
+          for (let x = 0; x < w; x++) {
+            let s = 0;
+            for (let ny = y0; ny <= y1; ny++) s += tmp[ny * w + x];
+            out[y * w + x] = s / cnt;
+          }
+        }
+        return out;
+      }
+
+      // Fine-Scale Morphological Closing Paper Surface (Tracks shadow boundaries with 0% grey streak!)
+      function computeFinePaperSurfaceGrid(chArray, w, h) {
+        const scale = 2;
+        const sw = Math.max(8, Math.floor(w / scale));
+        const sh = Math.max(8, Math.floor(h / scale));
+        const sub = new Float32Array(sw * sh);
+
+        for (let sy = 0; sy < sh; sy++) {
+          const y0 = sy * scale;
+          const rOff = y0 * w;
+          for (let sx = 0; sx < sw; sx++) {
+            sub[sy * sw + sx] = chArray[rOff + sx * scale];
+          }
+        }
+
+        // Morphological Closing at half-res (Dilate radius 3 -> Erode radius 2) erases text strokes up to 12px wide
+        // while keeping shadow transitions razor-accurate!
+        const dil = sepMaxFilter(sub, sw, sh, 3);
+        const clo = sepMinFilter(dil, sw, sh, 2);
+        const sm1 = sepBoxBlur(clo, sw, sh, 2);
+        const sm2 = sepBoxBlur(sm1, sw, sh, 2);
+
+        return { grid: sm2, sw, sh, scale };
+      }
+
+      function sampleEnvelopeGrid(envObj, x, y) {
+        const gx = Math.min(envObj.sw - 1.001, Math.max(0, x / envObj.scale));
+        const gy = Math.min(envObj.sh - 1.001, Math.max(0, y / envObj.scale));
+        const x0 = gx | 0;
+        const y0 = gy | 0;
+        const dx = gx - x0;
+        const dy = gy - y0;
+        const g = envObj.grid;
+        const sw = envObj.sw;
+        const r0 = y0 * sw + x0;
+        const r1 = (y0 + 1) * sw + x0;
+        return (
+          g[r0] * (1 - dx) * (1 - dy) +
+          g[r0 + 1] * dx * (1 - dy) +
+          g[r1] * (1 - dx) * dy +
+          g[r1 + 1] * dx * dy
+        );
+      }
+
+      // Precomputes Dewarped Canvas + Fine Illumination Envelopes + 2D Integral Sauvola Stats ONCE per geometry change!
+      function buildPageFilterCache(dewarpedCanvas) {
+        const w = dewarpedCanvas.width;
+        const h = dewarpedCanvas.height;
+        const nPixels = w * h;
+        const rawData = dewarpedCanvas.getContext("2d").getImageData(0, 0, w, h).data;
+
+        const chR = new Float32Array(nPixels);
+        const chG = new Float32Array(nPixels);
+        const chB = new Float32Array(nPixels);
+        const lum = new Float32Array(nPixels);
+
+        for (let i = 0; i < nPixels; i++) {
+          const idx = i * 4;
+          const r = rawData[idx];
+          const g = rawData[idx + 1];
+          const b = rawData[idx + 2];
+          chR[i] = r;
+          chG[i] = g;
+          chB[i] = b;
+          lum[i] = 0.299 * r + 0.587 * g + 0.114 * b;
+        }
+
+        const gridL = computeFinePaperSurfaceGrid(lum, w, h);
+        const gridR = computeFinePaperSurfaceGrid(chR, w, h);
+        const gridG = computeFinePaperSurfaceGrid(chG, w, h);
+        const gridB = computeFinePaperSurfaceGrid(chB, w, h);
+
+        const uR = new Uint8Array(nPixels);
+        const uG = new Uint8Array(nPixels);
+        const uB = new Uint8Array(nPixels);
+        const uL = new Float32Array(nPixels);
+        const dL = new Float32Array(nPixels);
+        const envRatioR = new Uint8Array(nPixels);
+        const envRatioG = new Uint8Array(nPixels);
+        const envRatioB = new Uint8Array(nPixels);
+
+        for (let y = 0; y < h; y++) {
+          const rOff = y * w;
+          for (let x = 0; x < w; x++) {
+            const i = rOff + x;
+            const eL = Math.max(40.0, sampleEnvelopeGrid(gridL, x, y));
+            const eR = Math.max(40.0, sampleEnvelopeGrid(gridR, x, y));
+            const eG = Math.max(40.0, sampleEnvelopeGrid(gridG, x, y));
+            const eB = Math.max(40.0, sampleEnvelopeGrid(gridB, x, y));
+
+            const nr = Math.min(255, Math.max(0, Math.round((255.0 * chR[i]) / eR)));
+            const ng = Math.min(255, Math.max(0, Math.round((255.0 * chG[i]) / eG)));
+            const nb = Math.min(255, Math.max(0, Math.round((255.0 * chB[i]) / eB)));
+            const nl = Math.min(255.0, Math.max(0.0, (255.0 * lum[i]) / eL));
+
+            uR[i] = nr;
+            uG[i] = ng;
+            uB[i] = nb;
+            uL[i] = nl;
+            dL[i] = 255.0 - nl;
+            envRatioR[i] = Math.min(255, Math.round(eR));
+            envRatioG[i] = Math.min(255, Math.round(eG));
+            envRatioB[i] = Math.min(255, Math.round(eB));
+          }
+        }
+
+        // Local 9x9 max of dL (radius 4) for Relative Halo Suppression right around character strokes!
+        const dMaxLocalF = sepMaxFilter(dL, w, h, 4);
+        const dMaxLocal = new Uint8Array(nPixels);
+        for (let i = 0; i < nPixels; i++) {
+          dMaxLocal[i] = Math.min(255, Math.round(dMaxLocalF[i]));
+        }
+
+        // Fast 31x31 (radius 15) local mean & std on shadow-leveled uL for Sauvola B&W Mode (Zero shadow blotches!)
+        const uLSq = new Float32Array(nPixels);
+        for (let i = 0; i < nPixels; i++) uLSq[i] = uL[i] * uL[i];
+        const meanL = sepBoxBlur(uL, w, h, 15);
+        const meanSqL = sepBoxBlur(uLSq, w, h, 15);
+        const stdL = new Float32Array(nPixels);
+        for (let i = 0; i < nPixels; i++) {
+          stdL[i] = Math.sqrt(Math.max(0.0, meanSqL[i] - meanL[i] * meanL[i]));
+        }
+
+        return {
+          w,
+          h,
+          rawData,
+          uR,
+          uG,
+          uB,
+          uL,
+          dMaxLocal,
+          envRatioR,
+          envRatioG,
+          envRatioB,
+          meanL,
+          stdL
+        };
+      }
+
+      // Ultra-Fast Cached Filter Execution (< 6ms per frame = 60 FPS on Smartphones!)
+      function applyCachedFiltersToPage(page) {
+        if (!page || !page.filterCache) return;
+        const fc = page.filterCache;
+        const w = fc.w;
+        const h = fc.h;
+        const nPixels = w * h;
+        const settings = page.settings;
+
+        const mode = settings.colorMode || "magic_color";
+        const cleanAmt = (settings.bgSuppress ?? 68) / 100.0;
+        const contrastAmt = (settings.contrast ?? 55) / 100.0;
+        const shadowAmt = (settings.shadowRemoval ?? 100) / 100.0;
+        const transparentBg = !!settings.transparentBg;
+
+        if (!page.processedCanvas || page.processedCanvas.width !== w || page.processedCanvas.height !== h) {
+          page.processedCanvas = document.createElement("canvas");
+          page.processedCanvas.width = w;
+          page.processedCanvas.height = h;
+        }
+        const outCtx = page.processedCanvas.getContext("2d");
+        const outImg = outCtx.createImageData(w, h);
+        const data = outImg.data;
+
+        const rawData = fc.rawData;
+        const uR = fc.uR;
+        const uG = fc.uG;
+        const uB = fc.uB;
+        const uL = fc.uL;
+        const dMaxLocal = fc.dMaxLocal;
+        const envRatioR = fc.envRatioR;
+        const envRatioG = fc.envRatioG;
+        const envRatioB = fc.envRatioB;
+        const meanL = fc.meanL;
+        const stdL = fc.stdL;
+
+        if (mode === "original") {
+          data.set(rawData);
+          if (transparentBg) {
+            for (let i = 0; i < nPixels; i++) {
+              const idx = i * 4;
+              const d = 255 - uL[i];
+              data[idx + 3] = d < 18 ? 0 : d < 48 ? Math.round(((d - 18) / 30) * 255) : 255;
+            }
+          }
+          outCtx.putImageData(outImg, 0, 0);
+          return;
+        }
+
+        if (mode === "bw_sauvola") {
+          const k = 0.16 + (1.0 - contrastAmt) * 0.10;
+          const minDip = 14.0 + cleanAmt * 20.0 - contrastAmt * 6.0;
+          const haloRatio = 0.24 + cleanAmt * 0.16;
+
+          for (let i = 0; i < nPixels; i++) {
+            const nl = uL[i];
+            const mL = meanL[i];
+            const sL = stdL[i];
+            const sauvolaT = mL * (1.0 - k * (1.0 - sL / 128.0));
+            const haloGuard = Math.max(minDip, dMaxLocal[i] * haloRatio);
+            const effT = Math.min(sauvolaT, 255.0 - haloGuard);
+
+            const diff = nl - effT;
+            let bw;
+            if (diff >= 5.0) bw = 255;
+            else if (diff <= -5.0) bw = 10;
+            else bw = Math.round(10.0 + ((diff + 5.0) / 10.0) * 245.0);
+
+            const idx = i * 4;
+            data[idx] = bw;
+            data[idx + 1] = bw;
+            data[idx + 2] = bw;
+            data[idx + 3] = transparentBg ? (255 - bw) : 255;
+          }
+          outCtx.putImageData(outImg, 0, 0);
+          return;
+        }
+
+        let baseFloor, haloRatio, gain;
+        if (mode === "faint_boost") {
+          baseFloor = 11.0 + cleanAmt * 16.0;
+          haloRatio = 0.22 + cleanAmt * 0.14;
+          gain = 1.65 + contrastAmt * 1.45;
+        } else if (mode === "true_color") {
+          baseFloor = 8.0 + cleanAmt * 14.0;
+          haloRatio = 0.18 + cleanAmt * 0.12;
+          gain = 1.15 + contrastAmt * 0.65;
+        } else {
+          baseFloor = 15.0 + cleanAmt * 26.0;
+          haloRatio = 0.28 + cleanAmt * 0.16;
+          gain = 1.40 + contrastAmt * 1.25;
+        }
+
+        const isGray = mode === "grayscale";
+        const paperBase = mode === "true_color" ? 248.0 : 255.0;
+        const oneMinusShadow = 1.0 - shadowAmt;
+
+        for (let i = 0; i < nPixels; i++) {
+          const nr = uR[i];
+          const ng = uG[i];
+          const nb = uB[i];
+          const nl = uL[i];
+          const dL = 255.0 - nl;
+
+          const maxC = nr > ng ? (nr > nb ? nr : nb) : (ng > nb ? ng : nb);
+          const minC = nr < ng ? (nr < nb ? nr : nb) : (ng < nb ? ng : nb);
+          const chroma = maxC - minC;
+
+          const adaptiveFloor = Math.max(baseFloor, dMaxLocal[i] * haloRatio);
+          const effFloor = Math.max(3.0, adaptiveFloor - chroma * 0.35);
+
+          let smoothGain = 0.0;
+          const lowEdge = effFloor * 0.80;
+          if (dL > lowEdge) {
+            const bandW = Math.max(2.0, effFloor * 0.35);
+            const t = Math.min(1.0, (dL - lowEdge) / bandW);
+            smoothGain = t * t * (3.0 - 2.0 * t) * gain;
+          }
+
+          let pR = paperBase;
+          let pG = paperBase;
+          let pB = paperBase;
+          if (oneMinusShadow > 0.005) {
+            pR = paperBase * (shadowAmt + oneMinusShadow * (envRatioR[i] / 255.0));
+            pG = paperBase * (shadowAmt + oneMinusShadow * (envRatioG[i] / 255.0));
+            pB = paperBase * (shadowAmt + oneMinusShadow * (envRatioB[i] / 255.0));
+          }
+
+          let r = Math.min(255, Math.max(0, Math.round(pR - (255 - nr) * smoothGain)));
+          let g = Math.min(255, Math.max(0, Math.round(pG - (255 - ng) * smoothGain)));
+          let b = Math.min(255, Math.max(0, Math.round(pB - (255 - nb) * smoothGain)));
+
+          if (isGray) {
+            const gv = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+            r = gv; g = gv; b = gv;
+          }
+
+          const idx = i * 4;
+          data[idx] = r;
+          data[idx + 1] = g;
+          data[idx + 2] = b;
+
+          if (transparentBg) {
+            const lumOut = 0.299 * r + 0.587 * g + 0.114 * b;
+            const dark = (255 - lumOut) + chroma * 0.85;
+            data[idx + 3] = dark < 12 ? 0 : dark < 46 ? Math.round(((dark - 12) / 34) * 255) : 255;
+          } else {
+            data[idx + 3] = 255;
+          }
+        }
+
+        outCtx.putImageData(outImg, 0, 0);
+      }
+
+      // Full geometry + illumination update (called ONLY when corners, rotation, or paper ratio change)
+      function updateGeometryAndProcess(page) {
+        if (!page) return;
+        const dewarped = dewarpQuad(
+          page.srcCanvas,
+          page.corners,
+          page.settings.paperSize
+        );
+        page.dewarpedCanvas = dewarped;
+        page.filterCache = buildPageFilterCache(dewarped);
+        applyCachedFiltersToPage(page);
+      }
+
+      // =========================================================================
+      // 6. STAGE RENDERING & CONFLICT-FREE MULTI-TOUCH PINCH-ZOOM / CORNER DRAG
+      // =========================================================================
+      function renderStage() {
+        const page = getCurrentPage();
+        if (!page) return;
+
+        const ctx = el.mainCanvas.getContext("2d");
+
+        if (state.viewMode === "crop") {
+          const sW = page.srcCanvas.width;
+          const sH = page.srcCanvas.height;
+          el.mainCanvas.width = sW;
+          el.mainCanvas.height = sH;
+
+          ctx.clearRect(0, 0, sW, sH);
+          ctx.drawImage(page.srcCanvas, 0, 0);
+
+          const c = page.corners;
+          ctx.save();
+          ctx.fillStyle = "rgba(15, 23, 42, 0.48)";
+          ctx.beginPath();
+          ctx.rect(0, 0, sW, sH);
+          ctx.moveTo(c[0].x, c[0].y);
+          ctx.lineTo(c[1].x, c[1].y);
+          ctx.lineTo(c[2].x, c[2].y);
+          ctx.lineTo(c[3].x, c[3].y);
+          ctx.closePath();
+          ctx.fill("evenodd");
+          ctx.restore();
+
+          const strokeW = Math.max(4, sW / 210);
+          ctx.save();
+          ctx.strokeStyle = "#0a467d";
+          ctx.lineWidth = strokeW + 2;
+          ctx.beginPath();
+          ctx.moveTo(c[0].x, c[0].y);
+          ctx.lineTo(c[1].x, c[1].y);
+          ctx.lineTo(c[2].x, c[2].y);
+          ctx.lineTo(c[3].x, c[3].y);
+          ctx.closePath();
+          ctx.stroke();
+
+          ctx.strokeStyle = "#38bdf8";
+          ctx.lineWidth = strokeW;
+          ctx.stroke();
+          ctx.restore();
+
+          const midR = Math.max(10, sW / 80);
+          for (let i = 0; i < 4; i++) {
+            const p1 = c[i];
+            const p2 = c[(i + 1) % 4];
+            const mx = (p1.x + p2.x) * 0.5;
+            const my = (p1.y + p2.y) * 0.5;
+            ctx.save();
+            ctx.fillStyle = "#ffffff";
+            ctx.strokeStyle = "#0a467d";
+            ctx.lineWidth = Math.max(2.5, sW / 300);
+            ctx.beginPath();
+            ctx.arc(mx, my, midR, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          const cornerR = Math.max(17, sW / 48);
+          const labels = ["TL", "TR", "BR", "BL"];
+          for (let i = 0; i < 4; i++) {
+            drawHandle(ctx, c[i].x, c[i].y, cornerR, "#0a467d", labels[i]);
+          }
+        } else {
+          if (!page.processedCanvas) updateGeometryAndProcess(page);
+          const targetCanvas = state.holdingCompare ? page.dewarpedCanvas : page.processedCanvas;
+          el.mainCanvas.width = targetCanvas.width;
+          el.mainCanvas.height = targetCanvas.height;
+          ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+          ctx.drawImage(targetCanvas, 0, 0);
+        }
+
+        updateExportEstimate();
+      }
+
+      function drawHandle(ctx, x, y, r, color, label) {
+        ctx.save();
+        ctx.fillStyle = color;
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = Math.max(3, r * 0.22);
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `bold ${Math.max(11, Math.round(r * 0.72))}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(label, x, y);
+        ctx.restore();
+      }
+
+      function updateMagnifierLoupe(imgX, imgY, clientX, clientY, labelText) {
+        const page = getCurrentPage();
+        if (!page || state.viewMode !== "crop") {
+          el.magnifierLoupe.style.display = "none";
+          return;
+        }
+        el.magnifierLoupe.style.display = "block";
+        el.loupeLabel.textContent = labelText;
+
+        const stRect = el.stageContainer.getBoundingClientRect();
+        const relX = clientX - stRect.left;
+        const leftPx = relX < stRect.width * 0.5 ? Math.max(10, stRect.width - 132) : 10;
+        const topPx = 10;
+
+        el.magnifierLoupe.style.left = `${leftPx}px`;
+        el.magnifierLoupe.style.top = `${topPx}px`;
+
+        const lCtx = el.loupeCanvas.getContext("2d");
+        const lw = el.loupeCanvas.width;
+        const lh = el.loupeCanvas.height;
+        lCtx.fillStyle = "#0f172a";
+        lCtx.fillRect(0, 0, lw, lh);
+
+        const zoom = 3.8;
+        const srcRadius = (lw / 2) / zoom;
+        lCtx.drawImage(
+          page.srcCanvas,
+          imgX - srcRadius,
+          imgY - srcRadius,
+          srcRadius * 2,
+          srcRadius * 2,
+          0,
+          0,
+          lw,
+          lh
+        );
+
+        lCtx.strokeStyle = "#38bdf8";
+        lCtx.lineWidth = 1.8;
+        lCtx.beginPath();
+        lCtx.moveTo(lw / 2, 0);
+        lCtx.lineTo(lw / 2, lh);
+        lCtx.moveTo(0, lh / 2);
+        lCtx.lineTo(lw, lh / 2);
+        lCtx.stroke();
+      }
+
+      function getCanvasCoords(clientX, clientY) {
+        const rect = el.mainCanvas.getBoundingClientRect();
+        const scaleX = el.mainCanvas.width / Math.max(1, rect.width);
+        const scaleY = el.mainCanvas.height / Math.max(1, rect.height);
+        return {
+          x: (clientX - rect.left) * scaleX,
+          y: (clientY - rect.top) * scaleY,
+          clientX,
+          clientY,
+          scaleX
+        };
+      }
+
+      // Precision delta-based handle hit test (so corner doesn't jump to center of fat thumb!)
+      function findHitHandle(page, pt) {
+        if (state.viewMode !== "crop") return null;
+        const hitRadius = Math.max(32, 44 * (pt.scaleX || 1));
+        const c = page.corners;
+
+        let bestCorner = -1;
+        let bestDist = hitRadius;
+        for (let i = 0; i < 4; i++) {
+          const d = Math.hypot(pt.x - c[i].x, pt.y - c[i].y);
+          if (d <= bestDist) {
+            bestDist = d;
+            bestCorner = i;
+          }
+        }
+        if (bestCorner !== -1) {
+          return {
+            type: "corner",
+            index: bestCorner,
+            startX: pt.x,
+            startY: pt.y,
+            origX: c[bestCorner].x,
+            origY: c[bestCorner].y,
+            label: ["Góc TL", "Góc TR", "Góc BR", "Góc BL"][bestCorner]
+          };
+        }
+
+        for (let i = 0; i < 4; i++) {
+          const p1 = c[i];
+          const p2 = c[(i + 1) % 4];
+          const mx = (p1.x + p2.x) * 0.5;
+          const my = (p1.y + p2.y) * 0.5;
+          if (Math.hypot(pt.x - mx, pt.y - my) <= hitRadius) {
+            return {
+              type: "edge",
+              index: i,
+              startX: pt.x,
+              startY: pt.y,
+              origP1: { ...p1 },
+              origP2: { ...p2 },
+              label: "Cạnh " + (i + 1)
+            };
+          }
+        }
+        return null;
+      }
+
+      function onStageTouchStart(evt) {
+        const page = getCurrentPage();
+        if (!page) return;
+
+        // 2-FINGER PINCH-TO-ZOOM: Immediately cancel any 1-finger corner drag & restore original corners!
+        if (evt.touches && evt.touches.length === 2) {
+          if (state.draggingHandle && state.preTouchCorners) {
+            page.corners = state.preTouchCorners.map((p) => ({ ...p }));
+            renderStage();
+          }
+          state.draggingHandle = null;
+          el.magnifierLoupe.style.display = "none";
+
+          const t0 = evt.touches[0];
+          const t1 = evt.touches[1];
+          const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+          const midX = (t0.clientX + t1.clientX) * 0.5;
+          const midY = (t0.clientY + t1.clientY) * 0.5;
+          const stRect = el.stageContainer.getBoundingClientRect();
+          state.pinchState = {
+            startDist: Math.max(12, dist),
+            startZoom: state.stageZoom,
+            startPanX: state.stagePanX,
+            startPanY: state.stagePanY,
+            startMidX: midX,
+            startMidY: midY,
+            centerX: stRect.left + stRect.width * 0.5,
+            centerY: stRect.top + stRect.height * 0.5
+          };
+          evt.preventDefault();
+          return;
+        }
+
+        if (evt.touches && evt.touches.length === 1) {
+          if (Date.now() < state.pinchCooldownUntil) {
+            evt.preventDefault();
+            return;
+          }
+          const t0 = evt.touches[0];
+          const pt = getCanvasCoords(t0.clientX, t0.clientY);
+          state.preTouchCorners = page.corners.map((p) => ({ ...p }));
+
+          const hit = findHitHandle(page, pt);
+          if (hit) {
+            state.draggingHandle = hit;
+            if (hit.type === "corner") {
+              updateMagnifierLoupe(hit.origX, hit.origY, pt.clientX, pt.clientY, hit.label);
+            }
+            evt.preventDefault();
+            return;
+          }
+
+          // Double-tap anywhere on document to toggle 100% <-> 240% zoom
+          const now = Date.now();
+          if (now - state.lastTapTime < 280 && Math.hypot(t0.clientX - state.lastTapX, t0.clientY - state.lastTapY) < 32) {
+            state.lastTapTime = 0;
+            if (state.stageZoom > 1.15) {
+              resetStageZoom();
+            } else {
+              const stRect = el.stageContainer.getBoundingClientRect();
+              const cx = stRect.left + stRect.width * 0.5;
+              const cy = stRect.top + stRect.height * 0.5;
+              state.stageZoom = 2.4;
+              state.stagePanX = (cx - t0.clientX) * 1.1;
+              state.stagePanY = (cy - t0.clientY) * 1.1;
+              applyStageTransform();
+            }
+            evt.preventDefault();
+            return;
+          }
+          state.lastTapTime = now;
+          state.lastTapX = t0.clientX;
+          state.lastTapY = t0.clientY;
+
+          // Pan with 1 finger when zoomed in
+          if (state.stageZoom > 1.02) {
+            state.draggingHandle = {
+              type: "pan",
+              startClientX: t0.clientX,
+              startClientY: t0.clientY,
+              origPanX: state.stagePanX,
+              origPanY: state.stagePanY
+            };
+            evt.preventDefault();
+          }
+        }
+      }
+
+      function onStageMouseDown(evt) {
+        const page = getCurrentPage();
+        if (!page) return;
+        const pt = getCanvasCoords(evt.clientX, evt.clientY);
+        state.preTouchCorners = page.corners.map((p) => ({ ...p }));
+        const hit = findHitHandle(page, pt);
+        if (hit) {
+          state.draggingHandle = hit;
+          if (hit.type === "corner") {
+            updateMagnifierLoupe(hit.origX, hit.origY, pt.clientX, pt.clientY, hit.label);
+          }
+          evt.preventDefault();
+          return;
+        }
+        if (state.stageZoom > 1.02) {
+          state.draggingHandle = {
+            type: "pan",
+            startClientX: evt.clientX,
+            startClientY: evt.clientY,
+            origPanX: state.stagePanX,
+            origPanY: state.stagePanY
+          };
+          evt.preventDefault();
+        }
+      }
+
+      function onStagePointerMove(evt) {
+        if (state.pinchState && evt.touches && evt.touches.length === 2) {
+          const t0 = evt.touches[0];
+          const t1 = evt.touches[1];
+          const currDist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+          const currMidX = (t0.clientX + t1.clientX) * 0.5;
+          const currMidY = (t0.clientY + t1.clientY) * 0.5;
+
+          const newZoom = Math.max(0.8, Math.min(5.0, state.pinchState.startZoom * (currDist / state.pinchState.startDist)));
+          const zoomRatio = newZoom / state.pinchState.startZoom;
+          const relX = state.pinchState.startMidX - state.pinchState.centerX;
+          const relY = state.pinchState.startMidY - state.pinchState.centerY;
+
+          state.stageZoom = newZoom;
+          state.stagePanX = (currMidX - state.pinchState.startMidX) + relX - (relX - state.pinchState.startPanX) * zoomRatio;
+          state.stagePanY = (currMidY - state.pinchState.startMidY) + relY - (relY - state.pinchState.startPanY) * zoomRatio;
+          applyStageTransform();
+          evt.preventDefault();
+          return;
+        }
+
+        if (!state.draggingHandle) return;
+        const page = getCurrentPage();
+        if (!page) return;
+
+        const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+        const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+
+        if (state.draggingHandle.type === "pan") {
+          state.stagePanX = state.draggingHandle.origPanX + (clientX - state.draggingHandle.startClientX);
+          state.stagePanY = state.draggingHandle.origPanY + (clientY - state.draggingHandle.startClientY);
+          applyStageTransform();
+          evt.preventDefault();
+          return;
+        }
+
+        const pt = getCanvasCoords(clientX, clientY);
+        const w = el.mainCanvas.width;
+        const h = el.mainCanvas.height;
+
+        if (state.draggingHandle.type === "corner") {
+          const idx = state.draggingHandle.index;
+          const dx = pt.x - state.draggingHandle.startX;
+          const dy = pt.y - state.draggingHandle.startY;
+          const nx = Math.max(0, Math.min(w, Math.round(state.draggingHandle.origX + dx)));
+          const ny = Math.max(0, Math.min(h, Math.round(state.draggingHandle.origY + dy)));
+          page.corners[idx].x = nx;
+          page.corners[idx].y = ny;
+          updateMagnifierLoupe(nx, ny, pt.clientX, pt.clientY, state.draggingHandle.label);
+          renderStage();
+        } else if (state.draggingHandle.type === "edge") {
+          const idx = state.draggingHandle.index;
+          const nextIdx = (idx + 1) % 4;
+          const dx = pt.x - state.draggingHandle.startX;
+          const dy = pt.y - state.draggingHandle.startY;
+          page.corners[idx].x = Math.max(0, Math.min(w, Math.round(state.draggingHandle.origP1.x + dx)));
+          page.corners[idx].y = Math.max(0, Math.min(h, Math.round(state.draggingHandle.origP1.y + dy)));
+          page.corners[nextIdx].x = Math.max(0, Math.min(w, Math.round(state.draggingHandle.origP2.x + dx)));
+          page.corners[nextIdx].y = Math.max(0, Math.min(h, Math.round(state.draggingHandle.origP2.y + dy)));
+          renderStage();
+        }
+        evt.preventDefault();
+      }
+
+      function onStagePointerUp(evt) {
+        if (state.pinchState && (!evt.touches || evt.touches.length < 2)) {
+          state.pinchState = null;
+          state.pinchCooldownUntil = Date.now() + 180;
+          state.draggingHandle = null;
+          return;
+        }
+        if (!state.draggingHandle) return;
+        const dragType = state.draggingHandle.type;
+        state.draggingHandle = null;
+        el.magnifierLoupe.style.display = "none";
+        if (dragType === "corner" || dragType === "edge") {
+          const page = getCurrentPage();
+          if (page) {
+            updateGeometryAndProcess(page);
+            renderPageList();
+          }
+        }
+      }
+
+      // =========================================================================
+      // 7. PAGE QUEUE MANAGEMENT & AUTO-CROP SELECTED REGION
+      // =========================================================================
+      function addNewPageFromCanvas(srcCanvas, name, customCorners) {
+        const detectedCorners = customCorners || detectDocumentCorners(srcCanvas);
+        const pageObj = {
+          id: "page_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+          name: name || `Trang_${state.pages.length + 1}`,
+          srcCanvas,
+          corners: detectedCorners,
+          dewarpedCanvas: null,
+          filterCache: null,
+          processedCanvas: null,
+          settings: cloneSettings(state.defaultSettings)
+        };
+        updateGeometryAndProcess(pageObj);
+        state.pages.push(pageObj);
+        state.currentPageIndex = state.pages.length - 1;
+        resetStageZoom();
+        syncControlsFromPage(pageObj);
+        renderPageList();
+        renderStage();
+      }
+
+      function renderPageList() {
+        el.pageListContainer.innerHTML = "";
+        el.pageCountText.textContent = `${state.pages.length}`;
+
+        state.pages.forEach((p, idx) => {
+          const item = document.createElement("div");
+          item.className = "page-chip-card" + (idx === state.currentPageIndex ? " active" : "");
+
+          const thumb = document.createElement("canvas");
+          thumb.className = "page-chip-thumb";
+          thumb.width = 48;
+          thumb.height = 64;
+          const tctx = thumb.getContext("2d");
+          tctx.fillStyle = "#ffffff";
+          tctx.fillRect(0, 0, thumb.width, thumb.height);
+          const src = p.processedCanvas || p.srcCanvas;
+          const sc = Math.min(thumb.width / src.width, thumb.height / src.height);
+          const dw = src.width * sc;
+          const dh = src.height * sc;
+          tctx.drawImage(src, (thumb.width - dw) / 2, (thumb.height - dh) / 2, dw, dh);
+
+          const title = document.createElement("div");
+          title.className = "page-chip-title";
+          title.textContent = `Tr.${idx + 1}`;
+
+          item.appendChild(thumb);
+          item.appendChild(title);
+
+          if (state.pages.length > 1) {
+            const delBtn = document.createElement("button");
+            delBtn.type = "button";
+            delBtn.className = "btn btn-danger";
+            delBtn.style.padding = "2px 5px";
+            delBtn.style.fontSize = "0.65rem";
+            delBtn.textContent = "✕";
+            delBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              state.pages.splice(idx, 1);
+              if (state.currentPageIndex >= state.pages.length) {
+                state.currentPageIndex = state.pages.length - 1;
+              }
+              syncControlsFromPage(getCurrentPage());
+              renderPageList();
+              renderStage();
+            });
+            item.appendChild(delBtn);
+          }
+
+          item.addEventListener("click", () => {
+            state.currentPageIndex = idx;
+            resetStageZoom();
+            syncControlsFromPage(getCurrentPage());
+            renderPageList();
+            renderStage();
+          });
+
+          el.pageListContainer.appendChild(item);
+        });
+      }
+
+      function splitCurrentPageIntoTwoHalves() {
+        const page = getCurrentPage();
+        if (!page) return;
+        const c = page.corners;
+        const midTop = {
+          x: Math.round((c[0].x + c[1].x) * 0.5),
+          y: Math.round((c[0].y + c[1].y) * 0.5)
+        };
+        const midBot = {
+          x: Math.round((c[3].x + c[2].x) * 0.5),
+          y: Math.round((c[3].y + c[2].y) * 0.5)
+        };
+
+        const baseName = page.name.replace(/_Tr[12].*$/, "");
+        const leftPage = {
+          id: "page_" + Date.now() + "_L",
+          name: `${baseName}_Tr1`,
+          srcCanvas: page.srcCanvas,
+          corners: [
+            { x: c[0].x, y: c[0].y },
+            { x: midTop.x, y: midTop.y },
+            { x: midBot.x, y: midBot.y },
+            { x: c[3].x, y: c[3].y }
+          ],
+          dewarpedCanvas: null,
+          filterCache: null,
+          processedCanvas: null,
+          settings: cloneSettings(page.settings)
+        };
+        const rightPage = {
+          id: "page_" + Date.now() + "_R",
+          name: `${baseName}_Tr2`,
+          srcCanvas: page.srcCanvas,
+          corners: [
+            { x: midTop.x, y: midTop.y },
+            { x: c[1].x, y: c[1].y },
+            { x: c[2].x, y: c[2].y },
+            { x: midBot.x, y: midBot.y }
+          ],
+          dewarpedCanvas: null,
+          filterCache: null,
+          processedCanvas: null,
+          settings: cloneSettings(page.settings)
+        };
+
+        updateGeometryAndProcess(leftPage);
+        updateGeometryAndProcess(rightPage);
+
+        state.pages.splice(state.currentPageIndex + 1, 0, leftPage, rightPage);
+        state.currentPageIndex = state.currentPageIndex + 1;
+        switchStep("color");
+        syncControlsFromPage(getCurrentPage());
+        renderPageList();
+        renderStage();
+        showToast("Đã tách thành 2 trang riêng biệt!");
+      }
+
+      // =========================================================================
+      // 8. MULTI-FORMAT EXPORT ENGINE (PDF, JPEG, PNG, WEBP, TIFF, SVG)
+      // =========================================================================
+      function getScaledExportCanvas(page) {
+        if (!page.processedCanvas) updateGeometryAndProcess(page);
+        const src = page.processedCanvas;
+        const scale = parseFloat(el.exportScale.value) || 1;
+        if (Math.abs(scale - 1) < 0.01) return src;
+
+        const out = document.createElement("canvas");
+        out.width = Math.round(src.width * scale);
+        out.height = Math.round(src.height * scale);
+        const ctx = out.getContext("2d");
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(src, 0, 0, out.width, out.height);
+        return out;
+      }
+
+      function generatePdfBlobFromPages(pagesToExport, quality) {
+        const enc = new TextEncoder();
+        const chunks = [];
+        let offset = 0;
+        const xref = [0];
+
+        function pushStr(str) {
+          const bytes = enc.encode(str);
+          chunks.push(bytes);
+          offset += bytes.length;
+        }
+        function pushBytes(bytes) {
+          chunks.push(bytes);
+          offset += bytes.length;
+        }
+        function startObj(id) {
+          xref[id] = offset;
+          pushStr(`${id} 0 obj\n`);
+        }
+        function endObj() {
+          pushStr(`\nendobj\n`);
+        }
+
+        pushStr("%PDF-1.4\n%\xFF\xFF\xFF\xFF\n");
+
+        const numPages = pagesToExport.length;
+        startObj(1);
+        pushStr(`<< /Type /Catalog /Pages 2 0 R >>`);
+        endObj();
+
+        const kidsRefs = pagesToExport.map((_, i) => `${3 + i * 3} 0 R`).join(" ");
+        startObj(2);
+        pushStr(`<< /Type /Pages /Kids [ ${kidsRefs} ] /Count ${numPages} >>`);
+        endObj();
+
+        for (let i = 0; i < numPages; i++) {
+          const p = pagesToExport[i];
+          const expCanvas = getScaledExportCanvas(p);
+          const flat = document.createElement("canvas");
+          flat.width = expCanvas.width;
+          flat.height = expCanvas.height;
+          const fctx = flat.getContext("2d");
+          fctx.fillStyle = "#ffffff";
+          fctx.fillRect(0, 0, flat.width, flat.height);
+          fctx.drawImage(expCanvas, 0, 0);
+
+          const dataUrl = flat.toDataURL("image/jpeg", quality);
+          const b64 = dataUrl.split(",")[1];
+          const binStr = atob(b64);
+          const jpgBytes = new Uint8Array(binStr.length);
+          for (let k = 0; k < binStr.length; k++) jpgBytes[k] = binStr.charCodeAt(k);
+
+          const paper = el.exportPaperSize.value;
+          let ptW = 595.28;
+          let ptH = 841.89;
+          if (paper === "a4_landscape") {
+            ptW = 841.89; ptH = 595.28;
+          } else if (paper === "letter") {
+            ptW = 612; ptH = 792;
+          } else if (paper === "a5") {
+            ptW = 419.53; ptH = 595.28;
+          } else {
+            ptW = 595.28;
+            ptH = Math.round((flat.height / flat.width) * 595.28 * 100) / 100;
+          }
+
+          const pageObjId = 3 + i * 3;
+          const contentObjId = 4 + i * 3;
+          const imgObjId = 5 + i * 3;
+
+          const contentCmd = `q\n${ptW} 0 0 ${ptH} 0 0 cm\n/Im${i} Do\nQ\n`;
+
+          startObj(pageObjId);
+          pushStr(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${ptW} ${ptH}] /Resources << /XObject << /Im${i} ${imgObjId} 0 R >> >> /Contents ${contentObjId} 0 R >>`);
+          endObj();
+
+          startObj(contentObjId);
+          pushStr(`<< /Length ${contentCmd.length} >>\nstream\n${contentCmd}endstream`);
+          endObj();
+
+          startObj(imgObjId);
+          pushStr(`<< /Type /XObject /Subtype /Image /Width ${flat.width} /Height ${flat.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpgBytes.length} >>\nstream\n`);
+          pushBytes(jpgBytes);
+          pushStr(`\nendstream`);
+          endObj();
+        }
+
+        const totalObjs = 3 + numPages * 3;
+        const startXrefOffset = offset;
+        pushStr(`xref\n0 ${totalObjs}\n0000000000 65535 f \n`);
+        for (let id = 1; id < totalObjs; id++) {
+          const offStr = String(xref[id]).padStart(10, "0");
+          pushStr(`${offStr} 00000 n \n`);
+        }
+        pushStr(`trailer\n<< /Size ${totalObjs} /Root 1 0 R >>\nstartxref\n${startXrefOffset}\n%%EOF`);
+
+        return new Blob(chunks, { type: "application/pdf" });
+      }
+
+      function generateTiffBlob(canvas, dpi) {
+        const w = canvas.width;
+        const h = canvas.height;
+        const ctx = canvas.getContext("2d");
+        const rgba = ctx.getImageData(0, 0, w, h).data;
+        const rgbLen = w * h * 3;
+        const headerAndIfdSize = 8 + 2 + 12 * 12 + 4 + 16 + 6;
+        const buf = new ArrayBuffer(headerAndIfdSize + rgbLen);
+        const view = new DataView(buf);
+        const bytes = new Uint8Array(buf);
+
+        view.setUint16(0, 0x4949, true);
+        view.setUint16(2, 42, true);
+        view.setUint32(4, 8, true);
+
+        const numEntries = 12;
+        view.setUint16(8, numEntries, true);
+        let pos = 10;
+        function writeTag(tag, type, count, valOrOffset) {
+          view.setUint16(pos, tag, true);
+          view.setUint16(pos + 2, type, true);
+          view.setUint32(pos + 4, count, true);
+          view.setUint32(pos + 8, valOrOffset, true);
+          pos += 12;
+        }
+
+        const extraOffset = 10 + numEntries * 12 + 4;
+        const stripOffset = headerAndIfdSize;
+
+        view.setUint16(extraOffset + 16, 8, true);
+        view.setUint16(extraOffset + 18, 8, true);
+        view.setUint16(extraOffset + 20, 8, true);
+
+        view.setUint32(extraOffset, dpi, true);
+        view.setUint32(extraOffset + 4, 1, true);
+        view.setUint32(extraOffset + 8, dpi, true);
+        view.setUint32(extraOffset + 12, 1, true);
+
+        writeTag(256, 4, 1, w);
+        writeTag(257, 4, 1, h);
+        writeTag(258, 3, 3, extraOffset + 16);
+        writeTag(259, 3, 1, 1);
+        writeTag(262, 3, 1, 2);
+        writeTag(273, 4, 1, stripOffset);
+        writeTag(277, 3, 1, 3);
+        writeTag(278, 4, 1, h);
+        writeTag(279, 4, 1, rgbLen);
+        writeTag(282, 5, 1, extraOffset);
+        writeTag(283, 5, 1, extraOffset + 8);
+        writeTag(296, 3, 1, 2);
+
+        view.setUint32(pos, 0, true);
+
+        let dst = stripOffset;
+        for (let i = 0; i < w * h; i++) {
+          const si = i * 4;
+          const a = rgba[si + 3] / 255;
+          bytes[dst++] = Math.round(rgba[si] * a + 255 * (1 - a));
+          bytes[dst++] = Math.round(rgba[si + 1] * a + 255 * (1 - a));
+          bytes[dst++] = Math.round(rgba[si + 2] * a + 255 * (1 - a));
+        }
+
+        return new Blob([buf], { type: "image/tiff" });
+      }
+
+      function generateSvgBlob(canvas) {
+        const pngUrl = canvas.toDataURL("image/png");
+        const svgContent = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${canvas.width} ${canvas.height}" width="${canvas.width}" height="${canvas.height}">\n  <image href="${pngUrl}" width="${canvas.width}" height="${canvas.height}" />\n</svg>`;
+        return new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
+      }
+
+      function formatByteSize(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+      }
+
+      function updateExportEstimate() {
+        const page = getCurrentPage();
+        if (!page || !page.processedCanvas) return;
+        const scale = parseFloat(el.exportScale.value) || 1;
+        const w = Math.round(page.processedCanvas.width * scale);
+        const h = Math.round(page.processedCanvas.height * scale);
+        el.exportDimText.textContent = `${w} × ${h} px`;
+
+        const fmt = el.exportFormat.value;
+        const q = (parseInt(el.sliderQuality.value, 10) || 94) / 100;
+        let estBytes = w * h * 0.25 * q;
+        if (fmt === "png") estBytes = w * h * 0.65;
+        else if (fmt === "tiff") estBytes = w * h * 3 + 256;
+        else if (fmt === "webp") estBytes = w * h * 0.16 * q;
+        else if (fmt === "pdf") estBytes = w * h * 0.28 * q + 2048;
+
+        el.exportSizeText.textContent = `~${formatByteSize(estBytes)}`;
+      }
+
+      function triggerBlobDownload(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 500);
+      }
+
+      function downloadCurrentPage(overrideFmt) {
+        const page = getCurrentPage();
+        if (!page) return;
+        const fmt = overrideFmt || el.exportFormat.value;
+        const q = (parseInt(el.sliderQuality.value, 10) || 94) / 100;
+        const baseName = (el.exportFilename.value || page.name || "Tai_Lieu_Scan").trim();
+        const expCanvas = getScaledExportCanvas(page);
+
+        if (fmt === "pdf") {
+          const blob = generatePdfBlobFromPages([page], q);
+          triggerBlobDownload(blob, `${baseName}.pdf`);
+          showToast(`Đã lưu PDF (${formatByteSize(blob.size)})!`);
+          return;
+        }
+        if (fmt === "tiff") {
+          const scale = parseFloat(el.exportScale.value) || 1;
+          const dpi = scale >= 2 ? 600 : scale >= 1.5 ? 300 : 200;
+          const blob = generateTiffBlob(expCanvas, dpi);
+          triggerBlobDownload(blob, `${baseName}.tif`);
+          showToast(`Đã lưu TIFF ${dpi} DPI!`);
+          return;
+        }
+        if (fmt === "svg") {
+          const blob = generateSvgBlob(expCanvas);
+          triggerBlobDownload(blob, `${baseName}.svg`);
+          showToast(`Đã lưu SVG!`);
+          return;
+        }
+
+        let targetCanvas = expCanvas;
+        if (fmt === "jpeg") {
+          const flat = document.createElement("canvas");
+          flat.width = expCanvas.width;
+          flat.height = expCanvas.height;
+          const fctx = flat.getContext("2d");
+          fctx.fillStyle = "#ffffff";
+          fctx.fillRect(0, 0, flat.width, flat.height);
+          fctx.drawImage(expCanvas, 0, 0);
+          targetCanvas = flat;
+        }
+
+        const mime = fmt === "png" ? "image/png" : fmt === "webp" ? "image/webp" : "image/jpeg";
+        const ext = fmt === "png" ? "png" : fmt === "webp" ? "webp" : "jpg";
+        targetCanvas.toBlob((blob) => {
+          if (!blob) return;
+          triggerBlobDownload(blob, `${baseName}.${ext}`);
+          showToast(`Đã lưu ${baseName}.${ext}!`);
+        }, mime, q);
+      }
+
+      function downloadAllPagesAsPdf() {
+        if (!state.pages.length) return;
+        const q = (parseInt(el.sliderQuality.value, 10) || 94) / 100;
+        const baseName = (el.exportFilename.value || "Tai_Lieu_Scan").trim();
+        const blob = generatePdfBlobFromPages(state.pages, q);
+        triggerBlobDownload(blob, `${baseName}_${state.pages.length}_trang.pdf`);
+        showToast(`Đã lưu PDF (${state.pages.length} trang)!`);
+      }
+
+      // =========================================================================
+      // 9. UI SYNC & 60FPS SLIDER CONTROLLER
+      // =========================================================================
+      function syncActiveSliderControl(page) {
+        if (!page) return;
+        const key = state.activeParamKey;
+        const meta = PARAM_META[key];
+        const val = page.settings[key] ?? 0;
+        el.activeSliderName.textContent = meta.label;
+        el.activeParamSlider.min = meta.min;
+        el.activeParamSlider.max = meta.max;
+        el.activeParamSlider.value = val;
+        el.activeSliderVal.textContent = `${val}${meta.suffix}`;
+
+        el.paramPillBar.querySelectorAll(".param-pill").forEach((pill) => {
+          pill.classList.toggle("active", pill.getAttribute("data-param") === key);
+        });
+      }
+
+      function syncControlsFromPage(page) {
+        if (!page) return;
+        const s = page.settings;
+        el.valBgSuppress.textContent = `${s.bgSuppress}%`;
+        el.valContrast.textContent = `${s.contrast}%`;
+        el.valShadow.textContent = `${s.shadowRemoval}%`;
+        el.btnToggleAlpha.classList.toggle("active", !!s.transparentBg);
+        el.exportPaperSize.value = s.paperSize || "auto";
+
+        el.colorPresetGrid.querySelectorAll(".filter-chip[data-mode]").forEach((b) => {
+          b.classList.toggle("active", b.getAttribute("data-mode") === s.colorMode);
+        });
+        syncActiveSliderControl(page);
+      }
+
+      function handleFilesSelected(fileList) {
+        if (!fileList || !fileList.length) return;
+        Array.from(fileList).forEach((file) => {
+          if (!file.type.startsWith("image/")) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+              const c = document.createElement("canvas");
+              const maxSide = 2000;
+              let w = img.width;
+              let h = img.height;
+              if (Math.max(w, h) > maxSide) {
+                const sc = maxSide / Math.max(w, h);
+                w = Math.round(w * sc);
+                h = Math.round(h * sc);
+              }
+              c.width = w;
+              c.height = h;
+              c.getContext("2d").drawImage(img, 0, 0, w, h);
+              const cleanName = file.name.replace(/\.[^.]+$/, "");
+              addNewPageFromCanvas(c, cleanName);
+              switchStep("color");
+              showToast(`Đã cắt gọn và làm sạch "${file.name}"!`);
+            };
+            img.src = ev.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // =========================================================================
+      // 10. WIDE-ANGLE FULL-SENSOR CAMERA
+      // =========================================================================
+      async function applyCameraZoomValue(zVal) {
+        if (!state.cameraStream) return;
+        const track = state.cameraStream.getVideoTracks()[0];
+        if (!track || typeof track.getCapabilities !== "function") return;
+        try {
+          const caps = track.getCapabilities();
+          if (caps && caps.zoom) {
+            const minZ = caps.zoom.min || 1;
+            const maxZ = caps.zoom.max || 1;
+            const clamped = Math.max(minZ, Math.min(maxZ, zVal));
+            await track.applyConstraints({ advanced: [{ zoom: clamped }] });
+          }
+        } catch (_) {}
+      }
+
+      async function applyCameraZoom(targetZoomMode) {
+        if (!state.cameraStream) return;
+        const track = state.cameraStream.getVideoTracks()[0];
+        if (!track || typeof track.getCapabilities !== "function") return;
+        try {
+          const caps = track.getCapabilities();
+          if (caps && caps.zoom) {
+            const minZ = caps.zoom.min || 1;
+            const maxZ = caps.zoom.max || 1;
+            let zVal = minZ;
+            if (targetZoomMode === "1") zVal = Math.max(minZ, Math.min(maxZ, 1.0));
+            else if (targetZoomMode === "1.5") zVal = Math.max(minZ, Math.min(maxZ, 1.5));
+            await track.applyConstraints({ advanced: [{ zoom: zVal }] });
+          }
+        } catch (_) {}
+      }
+
+      async function startCamera() {
+        stopCamera();
+        try {
+          const mode = el.cameraDeviceSelect.value || "environment";
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: mode },
+              width: { ideal: 1600 },
+              height: { ideal: 1200 }
+            },
+            audio: false
+          });
+          state.cameraStream = stream;
+          el.cameraVideo.srcObject = stream;
+          await el.cameraVideo.play();
+          await applyCameraZoom("min");
+          runCameraLiveOverlay();
+        } catch (err) {
+          showToast("Không thể mở Camera trực tiếp. Hãy bấm '📁 Chọn ảnh' để chụp bằng Camera máy.");
+        }
+      }
+
+      function stopCamera() {
+        if (state.cameraAnimId) {
+          cancelAnimationFrame(state.cameraAnimId);
+          state.cameraAnimId = null;
+        }
+        if (state.cameraStream) {
+          state.cameraStream.getTracks().forEach((t) => t.stop());
+          state.cameraStream = null;
+        }
+      }
+
+      function runCameraLiveOverlay() {
+        const video = el.cameraVideo;
+        const overlay = el.cameraOverlay;
+        const octx = overlay.getContext("2d");
+        const off = document.createElement("canvas");
+        let frameCount = 0;
+        state.lastCameraCorners = null;
+
+        function loop() {
+          if (!state.cameraStream) return;
+          if (video.readyState >= 2 && video.videoWidth > 0) {
+            overlay.width = video.videoWidth;
+            overlay.height = video.videoHeight;
+            frameCount++;
+            if (frameCount % 8 === 0) {
+              off.width = 280;
+              off.height = Math.round((video.videoHeight / video.videoWidth) * 280);
+              off.getContext("2d").drawImage(video, 0, 0, off.width, off.height);
+              const corners = detectDocumentCorners(off);
+              const sx = video.videoWidth / off.width;
+              const sy = video.videoHeight / off.height;
+              state.lastCameraCorners = corners.map((p) => ({
+                x: Math.round(p.x * sx),
+                y: Math.round(p.y * sy)
+              }));
+            }
+            octx.clearRect(0, 0, overlay.width, overlay.height);
+            if (state.lastCameraCorners) {
+              const c = state.lastCameraCorners;
+              octx.save();
+              octx.fillStyle = "rgba(15, 23, 42, 0.44)";
+              octx.beginPath();
+              octx.rect(0, 0, overlay.width, overlay.height);
+              octx.moveTo(c[0].x, c[0].y);
+              octx.lineTo(c[1].x, c[1].y);
+              octx.lineTo(c[2].x, c[2].y);
+              octx.lineTo(c[3].x, c[3].y);
+              octx.closePath();
+              octx.fill("evenodd");
+              octx.restore();
+
+              octx.strokeStyle = "#38bdf8";
+              octx.lineWidth = Math.max(4, overlay.width / 200);
+              octx.beginPath();
+              octx.moveTo(c[0].x, c[0].y);
+              octx.lineTo(c[1].x, c[1].y);
+              octx.lineTo(c[2].x, c[2].y);
+              octx.lineTo(c[3].x, c[3].y);
+              octx.closePath();
+              octx.stroke();
+            }
+          }
+          state.cameraAnimId = requestAnimationFrame(loop);
+        }
+        loop();
+      }
+
+      function rotateCurrentPage(dir) {
+        const page = getCurrentPage();
+        if (!page) return;
+        const sC = page.srcCanvas;
+        const rot = document.createElement("canvas");
+        rot.width = sC.height;
+        rot.height = sC.width;
+        const rctx = rot.getContext("2d");
+        rctx.save();
+        if (dir > 0) {
+          rctx.translate(rot.width, 0);
+          rctx.rotate(Math.PI / 2);
+        } else {
+          rctx.translate(0, rot.height);
+          rctx.rotate(-Math.PI / 2);
+        }
+        rctx.drawImage(sC, 0, 0);
+        rctx.restore();
+
+        page.srcCanvas = rot;
+        page.corners = detectDocumentCorners(rot);
+        updateGeometryAndProcess(page);
+        resetStageZoom();
+        renderPageList();
+        renderStage();
+      }
+
+      function initEvents() {
+        // 3-Step Switcher in Bottom Dock
+        el.tabStepCrop.addEventListener("click", () => switchStep("crop"));
+        el.tabStepColor.addEventListener("click", () => switchStep("color"));
+        el.tabStepExport.addEventListener("click", () => switchStep("export"));
+
+        // Press-and-Hold Compare Button
+        const startHoldCompare = (e) => {
+          e.preventDefault();
+          state.holdingCompare = true;
+          el.btnHoldCompare.classList.add("holding");
+          renderStage();
+        };
+        const endHoldCompare = () => {
+          if (!state.holdingCompare) return;
+          state.holdingCompare = false;
+          el.btnHoldCompare.classList.remove("holding");
+          renderStage();
+        };
+        el.btnHoldCompare.addEventListener("touchstart", startHoldCompare, { passive: false });
+        el.btnHoldCompare.addEventListener("touchend", endHoldCompare);
+        el.btnHoldCompare.addEventListener("touchcancel", endHoldCompare);
+        el.btnHoldCompare.addEventListener("mousedown", startHoldCompare);
+        window.addEventListener("mouseup", endHoldCompare);
+
+        // Stage Zoom Buttons & Wheel
+        el.btnZoomIn.addEventListener("click", () => setStageZoomByFactor(1.35));
+        el.btnZoomOut.addEventListener("click", () => setStageZoomByFactor(1 / 1.35));
+        el.btnZoomReset.addEventListener("click", resetStageZoom);
+
+        el.stageContainer.addEventListener("wheel", (e) => {
+          e.preventDefault();
+          const factor = e.deltaY < 0 ? 1.15 : (1 / 1.15);
+          setStageZoomByFactor(factor);
+        }, { passive: false });
+
+        // Stage Multi-Touch Pinch-to-Zoom & Pointer Events
+        el.stageContainer.addEventListener("touchstart", onStageTouchStart, { passive: false });
+        window.addEventListener("touchmove", onStagePointerMove, { passive: false });
+        window.addEventListener("touchend", onStagePointerUp);
+        window.addEventListener("touchcancel", onStagePointerUp);
+
+        el.stageContainer.addEventListener("mousedown", onStageMouseDown);
+        window.addEventListener("mousemove", onStagePointerMove);
+        window.addEventListener("mouseup", onStagePointerUp);
+
+        // Upload & Paste
+        el.btnTriggerUpload.addEventListener("click", () => el.fileInput.click());
+        el.fileInput.addEventListener("change", (e) => {
+          handleFilesSelected(e.target.files);
+          el.fileInput.value = "";
+        });
+
+        window.addEventListener("paste", (e) => {
+          if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length) {
+            handleFilesSelected(e.clipboardData.files);
+          }
+        });
+
+        // Samples
+        function loadSample(type, btnEl) {
+          [el.btnSampleWhiteOnWhite, el.btnSampleWoodA4, el.btnSampleBleed].forEach((b) => b.classList.remove("active"));
+          btnEl.classList.add("active");
+          const sample = createProceduralSample(type);
+          addNewPageFromCanvas(sample.canvas, sample.name);
+          switchStep("color");
+          showToast(`Đã nạp mẫu: ${sample.name}`);
+        }
+
+        el.btnSampleWhiteOnWhite.addEventListener("click", () => loadSample("white_on_white", el.btnSampleWhiteOnWhite));
+        el.btnSampleWoodA4.addEventListener("click", () => loadSample("wood_a4", el.btnSampleWoodA4));
+        el.btnSampleBleed.addEventListener("click", () => loadSample("bleed", el.btnSampleBleed));
+
+        el.btnClearPages.addEventListener("click", () => {
+          const sample = createProceduralSample("white_on_white");
+          state.pages = [];
+          addNewPageFromCanvas(sample.canvas, sample.name);
+          el.exportModal.classList.remove("open");
+          switchStep("color");
+          showToast("Đã làm mới danh sách trang!");
+        });
+
+        // Crop Actions
+        el.btnAutoDetectCorners.addEventListener("click", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          page.corners = detectDocumentCorners(page.srcCanvas);
+          updateGeometryAndProcess(page);
+          renderStage();
+          showToast("Đã tự động bắt chuẩn 4 góc!");
+        });
+
+        el.btnFullFrameCorners.addEventListener("click", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          const w = page.srcCanvas.width;
+          const h = page.srcCanvas.height;
+          page.corners = [
+            { x: 4, y: 4 },
+            { x: w - 4, y: 4 },
+            { x: w - 4, y: h - 4 },
+            { x: 4, y: h - 4 }
+          ];
+          updateGeometryAndProcess(page);
+          renderStage();
+          showToast("Đã chọn toàn khung ảnh!");
+        });
+
+        el.btnRotateLeft.addEventListener("click", () => rotateCurrentPage(-1));
+        el.btnRotateRight.addEventListener("click", () => rotateCurrentPage(1));
+
+        el.btnApplyCropNow.addEventListener("click", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          updateGeometryAndProcess(page);
+          renderPageList();
+          switchStep("color");
+          showToast("Đã cắt gọn chỉ lấy vùng giấy được chọn!");
+        });
+
+        el.btnSplitTwoPagesOptional.addEventListener("click", splitCurrentPageIntoTwoHalves);
+
+        // Color Mode Chips (Instant <6ms Cached Filter)
+        el.colorPresetGrid.querySelectorAll(".filter-chip[data-mode]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const page = getCurrentPage();
+            if (!page) return;
+            page.settings.colorMode = btn.getAttribute("data-mode");
+            syncControlsFromPage(page);
+            applyCachedFiltersToPage(page);
+            renderPageList();
+            renderStage();
+          });
+        });
+
+        // Transparent Background Chip
+        el.btnToggleAlpha.addEventListener("click", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          page.settings.transparentBg = !page.settings.transparentBg;
+          if (page.settings.transparentBg && el.exportFormat.value === "jpeg") {
+            el.exportFormat.value = "png";
+          }
+          syncControlsFromPage(page);
+          applyCachedFiltersToPage(page);
+          renderPageList();
+          renderStage();
+          showToast(page.settings.transparentBg ? "Đã bật Tách nền trong suốt!" : "Đã tắt Tách nền.");
+        });
+
+        // Parameter Pills & 60 FPS Throttled Slider
+        el.paramPillBar.querySelectorAll(".param-pill").forEach((pill) => {
+          pill.addEventListener("click", () => {
+            state.activeParamKey = pill.getAttribute("data-param");
+            syncActiveSliderControl(getCurrentPage());
+          });
+        });
+
+        el.activeParamSlider.addEventListener("input", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          const key = state.activeParamKey;
+          const v = parseInt(el.activeParamSlider.value, 10) || 0;
+          page.settings[key] = v;
+          syncControlsFromPage(page);
+          if (state.sliderRafId) cancelAnimationFrame(state.sliderRafId);
+          state.sliderRafId = requestAnimationFrame(() => {
+            state.sliderRafId = null;
+            applyCachedFiltersToPage(page);
+            renderStage();
+          });
+        });
+
+        el.activeParamSlider.addEventListener("change", () => {
+          renderPageList();
+        });
+
+        el.btnResetFilters.addEventListener("click", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          page.settings = cloneSettings(state.defaultSettings);
+          syncControlsFromPage(page);
+          applyCachedFiltersToPage(page);
+          renderPageList();
+          renderStage();
+          showToast("Đã khôi phục bộ lọc chuẩn!");
+        });
+
+        el.btnApplyFiltersAll.addEventListener("click", () => {
+          const current = getCurrentPage();
+          if (!current) return;
+          state.pages.forEach((p) => {
+            p.settings = cloneSettings(current.settings);
+            applyCachedFiltersToPage(p);
+          });
+          renderPageList();
+          renderStage();
+          showToast(`Đã đồng bộ cho cả ${state.pages.length} trang!`);
+        });
+
+        // Quick 1-Tap Export & Advanced Export Modal
+        el.btnQuickPdf.addEventListener("click", () => {
+          if (state.pages.length > 1) downloadAllPagesAsPdf();
+          else downloadCurrentPage("pdf");
+        });
+        el.btnQuickJpg.addEventListener("click", () => downloadCurrentPage("jpeg"));
+        el.btnOpenExportModal.addEventListener("click", () => {
+          updateExportEstimate();
+          el.exportModal.classList.add("open");
+        });
+        el.btnCloseExportModal.addEventListener("click", () => el.exportModal.classList.remove("open"));
+
+        el.exportFormat.addEventListener("change", updateExportEstimate);
+        el.exportScale.addEventListener("change", updateExportEstimate);
+        el.exportPaperSize.addEventListener("change", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          page.settings.paperSize = el.exportPaperSize.value;
+          updateGeometryAndProcess(page);
+          renderStage();
+        });
+        el.sliderQuality.addEventListener("input", () => {
+          el.valQuality.textContent = `${el.sliderQuality.value}%`;
+          updateExportEstimate();
+        });
+
+        el.btnDownloadCurrent.addEventListener("click", () => downloadCurrentPage());
+        el.btnDownloadAllPdf.addEventListener("click", downloadAllPagesAsPdf);
+
+        // Camera & Pinch-to-Zoom on Camera Viewfinder
+        el.btnOpenCamera.addEventListener("click", () => {
+          el.cameraModal.classList.add("open");
+          startCamera();
+        });
+        el.btnCloseCamera.addEventListener("click", () => {
+          el.cameraModal.classList.remove("open");
+          stopCamera();
+        });
+        el.btnSwitchCamera.addEventListener("click", () => {
+          el.cameraDeviceSelect.value = el.cameraDeviceSelect.value === "environment" ? "user" : "environment";
+          startCamera();
+        });
+        el.cameraDeviceSelect.addEventListener("change", startCamera);
+
+        [el.btnZoomMin, el.btnZoom1x, el.btnZoom15x].forEach((zBtn) => {
+          zBtn.addEventListener("click", () => {
+            [el.btnZoomMin, el.btnZoom1x, el.btnZoom15x].forEach((b) => b.classList.remove("active"));
+            zBtn.classList.add("active");
+            applyCameraZoom(zBtn.getAttribute("data-zoom"));
+          });
+        });
+
+        let camPinchStartDist = 0;
+        let camCurrentZoom = 1.0;
+        el.cameraVideoWrap.addEventListener("touchstart", (e) => {
+          if (e.touches && e.touches.length === 2) {
+            camPinchStartDist = Math.hypot(
+              e.touches[1].clientX - e.touches[0].clientX,
+              e.touches[1].clientY - e.touches[0].clientY
+            );
+            e.preventDefault();
+          }
+        }, { passive: false });
+        el.cameraVideoWrap.addEventListener("touchmove", (e) => {
+          if (e.touches && e.touches.length === 2 && camPinchStartDist > 10) {
+            const dist = Math.hypot(
+              e.touches[1].clientX - e.touches[0].clientX,
+              e.touches[1].clientY - e.touches[0].clientY
+            );
+            camCurrentZoom = Math.max(0.5, Math.min(3.0, camCurrentZoom * (dist / camPinchStartDist)));
+            camPinchStartDist = dist;
+            applyCameraZoomValue(camCurrentZoom);
+            e.preventDefault();
+          }
+        }, { passive: false });
+
+        el.btnCapturePhoto.addEventListener("click", () => {
+          const video = el.cameraVideo;
+          if (!video.videoWidth) return;
+          const c = document.createElement("canvas");
+          c.width = video.videoWidth;
+          c.height = video.videoHeight;
+          c.getContext("2d").drawImage(video, 0, 0);
+          const capturedCorners = state.lastCameraCorners || detectDocumentCorners(c);
+          el.cameraModal.classList.remove("open");
+          stopCamera();
+          addNewPageFromCanvas(c, `Scan_${state.pages.length + 1}`, capturedCorners);
+          switchStep("color");
+          showToast("Đã chụp và cắt gọn vùng giấy được chọn!");
+        });
+
+        el.btnOpenGuide.addEventListener("click", () => el.guideModal.classList.add("open"));
+        el.btnCloseGuide.addEventListener("click", () => el.guideModal.classList.remove("open"));
+      }
+
+      function initApp() {
+        initEvents();
+        const initialSample = createProceduralSample("white_on_white");
+        addNewPageFromCanvas(initialSample.canvas, initialSample.name);
+        switchStep("color");
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initApp);
+      } else {
+        initApp();
+      }
+    })();
+  </script>
+</body>
+</html>
