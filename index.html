@@ -3,19 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=no, viewport-fit=cover" />
-  <title>DocScan Pro v8.0 — Quét Tài Liệu Chuẩn A4</title>
+  <title>ScanhoahocABC</title>
   <meta name="theme-color" content="#0a467d" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="Ứng dụng quét tài liệu chuyên nghiệp trên điện thoại: Triệt nền sạch trắng quanh chữ, Đen trắng Sauvola không vết loang bóng đổ, mượt 60 FPS, hỗ trợ chụm 2 ngón phóng to/thu nhỏ." />
+  <meta name="description" content="ScanhoahocABC — Ứng dụng quét tài liệu thông minh: Nhận diện chuẩn tài liệu đa vùng màu (nửa trắng nửa màu khác), nền trắng & bàn gỗ, tự động làm phẳng 3D và hiển thị ảnh gốc trung thực." />
   <style>
     :root {
       --primary: #0a467d;
       --primary-dark: #073259;
-      --primary-light: #e6f0fa;
-      --accent: #0284c7;
-      --success: #15803d;
-      --danger: #b91c1c;
+      --primary-soft: #eaf2fb;
       --bg: #0f172a;
       --surface: #ffffff;
       --surface-alt: #f8fafc;
@@ -33,9 +30,10 @@
 
     html, body {
       width: 100%;
+      max-width: 100vw;
       height: 100dvh;
       overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Arial, sans-serif;
       background-color: var(--bg);
       color: var(--text);
       user-select: none;
@@ -46,120 +44,130 @@
       display: flex;
       flex-direction: column;
       width: 100%;
+      max-width: 100vw;
       height: 100dvh;
       overflow: hidden;
     }
 
-    /* 1. COMPACT MOBILE HEADER (46px) */
+    /* 1. MODERN MINIMALIST HEADER (50px, Zero Overlap) */
     .app-header {
-      height: 46px;
+      height: 50px;
       flex-shrink: 0;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      background: var(--primary);
       color: #ffffff;
-      padding: 0 10px;
+      padding: 0 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 6px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+      gap: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
       z-index: 40;
     }
 
     .brand-group {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       min-width: 0;
+      flex: 1;
     }
 
     .brand-logo {
-      width: 28px;
-      height: 28px;
-      border-radius: 7px;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
       background: rgba(255, 255, 255, 0.16);
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid rgba(255, 255, 255, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.3);
       flex-shrink: 0;
     }
 
     .brand-title {
-      font-size: 0.9rem;
-      font-weight: 700;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .badge-pro {
-      font-size: 0.62rem;
-      background: #38bdf8;
-      color: #082f49;
-      padding: 1px 5px;
-      border-radius: 999px;
+      font-size: 1.0rem;
       font-weight: 800;
+      letter-spacing: -0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #ffffff;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
       flex-shrink: 0;
     }
 
-    /* Touch-Friendly Buttons */
+    /* MODERN UNIFIED BUTTON SYSTEM (#0a467d Palette, Zero Overflow) */
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      padding: 7px 11px;
-      border-radius: 8px;
-      font-size: 0.78rem;
+      gap: 5px;
+      height: 38px;
+      padding: 0 10px;
+      border-radius: 10px;
+      font-size: 0.8rem;
       font-weight: 700;
-      border: 1px solid transparent;
       cursor: pointer;
-      transition: transform 0.1s ease, background 0.12s ease;
+      transition: all 0.14s ease;
       white-space: nowrap;
-      line-height: 1.1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+      line-height: 1;
+      border: 1.5px solid transparent;
     }
 
     .btn:active {
-      transform: scale(0.96);
+      transform: scale(0.97);
     }
 
-    .btn-primary {
+    .btn-main {
       background: var(--primary);
       color: #ffffff;
-      border-color: var(--primary-dark);
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px rgba(10, 70, 125, 0.24);
     }
 
-    .btn-light {
-      background: rgba(255, 255, 255, 0.18);
+    .btn-sec {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border-color: rgba(10, 70, 125, 0.28);
+    }
+
+    .btn-sec.active {
+      background: var(--primary);
       color: #ffffff;
-      border-color: rgba(255, 255, 255, 0.3);
+      border-color: var(--primary);
+      box-shadow: 0 2px 6px rgba(10, 70, 125, 0.22);
     }
 
-    .btn-outline {
+    .btn-hdr-main {
       background: #ffffff;
       color: var(--primary);
-      border-color: var(--border);
+      height: 34px;
+      padding: 0 11px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 800;
     }
 
-    .btn-success {
-      background: var(--success);
+    .btn-hdr-sec {
+      background: rgba(255, 255, 255, 0.16);
       color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      height: 34px;
+      padding: 0 11px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
     }
 
-    .btn-danger {
-      background: #fee2e2;
-      color: var(--danger);
-      border-color: #fecaca;
-    }
-
-    /* 2. UNOBSTRUCTED DOCUMENT VIEWPORT (Supports Smooth Pinch-to-Zoom & Pan) */
+    /* 2. DOCUMENT STAGE VIEWPORT */
     .workspace {
       flex: 1;
       min-height: 0;
@@ -175,99 +183,37 @@
       position: relative;
       display: flex;
       flex-direction: column;
-      background:
-        linear-gradient(45deg, #1e293b 25%, transparent 25%),
-        linear-gradient(-45deg, #1e293b 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #1e293b 75%),
-        linear-gradient(-45deg, transparent 75%, #1e293b 75%);
-      background-size: 20px 20px;
-      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
       background-color: #0f172a;
       overflow: hidden;
     }
 
-    /* Compact Floating Corner Pills (Never block the document!) */
-    .stage-floating-bar {
+    .stage-top-bar {
       position: absolute;
-      bottom: 8px;
-      left: 8px;
-      right: 8px;
+      top: 10px;
+      left: 10px;
+      right: 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 6px;
       z-index: 20;
       pointer-events: none;
     }
 
-    .stage-floating-bar > * {
+    .stage-top-bar > * {
       pointer-events: auto;
     }
 
-    .hold-compare-btn {
-      background: rgba(15, 23, 42, 0.82);
+    .stage-pill {
+      background: rgba(15, 23, 42, 0.78);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      color: #e2e8f0;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 5px 10px;
-      border-radius: 999px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .hold-compare-btn:active, .hold-compare-btn.holding {
-      background: #38bdf8;
-      color: #082f49;
-    }
-
-    .zoom-control-pill {
-      display: inline-flex;
-      align-items: center;
-      background: rgba(15, 23, 42, 0.82);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      padding: 2px 5px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      gap: 2px;
       color: #ffffff;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .zoom-icon-btn {
-      width: 26px;
-      height: 26px;
-      border: none;
-      background: transparent;
-      color: #e2e8f0;
-      font-size: 0.95rem;
-      font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      padding: 6px 11px;
       border-radius: 999px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .zoom-icon-btn:active {
-      background: rgba(255, 255, 255, 0.2);
-    }
-
-    .zoom-pct-btn {
-      border: none;
-      background: rgba(255, 255, 255, 0.12);
-      color: #38bdf8;
-      font-size: 0.71rem;
+      font-size: 0.73rem;
       font-weight: 700;
-      padding: 3px 7px;
-      border-radius: 999px;
       cursor: pointer;
-      min-width: 44px;
-      text-align: center;
-      font-variant-numeric: tabular-nums;
     }
 
     .stage-container {
@@ -280,7 +226,7 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      padding: 14px 14px 40px 14px;
+      padding: 16px;
       touch-action: none;
     }
 
@@ -291,8 +237,8 @@
       justify-content: center;
       max-width: 100%;
       max-height: 100%;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      border-radius: 3px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+      border-radius: 4px;
       transform-origin: center center;
       will-change: transform;
     }
@@ -300,19 +246,19 @@
     #mainCanvas {
       display: block;
       max-width: 100%;
-      max-height: calc(100dvh - 255px);
+      max-height: calc(100dvh - 220px);
       width: auto;
       height: auto;
       touch-action: none;
     }
 
-    /* Smart Magnifier Loupe (Docked to Top Corner, Never Blocked by Finger) */
+    /* Smart Magnifier Loupe */
     .magnifier-loupe {
       position: absolute;
-      width: 122px;
-      height: 122px;
+      width: 118px;
+      height: 118px;
       border-radius: 50%;
-      border: 3px solid #38bdf8;
+      border: 3px solid var(--primary);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
       pointer-events: none;
       overflow: hidden;
@@ -332,68 +278,33 @@
       bottom: 4px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(10, 70, 125, 0.94);
+      background: var(--primary);
       color: #fff;
-      font-size: 0.63rem;
+      font-size: 0.62rem;
       font-weight: 700;
       padding: 1px 7px;
       border-radius: 99px;
       white-space: nowrap;
     }
 
-    /* 3. UNIFIED ERGONOMIC BOTTOM DOCK (Everything in Thumb Reach, Zero Scroll!) */
+    /* 3. SLEEK MODERN BOTTOM BAR (Max 2 Rows, Zero Overflow Guaranteed via minmax(0, 1fr)) */
     .bottom-dock {
       flex-shrink: 0;
+      width: 100%;
+      max-width: 100vw;
       background: var(--surface);
       border-top: 1px solid var(--border);
-      padding: 7px 10px calc(7px + env(safe-area-inset-bottom, 0px));
+      border-radius: 16px 16px 0 0;
+      padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
       z-index: 35;
-      box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.18);
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-
-    /* 3-Step Workflow Switcher inside Bottom Dock */
-    .step-switcher {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      background: #e2e8f0;
-      padding: 3px;
-      border-radius: 9px;
-      gap: 3px;
-      max-width: 680px;
-      width: 100%;
-      margin: 0 auto;
-    }
-
-    .step-tab {
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-      font-size: 0.76rem;
-      font-weight: 700;
-      padding: 6px 4px;
-      border-radius: 7px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      white-space: nowrap;
-    }
-
-    .step-tab.active {
-      background: var(--primary);
-      color: #ffffff;
-      box-shadow: 0 2px 6px rgba(10, 70, 125, 0.25);
+      box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
     }
 
     .dock-pane {
       display: none;
       flex-direction: column;
-      gap: 6px;
-      max-width: 680px;
+      gap: 8px;
+      max-width: 600px;
       width: 100%;
       margin: 0 auto;
     }
@@ -402,185 +313,93 @@
       display: flex;
     }
 
-    /* Horizontal Ribbon of Scan Modes */
-    .chip-ribbon {
-      display: flex;
-      align-items: center;
+    /* Mode Selector Segmented Control (4 Equal Columns, Never Overflows) */
+    .mode-segmented-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 5px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      padding-bottom: 1px;
-    }
-    .chip-ribbon::-webkit-scrollbar {
-      display: none;
-    }
-
-    .filter-chip {
-      flex: 1 0 auto;
-      padding: 7px 10px;
-      border-radius: 8px;
+      width: 100%;
+      background: var(--surface-alt);
+      padding: 4px;
+      border-radius: 12px;
       border: 1px solid var(--border);
-      background: var(--surface-alt);
-      color: var(--text);
-      font-size: 0.76rem;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-      text-align: center;
     }
 
-    .filter-chip.active {
-      background: var(--primary);
-      color: #ffffff;
-      border-color: var(--primary-dark);
-    }
-
-    .filter-chip.alpha-chip.active {
-      background: #0284c7;
-      color: #ffffff;
-      border-color: #0369a1;
-    }
-
-    /* 3 Clear Parameter Pills + Live 60FPS Slider */
-    .param-control-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .param-pill-bar {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      flex: 1;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .param-pill-bar::-webkit-scrollbar {
-      display: none;
-    }
-
-    .param-pill {
-      flex: 1 0 auto;
-      padding: 5px 8px;
-      border-radius: 7px;
-      border: 1px solid #cbd5e1;
-      background: #f8fafc;
+    .mode-pill {
+      height: 34px;
+      border: none;
+      border-radius: 9px;
+      background: transparent;
       color: var(--text-muted);
-      font-size: 0.72rem;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-    }
-
-    .param-pill b {
-      color: var(--primary);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .param-pill.active {
-      background: var(--primary-light);
-      border-color: var(--primary);
-      color: var(--primary-dark);
-    }
-
-    .active-slider-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--surface-alt);
-      padding: 5px 10px;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
-    }
-
-    .active-slider-name {
       font-size: 0.74rem;
       font-weight: 700;
-      color: var(--primary-dark);
-      min-width: 82px;
+      padding: 0 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+      transition: all 0.14s ease;
+    }
+
+    .mode-pill.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(10, 70, 125, 0.25);
+    }
+
+    /* Optional Single Slider Row (Hidden on "Ảnh gốc", shown on enhanced modes) */
+    .clean-slider-row {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary-soft);
+      padding: 6px 10px;
+      border-radius: 10px;
+      width: 100%;
+    }
+
+    .clean-slider-row.visible {
+      display: flex;
+    }
+
+    .clean-slider-label {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--primary);
       white-space: nowrap;
     }
 
-    .active-slider-bar input[type="range"] {
+    .clean-slider-row input[type="range"] {
       flex: 1;
+      min-width: 0;
       accent-color: var(--primary);
-      height: 7px;
+      height: 6px;
       cursor: pointer;
     }
 
-    .active-slider-val {
-      font-size: 0.75rem;
+    .clean-slider-val {
+      font-size: 0.74rem;
       font-weight: 800;
       color: var(--primary);
-      min-width: 36px;
+      min-width: 34px;
       text-align: right;
       font-variant-numeric: tabular-nums;
     }
 
-    /* Crop Action Grid */
-    .crop-action-row {
+    /* 3-Column Action Grid (Guaranteed Zero Overflow) */
+    .grid-3 {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 5px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+      width: 100%;
     }
 
-    /* Pages & Export Row */
-    .pages-strip-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      padding: 1px 0;
-    }
-    .pages-strip-row::-webkit-scrollbar {
-      display: none;
-    }
-
-    .page-chip-card {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 7px;
-      border-radius: 7px;
-      border: 1px solid var(--border);
-      background: var(--surface-alt);
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
-    .page-chip-card.active {
-      border: 2px solid var(--primary);
-      background: var(--primary-light);
-    }
-
-    .page-chip-thumb {
-      width: 24px;
-      height: 32px;
-      border-radius: 3px;
-      border: 1px solid #cbd5e1;
-      background: #fff;
-      object-fit: contain;
-    }
-
-    .page-chip-title {
-      font-size: 0.72rem;
-      font-weight: 700;
-      max-width: 82px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .export-Primary-row {
+    .grid-2-confirm {
       display: grid;
-      grid-template-columns: 1fr 1fr auto;
-      gap: 6px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      gap: 7px;
+      width: 100%;
     }
 
     /* Modals */
@@ -592,7 +411,7 @@
       align-items: center;
       justify-content: center;
       z-index: 100;
-      padding: 8px;
+      padding: 10px;
     }
 
     .modal-backdrop.open {
@@ -601,10 +420,10 @@
 
     .modal-card {
       background: #ffffff;
-      border-radius: 12px;
-      max-width: 640px;
+      border-radius: 16px;
+      max-width: 560px;
       width: 100%;
-      max-height: 95dvh;
+      max-height: 94dvh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -612,33 +431,33 @@
     }
 
     .modal-header {
-      padding: 10px 14px;
+      padding: 12px 14px;
       background: var(--primary);
       color: #ffffff;
-      font-weight: 700;
-      font-size: 0.88rem;
+      font-weight: 800;
+      font-size: 0.9rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
     .modal-body {
-      padding: 10px;
+      padding: 12px;
       overflow-y: auto;
       font-size: 0.82rem;
       display: flex;
       flex-direction: column;
-      gap: 9px;
+      gap: 10px;
     }
 
     .camera-video-wrap {
       position: relative;
       background: #090d16;
-      border-radius: 8px;
+      border-radius: 12px;
       overflow: hidden;
       width: 100%;
-      height: 68dvh;
-      max-height: 600px;
+      height: 66dvh;
+      max-height: 560px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -665,68 +484,69 @@
       bottom: 10px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.82);
+      background: rgba(10, 70, 125, 0.88);
       padding: 3px 7px;
       border-radius: 999px;
       display: flex;
       align-items: center;
       gap: 5px;
-      border: 1px solid rgba(255,255,255,0.22);
+      border: 1px solid rgba(255,255,255,0.4);
       z-index: 10;
     }
 
     .zoom-pill {
       background: transparent;
-      color: #e2e8f0;
+      color: #ffffff;
       border: none;
-      font-size: 0.73rem;
-      font-weight: 700;
-      padding: 4px 9px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      padding: 4px 10px;
       border-radius: 999px;
       cursor: pointer;
     }
 
     .zoom-pill.active {
-      background: #38bdf8;
-      color: #082f49;
+      background: #ffffff;
+      color: var(--primary);
     }
 
     .export-grid-modal {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
     }
 
     .export-grid-modal label {
       font-size: 0.74rem;
       font-weight: 700;
-      color: var(--text-muted);
+      color: var(--primary);
       display: block;
       margin-bottom: 3px;
     }
 
     .export-grid-modal select, .export-grid-modal input {
       width: 100%;
-      padding: 7px 9px;
-      border-radius: 7px;
-      border: 1px solid var(--border);
+      padding: 8px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
       font-size: 0.8rem;
       font-weight: 600;
+      color: var(--text);
     }
 
     .toast-box {
       position: fixed;
-      top: 54px;
+      top: 58px;
       left: 16px;
       right: 16px;
-      max-width: 360px;
+      max-width: 320px;
       margin: 0 auto;
-      background: rgba(7, 50, 89, 0.96);
+      background: var(--primary);
       color: #ffffff;
       padding: 8px 14px;
       border-radius: 999px;
       font-size: 0.78rem;
-      font-weight: 600;
+      font-weight: 700;
       text-align: center;
       box-shadow: 0 6px 18px rgba(0,0,0,0.35);
       opacity: 0;
@@ -744,145 +564,96 @@
 </head>
 <body>
   <div class="app-shell">
-    <!-- 1. COMPACT TOP HEADER -->
+    <!-- 1. MODERN MINIMALIST HEADER -->
     <header class="app-header">
       <div class="brand-group">
         <div class="brand-logo" aria-hidden="true">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
             <path d="M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3"/>
             <rect x="7" y="7" width="10" height="10" rx="1.5"/>
           </svg>
         </div>
-        <div class="brand-title">
-          DocScan
-          <span class="badge-pro">v8.0</span>
-        </div>
+        <span class="brand-title">ScanhoahocABC</span>
       </div>
 
       <div class="header-actions">
         <input type="file" id="fileInput" accept="image/*" multiple style="display:none" />
-        <button type="button" class="btn btn-light" id="btnOpenCamera">
-          📸 Camera
+        <button type="button" class="btn btn-hdr-main" id="btnOpenCamera">
+          📸 Chụp ảnh
         </button>
-        <button type="button" class="btn btn-light" id="btnTriggerUpload">
+        <button type="button" class="btn btn-hdr-sec" id="btnTriggerUpload">
           📁 Chọn ảnh
-        </button>
-        <button type="button" class="btn btn-light" id="btnOpenGuide" title="Hướng dẫn">
-          ❓
         </button>
       </div>
     </header>
 
-    <!-- 2. UNOBSTRUCTED INTERACTIVE DOCUMENT STAGE -->
+    <!-- 2. DOCUMENT STAGE VIEWPORT -->
     <main class="workspace">
       <section class="stage-panel" id="panelStage" aria-label="Khung tài liệu">
-        <div class="stage-container" id="stageContainer">
-          <div class="canvas-wrapper" id="canvasWrapper">
-            <canvas id="mainCanvas" width="800" height="1130"></canvas>
-          </div>
-          <div class="magnifier-loupe" id="magnifierLoupe">
-            <canvas id="loupeCanvas" width="122" height="122"></canvas>
-            <div class="magnifier-label" id="loupeLabel">Góc TL</div>
-          </div>
+        <div class="stage-top-bar">
+          <button type="button" class="stage-pill" id="btnOpenExportModal">
+            ⚙️ Mẫu thử &amp; Tùy chọn (<span id="pageCountText">1</span>)
+          </button>
+          <button type="button" class="stage-pill" id="btnZoomReset" style="display:none;">
+            100%
+          </button>
         </div>
 
-        <!-- Floating Bottom Bar: Hold-to-Compare Original + Zoom Controls -->
-        <div class="stage-floating-bar">
-          <button type="button" class="hold-compare-btn" id="btnHoldCompare">
-            👁 Giữ xem gốc
-          </button>
-
-          <div class="zoom-control-pill" aria-label="Thu phóng">
-            <button type="button" class="zoom-icon-btn" id="btnZoomOut" title="Thu nhỏ">−</button>
-            <button type="button" class="zoom-pct-btn" id="btnZoomReset" title="Đặt lại 100%">100%</button>
-            <button type="button" class="zoom-icon-btn" id="btnZoomIn" title="Phóng to">+</button>
+        <div class="stage-container" id="stageContainer">
+          <div class="canvas-wrapper" id="canvasWrapper">
+            <canvas id="mainCanvas" width="800" height="1131"></canvas>
+          </div>
+          <div class="magnifier-loupe" id="magnifierLoupe">
+            <canvas id="loupeCanvas" width="118" height="118"></canvas>
+            <div class="magnifier-label" id="loupeLabel">Góc TL</div>
           </div>
         </div>
       </section>
 
-      <!-- 3. ERGONOMIC BOTTOM THUMB DOCK (3-STEP WORKFLOW, ZERO PAGE SCROLL) -->
-      <section class="bottom-dock" id="panelControls" aria-label="Bảng điều khiển">
+      <!-- 3. SLEEK MODERN BOTTOM BAR (2 Rows Only, Zero Overflow) -->
+      <section class="bottom-dock" id="panelControls" aria-label="Điều khiển">
 
-        <!-- 3-Step Segmented Bar Right Under the Thumb -->
-        <div class="step-switcher" role="tablist">
-          <button type="button" class="step-tab" id="tabStepCrop" role="tab">
-            📐 1. Cắt góc
-          </button>
-          <button type="button" class="step-tab active" id="tabStepColor" role="tab">
-            ✨ 2. Làm sạch
-          </button>
-          <button type="button" class="step-tab" id="tabStepExport" role="tab">
-            ⬇ 3. Lưu (<span id="pageCountText">1</span>)
-          </button>
-        </div>
-
-        <!-- PANE 1: CẮT GÓC & XOAY (4-CORNER ADJUSTMENT) -->
-        <div class="dock-pane" id="paneCrop">
-          <div class="crop-action-row">
-            <button type="button" class="btn btn-outline" id="btnAutoDetectCorners">🎯 Tự bắt</button>
-            <button type="button" class="btn btn-outline" id="btnFullFrameCorners">⛶ Đầy khung</button>
-            <button type="button" class="btn btn-outline" id="btnRotateLeft">↺ Trái</button>
-            <button type="button" class="btn btn-outline" id="btnRotateRight">↻ Phải</button>
-            <button type="button" class="btn btn-outline" id="btnSplitTwoPagesOptional">✂ Tách 2</button>
-          </div>
-          <button type="button" class="btn btn-primary" id="btnApplyCropNow" style="width:100%; padding:9px;">
-            ✓ Cắt lấy vùng chọn →
-          </button>
-        </div>
-
-        <!-- PANE 2: LÀM SẠCH NỀN & CHẾ ĐỘ MÀU (60 FPS CACHED ENGINE) -->
-        <div class="dock-pane active" id="paneColor">
-          <div class="chip-ribbon" id="colorPresetGrid">
-            <button type="button" class="filter-chip active" data-mode="magic_color">✨ Rõ nét</button>
-            <button type="button" class="filter-chip" data-mode="bw_sauvola">📄 Đen trắng</button>
-            <button type="button" class="filter-chip" data-mode="faint_boost">✏️ Chữ mờ</button>
-            <button type="button" class="filter-chip" data-mode="true_color">📷 Tự nhiên</button>
-            <button type="button" class="filter-chip" data-mode="grayscale">🪨 Xám</button>
-            <button type="button" class="filter-chip" data-mode="original">🖼 Gốc</button>
-            <button type="button" class="filter-chip alpha-chip" id="btnToggleAlpha">🔲 Tách nền</button>
+        <!-- PANE A: MAIN RESULT VIEW (Default Active, Starts on "Ảnh gốc") -->
+        <div class="dock-pane active" id="paneResult">
+          <!-- Row 1: 4 Mode Pills (Starts on "Ảnh gốc" per Requirement #4!) -->
+          <div class="mode-segmented-4" id="colorPresetGrid" role="tablist">
+            <button type="button" class="mode-pill active" data-mode="original">Ảnh gốc</button>
+            <button type="button" class="mode-pill" data-mode="magic_color">Tài liệu màu</button>
+            <button type="button" class="mode-pill" data-mode="bw_sauvola">Đen trắng</button>
+            <button type="button" class="mode-pill" data-mode="faint_boost">Rõ chữ mờ</button>
           </div>
 
-          <div class="param-control-row">
-            <div class="param-pill-bar" id="paramPillBar">
-              <button type="button" class="param-pill active" data-param="bgSuppress" data-label="Làm sạch nền" data-min="0" data-max="100" data-suffix="%">
-                Sạch nền <b id="valBgSuppress">68%</b>
-              </button>
-              <button type="button" class="param-pill" data-param="contrast" data-label="Độ đậm chữ" data-min="0" data-max="100" data-suffix="%">
-                Đậm chữ <b id="valContrast">55%</b>
-              </button>
-              <button type="button" class="param-pill" data-param="shadowRemoval" data-label="Khử bóng" data-min="0" data-max="100" data-suffix="%">
-                Khử bóng <b id="valShadow">100%</b>
-              </button>
-            </div>
-            <button type="button" class="btn btn-outline" id="btnResetFilters" style="padding:5px 8px; font-size:0.71rem;">Mặc định</button>
-          </div>
-
-          <div class="active-slider-bar">
-            <span class="active-slider-name" id="activeSliderName">Làm sạch nền</span>
+          <!-- Optional Clean Intensity Slider (Shown only when an enhancement mode is selected) -->
+          <div class="clean-slider-row" id="cleanSliderRow">
+            <span class="clean-slider-label">Làm sạch nền</span>
             <input type="range" id="activeParamSlider" min="0" max="100" value="68" />
-            <span class="active-slider-val" id="activeSliderVal">68%</span>
-          </div>
-        </div>
-
-        <!-- PANE 3: LƯU NHANH & DANH SÁCH TRANG / MẪU THỬ -->
-        <div class="dock-pane" id="paneExport">
-          <div class="pages-strip-row">
-            <button type="button" class="filter-chip active" id="btnSampleWhiteOnWhite" style="padding:5px 8px; font-size:0.71rem;">Mẫu: Nền trắng</button>
-            <button type="button" class="filter-chip" id="btnSampleWoodA4" style="padding:5px 8px; font-size:0.71rem;">Mẫu: Bàn gỗ</button>
-            <button type="button" class="filter-chip" id="btnSampleBleed" style="padding:5px 8px; font-size:0.71rem;">Mẫu: Bóng đổ nặng</button>
-            <div id="pageListContainer" style="display:inline-flex; gap:5px;"></div>
+            <span class="clean-slider-val" id="activeSliderVal">68%</span>
           </div>
 
-          <div class="export-Primary-row">
-            <button type="button" class="btn btn-success" id="btnQuickPdf" style="padding:9px;">
+          <!-- Row 2: 3 Primary Synchronized Actions -->
+          <div class="grid-3">
+            <button type="button" class="btn btn-sec" id="btnEnterCrop">
+              📐 Cắt &amp; Xoay
+            </button>
+            <button type="button" class="btn btn-main" id="btnQuickJpg">
+              🖼 Lưu Ảnh
+            </button>
+            <button type="button" class="btn btn-main" id="btnQuickPdf">
               📄 Lưu PDF
             </button>
-            <button type="button" class="btn btn-primary" id="btnQuickJpg" style="padding:9px;">
-              🖼 Lưu Ảnh JPG
-            </button>
-            <button type="button" class="btn btn-outline" id="btnOpenExportModal" style="padding:9px;">
-              ⚙️ Tùy chọn
-            </button>
+          </div>
+        </div>
+
+        <!-- PANE B: CROP & ROTATE VIEW (3 Tools + Confirm, Zero Overflow) -->
+        <div class="dock-pane" id="paneCrop">
+          <div class="grid-3">
+            <button type="button" class="btn btn-sec" id="btnAutoDetectCorners">Tự bắt góc</button>
+            <button type="button" class="btn btn-sec" id="btnFullFrameCorners">Đầy khung</button>
+            <button type="button" class="btn btn-sec" id="btnRotateRight">Xoay 90°</button>
+          </div>
+          <div class="grid-2-confirm">
+            <button type="button" class="btn btn-sec" id="btnCancelCrop">Hủy</button>
+            <button type="button" class="btn btn-main" id="btnApplyCropNow">✓ Áp dụng cắt</button>
           </div>
         </div>
 
@@ -890,12 +661,12 @@
     </main>
   </div>
 
-  <!-- WIDE-ANGLE PORTRAIT A4 CAMERA MODAL -->
+  <!-- REAR-CAMERA-ONLY MODAL (No Redundant Camera Switch Button!) -->
   <div class="modal-backdrop" id="cameraModal" role="dialog" aria-modal="true" aria-labelledby="cameraModalTitle">
     <div class="modal-card">
       <div class="modal-header">
-        <span id="cameraModalTitle">Camera Quét A4 (Góc Rộng 4:3)</span>
-        <button type="button" class="btn btn-light" id="btnCloseCamera">Đóng ✕</button>
+        <span id="cameraModalTitle">Chụp Tài Liệu</span>
+        <button type="button" class="btn btn-hdr-sec" id="btnCloseCamera">Đóng ✕</button>
       </div>
       <div class="modal-body">
         <div class="camera-video-wrap" id="cameraVideoWrap">
@@ -907,106 +678,72 @@
             <button type="button" class="zoom-pill" data-zoom="1.5" id="btnZoom15x">1.5x</button>
           </div>
         </div>
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
-          <select id="cameraDeviceSelect" style="width:auto; flex:1; padding:7px; border-radius:7px; border:1px solid var(--border); font-size:0.78rem;">
-            <option value="environment">Camera sau (4:3)</option>
-            <option value="user">Camera trước</option>
-          </select>
-          <button type="button" class="btn btn-outline" id="btnSwitchCamera">Đổi cam</button>
-          <button type="button" class="btn btn-primary" id="btnCapturePhoto" style="flex:1.2; padding:9px;">
-            📸 Chụp &amp; Cắt
-          </button>
-        </div>
+        <button type="button" class="btn btn-main" id="btnCapturePhoto" style="width:100%; height:42px; font-size:0.88rem;">
+          📸 Chụp tài liệu
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- ADVANCED EXPORT OPTIONS MODAL (PNG, WEBP, TIFF, SVG, DPI, QUALITY) -->
+  <!-- SAMPLES & ADVANCED EXPORT MODAL -->
   <div class="modal-backdrop" id="exportModal" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
     <div class="modal-card">
       <div class="modal-header">
-        <span id="exportModalTitle">Tùy Chọn Xuất File Nâng Cao</span>
-        <button type="button" class="btn btn-light" id="btnCloseExportModal">Đóng ✕</button>
+        <span id="exportModalTitle">Mẫu Kiểm Thử &amp; Tùy Chọn Xuất File</span>
+        <button type="button" class="btn btn-hdr-sec" id="btnCloseExportModal">Đóng ✕</button>
       </div>
       <div class="modal-body">
+        <div style="font-size:0.76rem; font-weight:700; color:var(--primary);">Mẫu thử nhận diện góc thông minh:</div>
+        <div class="grid-3">
+          <button type="button" class="btn btn-sec active" id="btnSampleTwoTone">Nửa trắng / màu</button>
+          <button type="button" class="btn btn-sec" id="btnSampleTiltedCurved">Nghiêng &amp; Cong</button>
+          <button type="button" class="btn btn-sec" id="btnSampleWhiteOnWhite">Trắng đè trắng</button>
+        </div>
+
+        <div id="pageListContainer" style="display:flex; gap:6px; overflow-x:auto; padding:2px 0;"></div>
+
         <div class="export-grid-modal">
           <div>
-            <label for="exportFormat">Định dạng tệp</label>
+            <label for="exportFormat">Định dạng</label>
             <select id="exportFormat">
-              <option value="pdf">PDF Tài liệu (.pdf)</option>
-              <option value="jpeg" selected>Ảnh JPEG (.jpg)</option>
-              <option value="png">Ảnh PNG (.png)</option>
-              <option value="webp">Ảnh WebP (.webp)</option>
-              <option value="tiff">Ảnh TIFF In ấn (.tif)</option>
-              <option value="svg">Ảnh SVG (.svg)</option>
+              <option value="pdf">PDF (.pdf)</option>
+              <option value="jpeg" selected>JPEG (.jpg)</option>
+              <option value="png">PNG (.png)</option>
+              <option value="webp">WebP (.webp)</option>
+              <option value="tiff">TIFF (.tif)</option>
+              <option value="svg">SVG (.svg)</option>
             </select>
           </div>
           <div>
             <label for="exportPaperSize">Khổ giấy</label>
             <select id="exportPaperSize">
-              <option value="auto">Tự động theo trang</option>
-              <option value="a4_portrait">Chuẩn A4 Dọc</option>
-              <option value="a4_landscape">Chuẩn A4 Ngang</option>
-              <option value="letter">Chuẩn Letter</option>
-              <option value="a5">Chuẩn A5</option>
+              <option value="auto">Chuẩn A4 (Tự động 3D)</option>
+              <option value="a4_portrait">A4 Dọc</option>
+              <option value="a4_landscape">A4 Ngang</option>
+              <option value="letter">Letter</option>
+              <option value="a5">A5</option>
             </select>
           </div>
           <div>
-            <label for="exportScale">Độ phân giải (DPI)</label>
+            <label for="exportScale">Độ nét (DPI)</label>
             <select id="exportScale">
-              <option value="0.75">150 DPI (Nhẹ)</option>
-              <option value="1" selected>200 DPI (Chuẩn)</option>
-              <option value="1.5">300 DPI (In rõ)</option>
-              <option value="2">600 DPI (Siêu nét)</option>
+              <option value="0.75">150 DPI</option>
+              <option value="1" selected>200 DPI</option>
+              <option value="1.5">300 DPI</option>
+              <option value="2">600 DPI</option>
             </select>
           </div>
           <div>
             <label for="exportFilename">Tên tệp</label>
-            <input type="text" id="exportFilename" value="Tai_Lieu_Scan" />
+            <input type="text" id="exportFilename" value="ScanhoahocABC" />
           </div>
         </div>
 
-        <div class="active-slider-bar">
-          <span class="active-slider-name">Chất lượng nén</span>
-          <input type="range" id="sliderQuality" min="20" max="100" value="94" />
-          <span class="active-slider-val" id="valQuality">94%</span>
+        <div class="grid-3">
+          <button type="button" class="btn btn-sec" id="btnToggleAlpha">Tách nền Alpha</button>
+          <button type="button" class="btn btn-sec" id="btnSplitTwoPagesOptional">Tách 2 trang</button>
+          <button type="button" class="btn btn-main" id="btnDownloadCurrent">⬇ Tải file</button>
         </div>
-
-        <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:var(--primary-dark); background:var(--primary-light); padding:7px 10px; border-radius:7px;">
-          <span>Kích thước: <b id="exportDimText">-- × -- px</b></span>
-          <span>Ước tính: <b id="exportSizeText">~180 KB</b></span>
-        </div>
-
-        <div style="display:flex; gap:6px;">
-          <button type="button" class="btn btn-primary" id="btnDownloadCurrent" style="flex:1; padding:9px;">
-            ⬇ Tải trang hiện tại
-          </button>
-          <button type="button" class="btn btn-success" id="btnDownloadAllPdf" style="flex:1; padding:9px;">
-            📑 Xuất PDF tất cả trang
-          </button>
-        </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:4px; border-top:1px solid var(--border);">
-          <button type="button" class="btn btn-outline" id="btnApplyFiltersAll" style="font-size:0.74rem;">Đồng bộ lọc cho mọi trang</button>
-          <button type="button" class="btn btn-danger" id="btnClearPages" style="font-size:0.74rem;">Xóa &amp; Làm mới</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- COMPACT GUIDE MODAL -->
-  <div class="modal-backdrop" id="guideModal" role="dialog" aria-modal="true" aria-labelledby="guideModalTitle">
-    <div class="modal-card">
-      <div class="modal-header">
-        <span id="guideModalTitle">Điểm Mới Trên DocScan Pro v8.0</span>
-        <button type="button" class="btn btn-light" id="btnCloseGuide">Đóng ✕</button>
-      </div>
-      <div class="modal-body">
-        <ol style="padding-left:18px; display:flex; flex-direction:column; gap:6px; line-height:1.45;">
-          <li><strong>Triệt sạch hoàn toàn quầng xám quanh chữ:</strong> Thuật toán đóng hình thái học mịn (Fine-Scale Closing) kết hợp triệt halo tương đối (Relative Halo Suppression) làm trắng sạch <code>100%</code> vùng giấy sát chân chữ về mức trắng tinh <code>#FFFFFF</code> mà không làm mất chữ chì mờ.</li>
-          <li><strong>Chế độ Đen Trắng Sauvola không còn vết loang đen:</strong> Chuẩn hóa ánh sáng phản xạ thực trước khi tính ngưỡng thích nghi cục bộ Sauvola <code>31×31</code>, triệt tiêu hoàn toàn hiện tượng vùng bóng đổ bị biến thành vết loang màu đen.</li>
-          <li><strong>Mượt 60 FPS &amp; Cảm ứng thông minh trên điện thoại:</strong> Bộ nhớ đệm ánh sáng giúp kéo thanh trượt phản hồi tức thì (<code>&lt; 6ms</code>). Hỗ trợ chụm 2 ngón phóng to/thu nhỏ không bị xung đột với thao tác kéo góc, giữ nút <strong>👁 Giữ xem gốc</strong> để so sánh Trước/Sau tức thì.</li>
-        </ol>
       </div>
     </div>
   </div>
@@ -1019,15 +756,15 @@
       "use strict";
 
       // =========================================================================
-      // 1. APPLICATION STATE (v8.0 60FPS CACHED FILTER & CONFLICT-FREE TOUCH)
+      // 1. APPLICATION STATE (v10.0 — STARTS ON ORIGINAL IMAGE, MULTI-COLOR DETECTOR)
       // =========================================================================
       const state = {
         pages: [],
         currentPageIndex: 0,
         viewMode: "result", // 'result' | 'crop'
-        holdingCompare: false,
         draggingHandle: null,
         preTouchCorners: null,
+        preTouchMidOffsets: null,
         pinchState: null,
         pinchCooldownUntil: 0,
         stageZoom: 1.0,
@@ -1036,14 +773,12 @@
         lastTapTime: 0,
         lastTapX: 0,
         lastTapY: 0,
-        activeParamKey: "bgSuppress",
         sliderRafId: null,
         cameraStream: null,
         cameraAnimId: null,
         lastCameraCorners: null,
-        activeStep: "color", // 'crop' | 'color' | 'export'
         defaultSettings: {
-          colorMode: "magic_color",
+          colorMode: "original", // REQUIREMENT #4: Initially display original image ("Ảnh gốc")!
           bgSuppress: 68,
           contrast: 55,
           shadowRemoval: 100,
@@ -1052,36 +787,22 @@
         }
       };
 
-      const PARAM_META = {
-        bgSuppress:    { label: "Làm sạch nền", min: 0, max: 100, suffix: "%" },
-        contrast:      { label: "Độ đậm chữ", min: 0, max: 100, suffix: "%" },
-        shadowRemoval: { label: "Khử bóng", min: 0, max: 100, suffix: "%" }
-      };
-
       const el = {
         fileInput: document.getElementById("fileInput"),
         btnTriggerUpload: document.getElementById("btnTriggerUpload"),
         btnOpenCamera: document.getElementById("btnOpenCamera"),
-        btnOpenGuide: document.getElementById("btnOpenGuide"),
+        btnSampleTwoTone: document.getElementById("btnSampleTwoTone"),
+        btnSampleTiltedCurved: document.getElementById("btnSampleTiltedCurved"),
         btnSampleWhiteOnWhite: document.getElementById("btnSampleWhiteOnWhite"),
-        btnSampleWoodA4: document.getElementById("btnSampleWoodA4"),
-        btnSampleBleed: document.getElementById("btnSampleBleed"),
-        btnClearPages: document.getElementById("btnClearPages"),
         pageListContainer: document.getElementById("pageListContainer"),
         pageCountText: document.getElementById("pageCountText"),
-        tabStepCrop: document.getElementById("tabStepCrop"),
-        tabStepColor: document.getElementById("tabStepColor"),
-        tabStepExport: document.getElementById("tabStepExport"),
+        paneResult: document.getElementById("paneResult"),
         paneCrop: document.getElementById("paneCrop"),
-        paneColor: document.getElementById("paneColor"),
-        paneExport: document.getElementById("paneExport"),
-        btnHoldCompare: document.getElementById("btnHoldCompare"),
-        btnZoomIn: document.getElementById("btnZoomIn"),
-        btnZoomOut: document.getElementById("btnZoomOut"),
+        btnEnterCrop: document.getElementById("btnEnterCrop"),
+        btnCancelCrop: document.getElementById("btnCancelCrop"),
         btnZoomReset: document.getElementById("btnZoomReset"),
         btnAutoDetectCorners: document.getElementById("btnAutoDetectCorners"),
         btnFullFrameCorners: document.getElementById("btnFullFrameCorners"),
-        btnRotateLeft: document.getElementById("btnRotateLeft"),
         btnRotateRight: document.getElementById("btnRotateRight"),
         btnApplyCropNow: document.getElementById("btnApplyCropNow"),
         btnSplitTwoPagesOptional: document.getElementById("btnSplitTwoPagesOptional"),
@@ -1092,16 +813,10 @@
         loupeCanvas: document.getElementById("loupeCanvas"),
         loupeLabel: document.getElementById("loupeLabel"),
         colorPresetGrid: document.getElementById("colorPresetGrid"),
-        btnToggleAlpha: document.getElementById("btnToggleAlpha"),
-        paramPillBar: document.getElementById("paramPillBar"),
-        activeSliderName: document.getElementById("activeSliderName"),
+        cleanSliderRow: document.getElementById("cleanSliderRow"),
         activeParamSlider: document.getElementById("activeParamSlider"),
         activeSliderVal: document.getElementById("activeSliderVal"),
-        valBgSuppress: document.getElementById("valBgSuppress"),
-        valContrast: document.getElementById("valContrast"),
-        valShadow: document.getElementById("valShadow"),
-        btnResetFilters: document.getElementById("btnResetFilters"),
-        btnApplyFiltersAll: document.getElementById("btnApplyFiltersAll"),
+        btnToggleAlpha: document.getElementById("btnToggleAlpha"),
         btnQuickPdf: document.getElementById("btnQuickPdf"),
         btnQuickJpg: document.getElementById("btnQuickJpg"),
         btnOpenExportModal: document.getElementById("btnOpenExportModal"),
@@ -1111,25 +826,16 @@
         exportPaperSize: document.getElementById("exportPaperSize"),
         exportScale: document.getElementById("exportScale"),
         exportFilename: document.getElementById("exportFilename"),
-        sliderQuality: document.getElementById("sliderQuality"),
-        valQuality: document.getElementById("valQuality"),
-        exportDimText: document.getElementById("exportDimText"),
-        exportSizeText: document.getElementById("exportSizeText"),
         btnDownloadCurrent: document.getElementById("btnDownloadCurrent"),
-        btnDownloadAllPdf: document.getElementById("btnDownloadAllPdf"),
         cameraModal: document.getElementById("cameraModal"),
         cameraVideoWrap: document.getElementById("cameraVideoWrap"),
         btnCloseCamera: document.getElementById("btnCloseCamera"),
         cameraVideo: document.getElementById("cameraVideo"),
         cameraOverlay: document.getElementById("cameraOverlay"),
-        cameraDeviceSelect: document.getElementById("cameraDeviceSelect"),
-        btnSwitchCamera: document.getElementById("btnSwitchCamera"),
         btnCapturePhoto: document.getElementById("btnCapturePhoto"),
         btnZoomMin: document.getElementById("btnZoomMin"),
         btnZoom1x: document.getElementById("btnZoom1x"),
         btnZoom15x: document.getElementById("btnZoom15x"),
-        guideModal: document.getElementById("guideModal"),
-        btnCloseGuide: document.getElementById("btnCloseGuide"),
         toastBox: document.getElementById("toastBox")
       };
 
@@ -1171,7 +877,9 @@
       function applyStageTransform() {
         clampStagePan();
         el.canvasWrapper.style.transform = `translate3d(${state.stagePanX.toFixed(1)}px, ${state.stagePanY.toFixed(1)}px, 0) scale(${state.stageZoom.toFixed(3)})`;
-        el.btnZoomReset.textContent = `${Math.round(state.stageZoom * 100)}%`;
+        const pct = Math.round(state.stageZoom * 100);
+        el.btnZoomReset.textContent = `${pct}% ✕`;
+        el.btnZoomReset.style.display = pct === 100 ? "none" : "inline-block";
       }
 
       function resetStageZoom() {
@@ -1181,44 +889,21 @@
         applyStageTransform();
       }
 
-      function setStageZoomByFactor(factor) {
-        state.stageZoom = Math.max(0.8, Math.min(5.0, state.stageZoom * factor));
-        applyStageTransform();
-      }
-
-      function switchStep(stepName) {
-        state.activeStep = stepName;
-        [el.tabStepCrop, el.tabStepColor, el.tabStepExport].forEach((b) => b.classList.remove("active"));
-        [el.paneCrop, el.paneColor, el.paneExport].forEach((p) => p.classList.remove("active"));
-
-        if (stepName === "crop") {
-          el.tabStepCrop.classList.add("active");
+      function setViewMode(mode) {
+        state.viewMode = mode;
+        resetStageZoom();
+        if (mode === "crop") {
+          el.paneResult.classList.remove("active");
           el.paneCrop.classList.add("active");
-          state.viewMode = "crop";
-          el.btnHoldCompare.style.display = "none";
-          resetStageZoom();
-        } else if (stepName === "color") {
-          el.tabStepColor.classList.add("active");
-          el.paneColor.classList.add("active");
-          if (state.viewMode === "crop") {
-            state.viewMode = "result";
-            resetStageZoom();
-          }
-          el.btnHoldCompare.style.display = "inline-flex";
-        } else if (stepName === "export") {
-          el.tabStepExport.classList.add("active");
-          el.paneExport.classList.add("active");
-          if (state.viewMode === "crop") {
-            state.viewMode = "result";
-            resetStageZoom();
-          }
-          el.btnHoldCompare.style.display = "inline-flex";
+        } else {
+          el.paneCrop.classList.remove("active");
+          el.paneResult.classList.add("active");
         }
         renderStage();
       }
 
       // =========================================================================
-      // 3. REALISTIC TEST SAMPLES (WHITE-ON-WHITE, WOOD DESK & HEAVY SHADOW)
+      // 3. REALISTIC TEST SAMPLES (INCLUDING HALF-WHITE / HALF-COLOR DOCUMENT!)
       // =========================================================================
       function drawWoodDeskBackground(ctx, w, h, c1, c2) {
         const img = ctx.createImageData(w, h);
@@ -1237,25 +922,34 @@
         ctx.putImageData(img, 0, 0);
       }
 
-      function buildExamSheetCanvas(bgColor) {
+      function buildExamSheetCanvas(bgColor, isTwoTone) {
         const docW = 800;
-        const docH = 1130;
+        const docH = 1131;
         const docCanvas = document.createElement("canvas");
         docCanvas.width = docW;
         docCanvas.height = docH;
         const dctx = docCanvas.getContext("2d");
 
-        dctx.fillStyle = bgColor || "#f7f6f2";
+        // Top half: White paper
+        dctx.fillStyle = bgColor || "#f8f7f3";
         dctx.fillRect(0, 0, docW, docH);
+
+        // If isTwoTone: Bottom half of the document has a distinct colored background (e.g. blue/teal panel)!
+        if (isTwoTone) {
+          dctx.fillStyle = "#dbeafe";
+          dctx.fillRect(0, Math.floor(docH * 0.50), docW, docH - Math.floor(docH * 0.50));
+          dctx.fillStyle = "#0a467d";
+          dctx.fillRect(0, Math.floor(docH * 0.50), docW, 6);
+        }
 
         dctx.fillStyle = "#0a467d";
         dctx.font = "bold 19px Arial";
-        dctx.fillText("TRƯỜNG THPT HAI BÀ TRƯNG - TỔ HÓA - SINH - CNNN", 55, 65);
+        dctx.fillText("TRƯỜNG THPT ABC - TỔ HÓA - SINH - CNNN", 55, 65);
         dctx.fillStyle = "#0f172a";
         dctx.font = "bold 24px Arial";
         dctx.fillText("ĐỀ KIỂM TRA CHUYÊN ĐỀ ESTE – LIPIT (MÃ ĐỀ 104)", 55, 105);
         dctx.strokeStyle = "#0a467d";
-        dctx.lineWidth = 2.2;
+        dctx.lineWidth = 2.4;
         dctx.beginPath();
         dctx.moveTo(55, 122);
         dctx.lineTo(745, 122);
@@ -1280,29 +974,27 @@
           dctx.fillText(line, 55, 165 + idx * 34);
         });
 
-        dctx.strokeStyle = "#475569";
-        dctx.lineWidth = 1.6;
-        dctx.strokeRect(55, 565, 690, 175);
-        dctx.fillStyle = "#0369a1";
+        dctx.strokeStyle = "#0a467d";
+        dctx.lineWidth = 2.0;
+        dctx.strokeRect(55, 600, 690, 175);
+        dctx.fillStyle = "#073259";
         dctx.font = "bold 17px Arial";
-        dctx.fillText("Hướng dẫn giải nhanh & Ghi chú bút chì:", 75, 598);
-        dctx.fillStyle = "#334155";
+        dctx.fillText("Phần II — Bảng thông số & Ghi chú chuyên đề (Vùng màu khác):", 75, 633);
+        dctx.fillStyle = "#1e293b";
         dctx.font = "16px Arial";
-        dctx.fillText("• Câu 1: Ancol bậc hai là CH3-CH(OH)-CH3 => Chọn đáp án A.", 75, 634);
-        dctx.fillStyle = "#64748b";
-        dctx.font = "italic 16px Arial";
-        dctx.fillText("• Ghi chú chì mờ: Bảo toàn khối lượng m(este) = m(CO2) + m(H2O) - m(O2) = 10,2g.", 75, 670);
-        dctx.fillText("• Câu 3: n(este) = 0,1 mol => n(CH3COONa) = 0,1 mol => m(muối) = 8,2 gam.", 75, 706);
+        dctx.fillText("• Câu 1: Ancol bậc hai là CH3-CH(OH)-CH3 => Chọn đáp án A.", 75, 669);
+        dctx.fillText("• Ghi chú: Bảo toàn khối lượng m(este) = m(CO2) + m(H2O) - m(O2) = 10,2g.", 75, 705);
+        dctx.fillText("• Câu 3: n(este) = 0,1 mol => n(CH3COONa) = 0,1 mol => m(muối) = 8,2 gam.", 75, 741);
 
         dctx.save();
-        dctx.translate(570, 910);
-        dctx.rotate(-0.10);
+        dctx.translate(570, 930);
+        dctx.rotate(-0.08);
         dctx.strokeStyle = "#dc2626";
         dctx.lineWidth = 3.2;
         dctx.strokeRect(-120, -45, 240, 90);
         dctx.fillStyle = "#dc2626";
         dctx.font = "bold 18px Arial";
-        dctx.fillText("NHÓM HÓA HỌC THPT", -98, -10);
+        dctx.fillText("NHÓM HÓA HỌC ABC", -98, -10);
         dctx.font = "bold 15px Arial";
         dctx.fillText("ĐỀ CHUẨN KIỂM TRA 45 PHÚT", -108, 20);
         dctx.restore();
@@ -1314,58 +1006,71 @@
         const c = document.createElement("canvas");
         const ctx = c.getContext("2d");
         c.width = 960;
-        c.height = 1160;
+        c.height = 1140;
 
-        if (type === "white_on_white") {
-          ctx.fillStyle = "#ecece8";
-          ctx.fillRect(0, 0, c.width, c.height);
-
-          const underSheet = buildExamSheetCanvas("#f1f1ed");
-          const underCorners = [
-            { x: 65, y: 115 },
-            { x: 865, y: 65 },
-            { x: 905, y: 1085 },
-            { x: 105, y: 1110 }
-          ];
-          renderWarpedQuadToCanvas(underSheet, c, underCorners, 0, true);
-
-          const topSheet = buildExamSheetCanvas("#f8f8f5");
-          const topCorners = [
-            { x: 155, y: 115 },
-            { x: 815, y: 165 },
-            { x: 755, y: 1015 },
-            { x: 95, y: 965 }
-          ];
-          renderWarpedQuadToCanvas(topSheet, c, topCorners, 0.28, true);
-          return { canvas: c, name: "Giay_Trang_Nen_Trang" };
-        }
-
-        if (type === "wood_a4") {
-          drawWoodDeskBackground(ctx, c.width, c.height, [196, 148, 92], [166, 118, 66]);
-          const topSheet = buildExamSheetCanvas("#f7f5ee");
+        if (type === "two_tone") {
+          // Sample 1: Document with White Top Half and Colored Bottom Half on Wooden Desk!
+          drawWoodDeskBackground(ctx, c.width, c.height, [168, 122, 78], [136, 94, 56]);
+          const topSheet = buildExamSheetCanvas("#f8f8f5", true);
           const dstCorners = [
-            { x: 165, y: 95 },
-            { x: 825, y: 145 },
-            { x: 765, y: 1045 },
-            { x: 85, y: 985 }
+            { x: 155, y: 105 },
+            { x: 815, y: 145 },
+            { x: 765, y: 1025 },
+            { x: 95,  y: 975 }
           ];
-          renderWarpedQuadToCanvas(topSheet, c, dstCorners, 0.44, false);
-          return { canvas: c, name: "A4_Ban_Go" };
+          renderWarpedQuadToCanvas(topSheet, c, dstCorners, 0.28, false, 0);
+          return {
+            canvas: c,
+            name: "Tai_Lieu_Nua_Trang_Nua_Mau"
+          };
         }
 
-        drawWoodDeskBackground(ctx, c.width, c.height, [142, 68, 42], [108, 46, 26]);
-        const topSheet = buildExamSheetCanvas("#efe4c8");
-        const dstCorners = [
-          { x: 145, y: 110 },
-          { x: 790, y: 82 },
-          { x: 855, y: 1025 },
-          { x: 110, y: 1055 }
-        ];
-        renderWarpedQuadToCanvas(topSheet, c, dstCorners, 0.52, false);
-        return { canvas: c, name: "Bong_Do_Nang" };
+        if (type === "tilted_curved") {
+          c.height = 1080;
+          drawWoodDeskBackground(ctx, c.width, c.height, [152, 110, 72], [122, 84, 52]);
+          const topSheet = buildExamSheetCanvas("#f8f7f2", false);
+          const dstCorners = [
+            { x: 245, y: 155 },
+            { x: 715, y: 175 },
+            { x: 885, y: 855 },
+            { x: 75,  y: 830 }
+          ];
+          renderWarpedQuadToCanvas(topSheet, c, dstCorners, 0.32, false, 26.0);
+          return {
+            canvas: c,
+            name: "Tai_Lieu_Nghieng_Cong",
+            presetCorners: dstCorners,
+            presetMidOffsets: [
+              { x: 0, y: -16 },
+              { x: 0, y: 0 },
+              { x: 0, y: -16 },
+              { x: 0, y: 0 }
+            ]
+          };
+        }
+
+        // White on White
+        ctx.fillStyle = "#ecece8";
+        ctx.fillRect(0, 0, c.width, c.height);
+        const underSheet = buildExamSheetCanvas("#f1f1ed", false);
+        renderWarpedQuadToCanvas(underSheet, c, [
+          { x: 65, y: 115 },
+          { x: 865, y: 65 },
+          { x: 905, y: 1065 },
+          { x: 105, y: 1090 }
+        ], 0, true, 0);
+
+        const topSheet = buildExamSheetCanvas("#f8f8f5", false);
+        renderWarpedQuadToCanvas(topSheet, c, [
+          { x: 155, y: 115 },
+          { x: 815, y: 165 },
+          { x: 755, y: 1015 },
+          { x: 95, y: 965 }
+        ], 0.25, true, 0);
+        return { canvas: c, name: "Giay_Trang_Tren_Nen_Trang" };
       }
 
-      function renderWarpedQuadToCanvas(srcCanvas, dstCanvas, corners, shadowStrength, addPaperDropShadow) {
+      function renderWarpedQuadToCanvas(srcCanvas, dstCanvas, corners, shadowStrength, addPaperDropShadow, curlAmp) {
         const sW = srcCanvas.width;
         const sH = srcCanvas.height;
         const dW = dstCanvas.width;
@@ -1399,6 +1104,7 @@
           { x: 0, y: sH }
         ];
         const Hinv = computeHomography(corners, srcPts);
+        const cAmp = curlAmp || 0;
 
         for (let y = 0; y < dH; y++) {
           for (let x = 0; x < dW; x++) {
@@ -1406,7 +1112,12 @@
             const di = (y * dW + x) * 4;
             if (Math.abs(denom) > 1e-8) {
               const sx = (Hinv[0] * x + Hinv[1] * y + Hinv[2]) / denom;
-              const sy = (Hinv[3] * x + Hinv[4] * y + Hinv[5]) / denom;
+              let sy = (Hinv[3] * x + Hinv[4] * y + Hinv[5]) / denom;
+
+              if (cAmp !== 0) {
+                const xn = sx / sW;
+                sy += cAmp * (4.0 * (xn - 0.5) * (xn - 0.5));
+              }
 
               if (sx >= 0 && sx < sW - 1 && sy >= 0 && sy < sH - 1) {
                 const x0 = sx | 0;
@@ -1432,8 +1143,7 @@
 
             if (shadowStrength > 0) {
               const sig = 1.0 / (1.0 + Math.exp(-((x - dW * 0.44) * 0.009 + (y - dH * 0.48) * 0.009)));
-              const blob = 0.22 * Math.exp(-(((x - dW * 0.62) * (x - dW * 0.62)) / 32000 + ((y - dH * 0.68) * (y - dH * 0.68)) / 42000));
-              const shFactor = Math.max(0.38, 1.0 - shadowStrength * sig - blob);
+              const shFactor = Math.max(0.45, 1.0 - shadowStrength * sig);
               dData[di]     = Math.round(dData[di] * shFactor);
               dData[di + 1] = Math.round(dData[di + 1] * shFactor);
               dData[di + 2] = Math.round(dData[di + 2] * shFactor);
@@ -1444,7 +1154,8 @@
       }
 
       // =========================================================================
-      // 4. VERIFIED v6.0 HYBRID 4-CORNER DETECTOR (PRESERVED EXACTLY)
+      // 4. v10.0 INTELLIGENT MULTI-ZONE & OUTER-BORDER HYBRID CORNER DETECTOR
+      //    (Accurately detects Half-White/Half-Color, White-on-White & Wood Desk!)
       // =========================================================================
       function getPercentile(arr, p) {
         if (!arr.length) return 0;
@@ -1578,83 +1289,134 @@
           bn[i] = B / sumRGB;
         }
 
+        // 1. Text-erased surface via morphological closing radius 2
         const L_surf = morphErodeFloat(morphDilateFloat(L, w, h, 2), w, h, 2);
-        const L_env = morphDilateFloat(L_surf, w, h, 4);
-        const L_norm = new Float32Array(nPix);
-        for (let i = 0; i < nPix; i++) {
-          L_norm[i] = Math.min(255, L_surf[i] * (245.0 / Math.max(85.0, L_env[i])));
-        }
+        const rn_surf = morphErodeFloat(morphDilateFloat(rn, w, h, 2), w, h, 2);
+        const gn_surf = morphErodeFloat(morphDilateFloat(gn, w, h, 2), w, h, 2);
+        const bn_surf = morphErodeFloat(morphDilateFloat(bn, w, h, 2), w, h, 2);
 
-        const cy0 = Math.floor(h * 0.32), cy1 = Math.ceil(h * 0.68);
-        const cx0 = Math.floor(w * 0.32), cx1 = Math.ceil(w * 0.68);
-        const cRn = [], cGn = [], cBn = [], cSat = [], cWarm = [];
-        for (let y = cy0; y < cy1; y++) {
-          for (let x = cx0; x < cx1; x++) {
-            const i = y * w + x;
-            if (L_norm[i] >= 218.0) {
-              cRn.push(rn[i]); cGn.push(gn[i]); cBn.push(bn[i]);
-              cSat.push(sat[i]); cWarm.push(warmth[i]);
-            }
-          }
-        }
-        const paperRn = getPercentile(cRn, 0.5);
-        const paperGn = getPercentile(cGn, 0.5);
-        const paperBn = getPercentile(cBn, 0.5);
-        const paperSat = getPercentile(cSat, 0.5);
-        const paperWarmth = getPercentile(cWarm, 0.5);
-
-        const chromaDist = new Float32Array(nPix);
-        for (let i = 0; i < nPix; i++) {
-          const dr = rn[i] - paperRn;
-          const dg = gn[i] - paperGn;
-          const db = bn[i] - paperBn;
-          const ds = sat[i] - paperSat;
-          const dw = warmth[i] - paperWarmth;
-          chromaDist[i] = Math.sqrt(dr * dr + dg * dg + db * db + 0.5 * ds * ds + 0.5 * dw * dw);
-        }
-
+        // 2. Sample OUTER BORDER RING (outer 4% frame) to model the Background / Desk Surface!
         const bd = Math.max(2, Math.floor(Math.min(w, h) * 0.04));
-        const borderChroma = [];
+        const bRn = [], bGn = [], bBn = [], bSat = [], bWarm = [], bL = [];
         for (let y = 0; y < h; y++) {
           for (let x = 0; x < w; x++) {
             if (x < bd || x >= w - bd || y < bd || y >= h - bd) {
-              borderChroma.push(chromaDist[y * w + x]);
+              const i = y * w + x;
+              bRn.push(rn_surf[i]);
+              bGn.push(gn_surf[i]);
+              bBn.push(bn_surf[i]);
+              bSat.push(sat[i]);
+              bWarm.push(warmth[i]);
+              bL.push(L_surf[i]);
             }
           }
         }
-        const borderChromaP75 = getPercentile(borderChroma, 0.75);
+        const bgRn = getPercentile(bRn, 0.5);
+        const bgGn = getPercentile(bGn, 0.5);
+        const bgBn = getPercentile(bBn, 0.5);
+        const bgSat = getPercentile(bSat, 0.5);
+        const bgWarm = getPercentile(bWarm, 0.5);
+        const bgL = getPercentile(bL, 0.5);
 
-        // ENGINE 1: Chromaticity Blob + Max-Area Convex Hull + 4-Line IRLS
-        if (borderChromaP75 > 0.042) {
-          const denom = borderChromaP75 * 0.65;
-          const scoreU8 = new Uint8Array(nPix);
-          const hist = new Int32Array(256);
-          for (let i = 0; i < nPix; i++) {
-            const cScore = Math.max(0.0, 1.0 - chromaDist[i] / denom);
-            const lGuard = Math.min(1.0, L_env[i] / 85.0);
-            const v = Math.min(255, Math.max(0, Math.round(cScore * lGuard * 255)));
-            scoreU8[i] = v;
-            hist[v]++;
+        const distFromBg = new Float32Array(nPix);
+        for (let i = 0; i < nPix; i++) {
+          const dr = rn_surf[i] - bgRn;
+          const dg = gn_surf[i] - bgGn;
+          const db = bn_surf[i] - bgBn;
+          const ds = sat[i] - bgSat;
+          const dw = warmth[i] - bgWarm;
+          const dL = (L_surf[i] - bgL) / 255.0;
+          distFromBg[i] = Math.sqrt(dr * dr + dg * dg + db * db + 0.5 * ds * ds + 0.5 * dw * dw + 0.08 * dL * dL);
+        }
+
+        // 3. Sample 3 Interior Document Zones (Top: 18..42%, Mid: 38..62%, Bot: 58..82%, x: 28..72%)
+        // This ensures a document with a White Top Half and a Colored Bottom Half has BOTH halves in its foreground palette!
+        const zoneRanges = [
+          [0.18, 0.42],
+          [0.38, 0.62],
+          [0.58, 0.82]
+        ];
+        const cx0 = Math.floor(w * 0.28), cx1 = Math.ceil(w * 0.72);
+        const docClusters = [];
+        let maxZoneBgDist = 0;
+        let minZoneBgDist = Infinity;
+
+        for (let z = 0; z < zoneRanges.length; z++) {
+          const zy0 = Math.floor(h * zoneRanges[z][0]);
+          const zy1 = Math.ceil(h * zoneRanges[z][1]);
+          const zR = [], zG = [], zB = [], zS = [], zW = [], zLv = [];
+          for (let y = zy0; y < zy1; y++) {
+            for (let x = cx0; x < cx1; x++) {
+              const i = y * w + x;
+              zR.push(rn_surf[i]);
+              zG.push(gn_surf[i]);
+              zB.push(bn_surf[i]);
+              zS.push(sat[i]);
+              zW.push(warmth[i]);
+              zLv.push(L_surf[i]);
+            }
           }
+          const cr = getPercentile(zR, 0.5);
+          const cg = getPercentile(zG, 0.5);
+          const cb = getPercentile(zB, 0.5);
+          const cs = getPercentile(zS, 0.5);
+          const cw = getPercentile(zW, 0.5);
+          const cL = getPercentile(zLv, 0.5);
 
-          let sumAll = 0;
-          for (let t = 0; t < 256; t++) sumAll += t * hist[t];
-          let sumB = 0, wB = 0, maxVar = 0, otsuT = 128;
-          for (let t = 0; t < 256; t++) {
-            wB += hist[t];
-            if (wB === 0) continue;
-            const wF = nPix - wB;
-            if (wF === 0) break;
-            sumB += t * hist[t];
-            const mB = sumB / wB;
-            const mF = (sumAll - sumB) / wF;
-            const vBtw = wB * wF * (mB - mF) * (mB - mF);
-            if (vBtw > maxVar) { maxVar = vBtw; otsuT = t; }
-          }
+          const dr = cr - bgRn, dg = cg - bgGn, db = cb - bgBn;
+          const ds = cs - bgSat, dw = cw - bgWarm, dL = (cL - bgL) / 255.0;
+          const zBgDist = Math.sqrt(dr * dr + dg * dg + db * db + 0.5 * ds * ds + 0.5 * dw * dw + 0.08 * dL * dL);
 
-          const cutoff = Math.max(85, Math.floor(otsuT * 0.92));
+          if (zBgDist > maxZoneBgDist) maxZoneBgDist = zBgDist;
+          if (zBgDist < minZoneBgDist) minZoneBgDist = zBgDist;
+          docClusters.push({ cr, cg, cb, cs, cw, cL, zBgDist });
+        }
+
+        // Check if image is already a full-bleed / full-frame document (e.g. screenshot with top half white, bottom half colored)
+        // where top border matches top zone and bottom border matches bottom zone!
+        let topBorderMatchesTopZone = 0, botBorderMatchesBotZone = 0;
+        for (let x = Math.floor(w * 0.2); x < Math.floor(w * 0.8); x++) {
+          const iTop = bd * w + x;
+          const iBot = (h - 1 - bd) * w + x;
+          const dTop = Math.hypot(rn_surf[iTop] - docClusters[0].cr, gn_surf[iTop] - docClusters[0].cg, bn_surf[iTop] - docClusters[0].cb);
+          const dBot = Math.hypot(rn_surf[iBot] - docClusters[2].cr, gn_surf[iBot] - docClusters[2].cg, bn_surf[iBot] - docClusters[2].cb);
+          if (dTop < 0.025) topBorderMatchesTopZone++;
+          if (dBot < 0.025) botBorderMatchesBotZone++;
+        }
+        const spanW = Math.floor(w * 0.6);
+        const isFullBleedTwoTone = (
+          topBorderMatchesTopZone > spanW * 0.75 &&
+          botBorderMatchesBotZone > spanW * 0.75 &&
+          Math.hypot(docClusters[0].cr - docClusters[2].cr, docClusters[0].cg - docClusters[2].cg, docClusters[0].cb - docClusters[2].cb) > 0.03
+        );
+        if (isFullBleedTwoTone) {
+          return [
+            { x: 4, y: 4 },
+            { x: origW - 4, y: 4 },
+            { x: origW - 4, y: origH - 4 },
+            { x: 4, y: origH - 4 }
+          ];
+        }
+
+        // ENGINE 1: Multi-Zone Document Palette vs Outer Border Background (For Wooden & Colored Desks, including Multi-Color Documents!)
+        if (minZoneBgDist > 0.038 && maxZoneBgDist > 0.045) {
           const maskF = new Float32Array(nPix);
-          for (let i = 0; i < nPix; i++) maskF[i] = scoreU8[i] >= cutoff ? 1.0 : 0.0;
+          for (let i = 0; i < nPix; i++) {
+            let minDistDoc = 1e9;
+            for (let z = 0; z < docClusters.length; z++) {
+              const c = docClusters[z];
+              const dr = rn_surf[i] - c.cr;
+              const dg = gn_surf[i] - c.cg;
+              const db = bn_surf[i] - c.cb;
+              const ds = sat[i] - c.cs;
+              const dw = warmth[i] - c.cw;
+              const dL = (L_surf[i] - c.cL) / 255.0;
+              const d = Math.sqrt(dr * dr + dg * dg + db * db + 0.5 * ds * ds + 0.5 * dw * dw + 0.04 * dL * dL);
+              if (d < minDistDoc) minDistDoc = d;
+            }
+            const affinity = distFromBg[i] / (distFromBg[i] + minDistDoc + 0.015);
+            maskF[i] = affinity >= 0.50 ? 1.0 : 0.0;
+          }
 
           const closed = morphErodeFloat(morphDilateFloat(maskF, w, h, 2), w, h, 2);
           const cleaned = morphDilateFloat(morphErodeFloat(closed, w, h, 1), w, h, 1);
@@ -1677,7 +1439,7 @@
                   area++;
                   const cy = (curr / w) | 0;
                   const cx = curr - cy * w;
-                  if (cx > w * 0.25 && cx < w * 0.75 && cy > h * 0.25 && cy < h * 0.75) cHits++;
+                  if (cx > w * 0.25 && cx < w * 0.75 && cy > h * 0.20 && cy < h * 0.80) cHits++;
                   const nbs = [curr - 1, curr + 1, curr - w, curr + w];
                   for (let k = 0; k < 4; k++) {
                     const nb = nbs[k];
@@ -1710,7 +1472,7 @@
             }
           }
 
-          if (bPts.length >= 24 && bestScore < nPix * 3.80) {
+          if (bPts.length >= 24 && bestScore < nPix * 3.85) {
             const sortedPts = bPts.slice().sort((a, b) => (a.x !== b.x ? a.x - b.x : a.y - b.y));
             const cross = (o, a, b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
             const lower = [], upper = [];
@@ -1818,7 +1580,7 @@
           }
         }
 
-        // ENGINE 2: White-on-White / Paper-on-Paper / White-Desk Radon Crease Detector
+        // ENGINE 2: Universal Crease + Multi-Color Outer-Background Step Radon Detector
         const rawLeft = new Float32Array(nPix);
         const rawRight = new Float32Array(nPix);
         const rawTop = new Float32Array(nPix);
@@ -1835,41 +1597,31 @@
             const minXCrease = Math.min(cVal, L[i - 1], L[i + 1]);
             const minYCrease = Math.min(cVal, L[i - w], L[i + w]);
 
-            const outLeftL = Math.min(L[i - 2], L[i - 4]);
-            const outRightL = Math.min(L[i + 2], L[i + 4]);
-            const outTopL = Math.min(L[i - 2 * w], L[i - 4 * w]);
-            const outBotL = Math.min(L[i + 2 * w], L[i + 4 * w]);
-
-            const inLeftL = L[i + 3];
-            const inRightL = L[i - 3];
-            const inTopL = L[i + 3 * w];
-            const inBotL = L[i - 3 * w];
-
-            const chL = Math.max(0, (chromaDist[i - 3] - chromaDist[i + 3]) * 320);
-            const chR = Math.max(0, (chromaDist[i + 3] - chromaDist[i - 3]) * 320);
-            const chT = Math.max(0, (chromaDist[i - 3 * w] - chromaDist[i + 3 * w]) * 320);
-            const chB = Math.max(0, (chromaDist[i + 3 * w] - chromaDist[i - 3 * w]) * 320);
-
-            const gyAbs = Math.abs(L[i + w] - L[i - w]);
-            const gxAbs = Math.abs(L[i + 1] - L[i - 1]);
-
-            if (L_norm[i + 3] > 215.0 && gxAbs >= gyAbs * 0.6) {
-              const v = Math.max(0, inLeftL - Math.min(minXCrease, outLeftL)) + chL;
+            if (distFromBg[i - 3] < 0.055) {
+              const stepL = Math.max(0, L[i + 3] - Math.min(minXCrease, L[i - 2], L[i - 4]));
+              const stepC = Math.hypot(rn[i + 3] - rn[i - 3], gn[i + 3] - gn[i - 3], bn[i + 3] - bn[i - 3]) * 320 + Math.abs(L_surf[i + 3] - L_surf[i - 3]) * 0.45;
+              const v = Math.max(stepL, stepC);
               rawLeft[i] = v;
               eLeft[i] = Math.tanh(v / 4.5);
             }
-            if (L_norm[i - 3] > 215.0 && gxAbs >= gyAbs * 0.6) {
-              const v = Math.max(0, inRightL - Math.min(minXCrease, outRightL)) + chR;
+            if (distFromBg[i + 3] < 0.055) {
+              const stepL = Math.max(0, L[i - 3] - Math.min(minXCrease, L[i + 2], L[i + 4]));
+              const stepC = Math.hypot(rn[i - 3] - rn[i + 3], gn[i - 3] - gn[i + 3], bn[i - 3] - bn[i + 3]) * 320 + Math.abs(L_surf[i - 3] - L_surf[i + 3]) * 0.45;
+              const v = Math.max(stepL, stepC);
               rawRight[i] = v;
               eRight[i] = Math.tanh(v / 4.5);
             }
-            if (L_norm[i + 3 * w] > 215.0 && gyAbs >= gxAbs * 0.6) {
-              const v = Math.max(0, inTopL - Math.min(minYCrease, outTopL)) + chT;
+            if (distFromBg[i - 3 * w] < 0.055) {
+              const stepL = Math.max(0, L[i + 3 * w] - Math.min(minYCrease, L[i - 2 * w], L[i - 4 * w]));
+              const stepC = Math.hypot(rn[i + 3 * w] - rn[i - 3 * w], gn[i + 3 * w] - gn[i - 3 * w], bn[i + 3 * w] - bn[i - 3 * w]) * 320 + Math.abs(L_surf[i + 3 * w] - L_surf[i - 3 * w]) * 0.45;
+              const v = Math.max(stepL, stepC);
               rawTop[i] = v;
               eTop[i] = Math.tanh(v / 4.5);
             }
-            if (L_norm[i - 3 * w] > 215.0 && gyAbs >= gxAbs * 0.6) {
-              const v = Math.max(0, inBotL - Math.min(minYCrease, outBotL)) + chB;
+            if (distFromBg[i + 3 * w] < 0.055) {
+              const stepL = Math.max(0, L[i - 3 * w] - Math.min(minYCrease, L[i + 2 * w], L[i + 4 * w]));
+              const stepC = Math.hypot(rn[i - 3 * w] - rn[i + 3 * w], gn[i - 3 * w] - gn[i + 3 * w], bn[i - 3 * w] - bn[i + 3 * w]) * 320 + Math.abs(L_surf[i - 3 * w] - L_surf[i + 3 * w]) * 0.45;
+              const v = Math.max(stepL, stepC);
               rawBot[i] = v;
               eBot[i] = Math.tanh(v / 4.5);
             }
@@ -1897,9 +1649,9 @@
               }
               const meanSc = sumV / N;
               const cont = hits / N;
-              if (cont > 0.58) {
+              if (cont > 0.55) {
                 const innerPos = isLeft ? (xt + xb) / (2 * w) : 1.0 - (xt + xb) / (2 * w);
-                const totalSc = meanSc * 0.55 + cont * 0.45 + innerPos * 0.35;
+                const totalSc = meanSc * 0.55 + cont * 0.45 + innerPos * 0.30;
                 candidates.push({ sc: totalSc, xt, xb });
               }
             }
@@ -1937,9 +1689,9 @@
               }
               const meanSc = sumV / N;
               const cont = hits / N;
-              if (cont > 0.58) {
+              if (cont > 0.55) {
                 const innerPos = isTop ? (yl + yr) / (2 * h) : 1.0 - (yl + yr) / (2 * h);
-                const totalSc = meanSc * 0.55 + cont * 0.45 + innerPos * 0.35;
+                const totalSc = meanSc * 0.55 + cont * 0.45 + innerPos * 0.30;
                 candidates.push({ sc: totalSc, yl, yr });
               }
             }
@@ -2035,7 +1787,7 @@
                 const minSup = Math.min(supT, supB, supL, supR);
                 const orthoBonus = (1.0 - cosTL) * 0.4 + (1.0 - cosBR) * 0.4;
                 const areaRatio = (lenT + lenB) * (lenL + lenR) * 0.25 / (w * h);
-                const innerPref = (1.0 - areaRatio) * 0.35;
+                const innerPref = (1.0 - areaRatio) * 0.30;
 
                 const qScore = (supT + supB + supL + supR) + minSup * 1.2 + orthoBonus + innerPref;
                 if (qScore > bestQScore) {
@@ -2098,7 +1850,7 @@
       }
 
       // =========================================================================
-      // 5. v8.0 CACHED ILLUMINATION SURFACE, RELATIVE HALO SUPPRESSION & SAUVOLA B&W
+      // 5. TRUE-3D ASPECT RECOVERY + COONS PATCH + PARABOLIC TEXT-LINE RECTIFIER
       // =========================================================================
       function computeHomography(srcPts, dstPts) {
         const A = [];
@@ -2142,31 +1894,85 @@
         return [b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], 1];
       }
 
-      function dewarpQuad(srcCanvas, quadCorners, paperSizeMode) {
+      function fitParabola3(xs, ys) {
+        const n = xs.length;
+        if (n < 3) return [0, 0, 0];
+        let s4 = 0, s3 = 0, s2 = 0, s1 = 0, s0 = n;
+        let syx2 = 0, syx1 = 0, sy0 = 0;
+        for (let i = 0; i < n; i++) {
+          const x = xs[i], y = ys[i];
+          const x2 = x * x;
+          s1 += x;
+          s2 += x2;
+          s3 += x2 * x;
+          s4 += x2 * x2;
+          sy0 += y;
+          syx1 += y * x;
+          syx2 += y * x2;
+        }
+        const M = [
+          [s4, s3, s2, syx2],
+          [s3, s2, s1, syx1],
+          [s2, s1, s0, sy0]
+        ];
+        for (let i = 0; i < 3; i++) {
+          let piv = i;
+          for (let k = i + 1; k < 3; k++) {
+            if (Math.abs(M[k][i]) > Math.abs(M[piv][i])) piv = k;
+          }
+          const tmp = M[i]; M[i] = M[piv]; M[piv] = tmp;
+          const div = M[i][i] || 1e-9;
+          for (let j = i; j < 4; j++) M[i][j] /= div;
+          for (let k = 0; k < 3; k++) {
+            if (k !== i) {
+              const f = M[k][i];
+              for (let j = i; j < 4; j++) M[k][j] -= f * M[i][j];
+            }
+          }
+        }
+        return [M[0][3], M[1][3], M[2][3]];
+      }
+
+      function dewarpQuad(srcCanvas, quadCorners, paperSizeMode, midOffsets) {
         const topW = Math.hypot(quadCorners[1].x - quadCorners[0].x, quadCorners[1].y - quadCorners[0].y);
         const botW = Math.hypot(quadCorners[2].x - quadCorners[3].x, quadCorners[2].y - quadCorners[3].y);
         const leftH = Math.hypot(quadCorners[3].x - quadCorners[0].x, quadCorners[3].y - quadCorners[0].y);
         const rightH = Math.hypot(quadCorners[2].x - quadCorners[1].x, quadCorners[2].y - quadCorners[1].y);
 
-        let dstW = Math.round(Math.max(topW, botW));
-        let dstH = Math.round(Math.max(leftH, rightH));
+        const kw = Math.max(topW, botW) / Math.max(1.0, Math.min(topW, botW));
+        const kh = Math.max(leftH, rightH) / Math.max(1.0, Math.min(leftH, rightH));
+        const tiltBoostH = Math.sqrt(1.0 + 2.6 * Math.pow(kw - 1.0, 1.15));
+        const tiltBoostW = Math.sqrt(1.0 + 2.6 * Math.pow(kh - 1.0, 1.15));
+
+        const corrW = Math.max(topW, botW) * tiltBoostW;
+        const corrH = Math.max(leftH, rightH) * tiltBoostH;
+        let ratioHW = corrH / Math.max(1.0, corrW);
 
         if (paperSizeMode === "a4_portrait" || paperSizeMode === "a5") {
-          dstH = Math.round(dstW * 1.4142);
+          ratioHW = 1.4142;
         } else if (paperSizeMode === "a4_landscape") {
-          dstH = Math.round(dstW / 1.4142);
+          ratioHW = 1.0 / 1.4142;
         } else if (paperSizeMode === "letter") {
-          dstH = Math.round(dstW * (11 / 8.5));
+          ratioHW = 11.0 / 8.5;
+        } else {
+          if (ratioHW >= 0.90 && ratioHW <= 1.88) {
+            ratioHW = 1.4142;
+          } else if (ratioHW >= 0.52 && ratioHW < 0.90) {
+            ratioHW = 1.0 / 1.4142;
+          }
         }
 
-        const maxSide = 1400;
+        let dstW = Math.round(Math.max(topW, botW, 800));
+        let dstH = Math.round(dstW * ratioHW);
+
+        const maxSide = 1350;
         if (Math.max(dstW, dstH) > maxSide) {
           const sc = maxSide / Math.max(dstW, dstH);
           dstW = Math.round(dstW * sc);
           dstH = Math.round(dstH * sc);
         }
-        dstW = Math.max(120, dstW);
-        dstH = Math.max(120, dstH);
+        dstW = Math.max(160, dstW);
+        dstH = Math.max(160, dstH);
 
         const dstPts = [
           { x: 0, y: 0 },
@@ -2180,18 +1986,29 @@
         const sH = srcCanvas.height;
         const sData = srcCanvas.getContext("2d").getImageData(0, 0, sW, sH).data;
 
-        const outCanvas = document.createElement("canvas");
-        outCanvas.width = dstW;
-        outCanvas.height = dstH;
-        const outCtx = outCanvas.getContext("2d");
-        const outImg = outCtx.createImageData(dstW, dstH);
-        const dData = outImg.data;
+        const mOff = midOffsets || [
+          { x: 0, y: 0 },
+          { x: 0, y: 0 },
+          { x: 0, y: 0 },
+          { x: 0, y: 0 }
+        ];
 
+        const tempData = new Uint8ClampedArray(dstW * dstH * 4);
         for (let v = 0; v < dstH; v++) {
+          const ty = v / (dstH - 1);
+          const parabY = 4.0 * ty * (1.0 - ty);
           for (let u = 0; u < dstW; u++) {
+            const tx = u / (dstW - 1);
+            const parabX = 4.0 * tx * (1.0 - tx);
+
             const denom = H[6] * u + H[7] * v + 1;
-            const sx = (H[0] * u + H[1] * v + H[2]) / denom;
-            const sy = (H[3] * u + H[4] * v + H[5]) / denom;
+            const offX = (1.0 - ty) * parabX * mOff[0].x + ty * parabX * mOff[2].x +
+                         (1.0 - tx) * parabY * mOff[3].x + tx * parabY * mOff[1].x;
+            const offY = (1.0 - ty) * parabX * mOff[0].y + ty * parabX * mOff[2].y +
+                         (1.0 - tx) * parabY * mOff[3].y + tx * parabY * mOff[1].y;
+
+            const sx = (H[0] * u + H[1] * v + H[2]) / denom + offX;
+            const sy = (H[3] * u + H[4] * v + H[5]) / denom + offY;
 
             const di = (v * dstW + u) * 4;
             if (sx >= 0 && sx < sW - 1 && sy >= 0 && sy < sH - 1) {
@@ -2210,24 +2027,152 @@
               const w01 = (1 - dx) * dy;
               const w11 = dx * dy;
 
-              dData[di]     = sData[i00] * w00 + sData[i10] * w10 + sData[i01] * w01 + sData[i11] * w11;
-              dData[di + 1] = sData[i00 + 1] * w00 + sData[i10 + 1] * w10 + sData[i01 + 1] * w01 + sData[i11 + 1] * w11;
-              dData[di + 2] = sData[i00 + 2] * w00 + sData[i10 + 2] * w10 + sData[i01 + 2] * w01 + sData[i11 + 2] * w11;
-              dData[di + 3] = 255;
+              tempData[di]     = sData[i00] * w00 + sData[i10] * w10 + sData[i01] * w01 + sData[i11] * w11;
+              tempData[di + 1] = sData[i00 + 1] * w00 + sData[i10 + 1] * w10 + sData[i01 + 1] * w01 + sData[i11 + 1] * w11;
+              tempData[di + 2] = sData[i00 + 2] * w00 + sData[i10 + 2] * w10 + sData[i01 + 2] * w01 + sData[i11 + 2] * w11;
+              tempData[di + 3] = 255;
             } else {
-              dData[di] = 255;
-              dData[di + 1] = 255;
-              dData[di + 2] = 255;
-              dData[di + 3] = 255;
+              tempData[di] = 255;
+              tempData[di + 1] = 255;
+              tempData[di + 2] = 255;
+              tempData[di + 3] = 255;
             }
           }
         }
 
+        // Stage 3: Automatic 16-Strip Parabolic Text-Line Curl Straightening
+        const nStrips = 16;
+        const stripW = Math.floor(dstW / nStrips);
+        const y0 = Math.floor(dstH * 0.06);
+        const y1 = Math.floor(dstH * 0.94);
+        const yLen = y1 - y0;
+
+        const profiles = [];
+        const pNorms = new Float32Array(nStrips);
+
+        for (let k = 0; k < nStrips; k++) {
+          const xs0 = k * stripW + Math.floor(stripW * 0.1);
+          const xs1 = (k + 1) * stripW - Math.floor(stripW * 0.1);
+          const prof = new Float32Array(yLen);
+          for (let y = y0; y < y1; y++) {
+            let sumGy = 0;
+            const rPrev = (y - 1) * dstW * 4;
+            const rNext = (y + 1) * dstW * 4;
+            for (let x = xs0; x < xs1; x += 2) {
+              const cOff = x * 4;
+              const lPrev = 0.299 * tempData[rPrev + cOff] + 0.587 * tempData[rPrev + cOff + 1] + 0.114 * tempData[rPrev + cOff + 2];
+              const lNext = 0.299 * tempData[rNext + cOff] + 0.587 * tempData[rNext + cOff + 1] + 0.114 * tempData[rNext + cOff + 2];
+              sumGy += Math.abs(lNext - lPrev);
+            }
+            prof[y - y0] = sumGy / Math.max(1, Math.ceil((xs1 - xs0) / 2));
+          }
+          const hp = new Float32Array(yLen);
+          let normSq = 0;
+          for (let i = 0; i < yLen; i++) {
+            const a0 = Math.max(0, i - 16), a1 = Math.min(yLen - 1, i + 16);
+            let s = 0;
+            for (let j = a0; j <= a1; j++) s += prof[j];
+            const v = prof[i] - s / (a1 - a0 + 1);
+            hp[i] = v;
+            normSq += v * v;
+          }
+          profiles.push(hp);
+          pNorms[k] = Math.sqrt(normSq);
+        }
+
+        const refProf = new Float32Array(yLen);
+        let refNormSq = 0;
+        for (let i = 0; i < yLen; i++) {
+          const v = (profiles[6][i] + profiles[7][i] + profiles[8][i] + profiles[9][i]) * 0.25;
+          refProf[i] = v;
+          refNormSq += v * v;
+        }
+        const refNorm = Math.sqrt(refNormSq) + 1e-5;
+
+        const validXs = [];
+        const validShifts = [];
+        const maxShift = Math.min(38, Math.floor(dstH * 0.04));
+
+        for (let k = 0; k < nStrips; k++) {
+          const xNorm = (k + 0.5) / nStrips - 0.5;
+          if (k >= 6 && k <= 9) {
+            validXs.push(xNorm);
+            validShifts.push(0);
+            continue;
+          }
+          if (pNorms[k] < refNorm * 0.35) continue;
+
+          const p = profiles[k];
+          const denomNorm = refNorm * pNorms[k] + 1e-5;
+          let bestS = 0;
+          let bestScore = -1e9;
+
+          for (let s = -maxShift; s <= maxShift; s++) {
+            let dot = 0;
+            const iStart = Math.max(0, s);
+            const iEnd = Math.min(yLen, yLen + s);
+            for (let i = iStart; i < iEnd; i++) {
+              dot += refProf[i] * p[i - s];
+            }
+            const score = (dot / denomNorm) - 0.0012 * (s * s);
+            if (score > bestScore) {
+              bestScore = score;
+              bestS = s;
+            }
+          }
+          if (bestScore > 0.20) {
+            validXs.push(xNorm);
+            validShifts.push(bestS);
+          }
+        }
+
+        const outCanvas = document.createElement("canvas");
+        outCanvas.width = dstW;
+        outCanvas.height = dstH;
+        const outCtx = outCanvas.getContext("2d");
+        const outImg = outCtx.createImageData(dstW, dstH);
+        const dData = outImg.data;
+
+        if (validXs.length >= 6) {
+          const [a, b] = fitParabola3(validXs, validShifts);
+          const shiftCol = new Float32Array(dstW);
+          let maxAbsShift = 0;
+          for (let x = 0; x < dstW; x++) {
+            const xn = x / dstW - 0.5;
+            const sh = a * xn * xn + b * xn;
+            shiftCol[x] = sh;
+            if (Math.abs(sh) > maxAbsShift) maxAbsShift = Math.abs(sh);
+          }
+
+          if (maxAbsShift >= 1.2) {
+            for (let y = 0; y < dstH; y++) {
+              const borderTaper = Math.min(1.0, Math.min(y, dstH - 1 - y) / (dstH * 0.03 + 1));
+              for (let x = 0; x < dstW; x++) {
+                const sy = Math.min(dstH - 1.001, Math.max(0, y - shiftCol[x] * borderTaper));
+                const y0i = sy | 0;
+                const dy = sy - y0i;
+                const i0 = (y0i * dstW + x) * 4;
+                const i1 = ((y0i + 1) * dstW + x) * 4;
+                const di = (y * dstW + x) * 4;
+                dData[di]     = tempData[i0] * (1 - dy) + tempData[i1] * dy;
+                dData[di + 1] = tempData[i0 + 1] * (1 - dy) + tempData[i1 + 1] * dy;
+                dData[di + 2] = tempData[i0 + 2] * (1 - dy) + tempData[i1 + 2] * dy;
+                dData[di + 3] = 255;
+              }
+            }
+            outCtx.putImageData(outImg, 0, 0);
+            return outCanvas;
+          }
+        }
+
+        dData.set(tempData);
         outCtx.putImageData(outImg, 0, 0);
         return outCanvas;
       }
 
-      // Fast 1D separable morphological & box filters for Fine-Scale Paper Surface Estimation
+      // =========================================================================
+      // 6. HALO-FREE PAPER WHITENING & SAUVOLA B&W ENGINE
+      // =========================================================================
       function sepMaxFilter(arr, w, h, rad) {
         const tmp = new Float32Array(w * h);
         const out = new Float32Array(w * h);
@@ -2310,7 +2255,6 @@
         return out;
       }
 
-      // Fine-Scale Morphological Closing Paper Surface (Tracks shadow boundaries with 0% grey streak!)
       function computeFinePaperSurfaceGrid(chArray, w, h) {
         const scale = 2;
         const sw = Math.max(8, Math.floor(w / scale));
@@ -2325,8 +2269,6 @@
           }
         }
 
-        // Morphological Closing at half-res (Dilate radius 3 -> Erode radius 2) erases text strokes up to 12px wide
-        // while keeping shadow transitions razor-accurate!
         const dil = sepMaxFilter(sub, sw, sh, 3);
         const clo = sepMinFilter(dil, sw, sh, 2);
         const sm1 = sepBoxBlur(clo, sw, sh, 2);
@@ -2354,7 +2296,6 @@
         );
       }
 
-      // Precomputes Dewarped Canvas + Fine Illumination Envelopes + 2D Integral Sauvola Stats ONCE per geometry change!
       function buildPageFilterCache(dewarpedCanvas) {
         const w = dewarpedCanvas.width;
         const h = dewarpedCanvas.height;
@@ -2387,9 +2328,6 @@
         const uB = new Uint8Array(nPixels);
         const uL = new Float32Array(nPixels);
         const dL = new Float32Array(nPixels);
-        const envRatioR = new Uint8Array(nPixels);
-        const envRatioG = new Uint8Array(nPixels);
-        const envRatioB = new Uint8Array(nPixels);
 
         for (let y = 0; y < h; y++) {
           const rOff = y * w;
@@ -2410,20 +2348,15 @@
             uB[i] = nb;
             uL[i] = nl;
             dL[i] = 255.0 - nl;
-            envRatioR[i] = Math.min(255, Math.round(eR));
-            envRatioG[i] = Math.min(255, Math.round(eG));
-            envRatioB[i] = Math.min(255, Math.round(eB));
           }
         }
 
-        // Local 9x9 max of dL (radius 4) for Relative Halo Suppression right around character strokes!
         const dMaxLocalF = sepMaxFilter(dL, w, h, 4);
         const dMaxLocal = new Uint8Array(nPixels);
         for (let i = 0; i < nPixels; i++) {
           dMaxLocal[i] = Math.min(255, Math.round(dMaxLocalF[i]));
         }
 
-        // Fast 31x31 (radius 15) local mean & std on shadow-leveled uL for Sauvola B&W Mode (Zero shadow blotches!)
         const uLSq = new Float32Array(nPixels);
         for (let i = 0; i < nPixels; i++) uLSq[i] = uL[i] * uL[i];
         const meanL = sepBoxBlur(uL, w, h, 15);
@@ -2442,15 +2375,11 @@
           uB,
           uL,
           dMaxLocal,
-          envRatioR,
-          envRatioG,
-          envRatioB,
           meanL,
           stdL
         };
       }
 
-      // Ultra-Fast Cached Filter Execution (< 6ms per frame = 60 FPS on Smartphones!)
       function applyCachedFiltersToPage(page) {
         if (!page || !page.filterCache) return;
         const fc = page.filterCache;
@@ -2459,10 +2388,9 @@
         const nPixels = w * h;
         const settings = page.settings;
 
-        const mode = settings.colorMode || "magic_color";
+        const mode = settings.colorMode || "original";
         const cleanAmt = (settings.bgSuppress ?? 68) / 100.0;
         const contrastAmt = (settings.contrast ?? 55) / 100.0;
-        const shadowAmt = (settings.shadowRemoval ?? 100) / 100.0;
         const transparentBg = !!settings.transparentBg;
 
         if (!page.processedCanvas || page.processedCanvas.width !== w || page.processedCanvas.height !== h) {
@@ -2480,9 +2408,6 @@
         const uB = fc.uB;
         const uL = fc.uL;
         const dMaxLocal = fc.dMaxLocal;
-        const envRatioR = fc.envRatioR;
-        const envRatioG = fc.envRatioG;
-        const envRatioB = fc.envRatioB;
         const meanL = fc.meanL;
         const stdL = fc.stdL;
 
@@ -2533,19 +2458,11 @@
           baseFloor = 11.0 + cleanAmt * 16.0;
           haloRatio = 0.22 + cleanAmt * 0.14;
           gain = 1.65 + contrastAmt * 1.45;
-        } else if (mode === "true_color") {
-          baseFloor = 8.0 + cleanAmt * 14.0;
-          haloRatio = 0.18 + cleanAmt * 0.12;
-          gain = 1.15 + contrastAmt * 0.65;
         } else {
           baseFloor = 15.0 + cleanAmt * 26.0;
           haloRatio = 0.28 + cleanAmt * 0.16;
           gain = 1.40 + contrastAmt * 1.25;
         }
-
-        const isGray = mode === "grayscale";
-        const paperBase = mode === "true_color" ? 248.0 : 255.0;
-        const oneMinusShadow = 1.0 - shadowAmt;
 
         for (let i = 0; i < nPixels; i++) {
           const nr = uR[i];
@@ -2569,23 +2486,9 @@
             smoothGain = t * t * (3.0 - 2.0 * t) * gain;
           }
 
-          let pR = paperBase;
-          let pG = paperBase;
-          let pB = paperBase;
-          if (oneMinusShadow > 0.005) {
-            pR = paperBase * (shadowAmt + oneMinusShadow * (envRatioR[i] / 255.0));
-            pG = paperBase * (shadowAmt + oneMinusShadow * (envRatioG[i] / 255.0));
-            pB = paperBase * (shadowAmt + oneMinusShadow * (envRatioB[i] / 255.0));
-          }
-
-          let r = Math.min(255, Math.max(0, Math.round(pR - (255 - nr) * smoothGain)));
-          let g = Math.min(255, Math.max(0, Math.round(pG - (255 - ng) * smoothGain)));
-          let b = Math.min(255, Math.max(0, Math.round(pB - (255 - nb) * smoothGain)));
-
-          if (isGray) {
-            const gv = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
-            r = gv; g = gv; b = gv;
-          }
+          const r = Math.min(255, Math.max(0, Math.round(255.0 - (255 - nr) * smoothGain)));
+          const g = Math.min(255, Math.max(0, Math.round(255.0 - (255 - ng) * smoothGain)));
+          const b = Math.min(255, Math.max(0, Math.round(255.0 - (255 - nb) * smoothGain)));
 
           const idx = i * 4;
           data[idx] = r;
@@ -2604,13 +2507,13 @@
         outCtx.putImageData(outImg, 0, 0);
       }
 
-      // Full geometry + illumination update (called ONLY when corners, rotation, or paper ratio change)
       function updateGeometryAndProcess(page) {
         if (!page) return;
         const dewarped = dewarpQuad(
           page.srcCanvas,
           page.corners,
-          page.settings.paperSize
+          page.settings.paperSize,
+          page.midOffsets
         );
         page.dewarpedCanvas = dewarped;
         page.filterCache = buildPageFilterCache(dewarped);
@@ -2618,8 +2521,33 @@
       }
 
       // =========================================================================
-      // 6. STAGE RENDERING & CONFLICT-FREE MULTI-TOUCH PINCH-ZOOM / CORNER DRAG
+      // 7. STAGE RENDERING & TOUCH HANDLERS
       // =========================================================================
+      function getMidHandlePos(page, i) {
+        const c = page.corners;
+        const p1 = c[i];
+        const p2 = c[(i + 1) % 4];
+        const mOff = (page.midOffsets && page.midOffsets[i]) || { x: 0, y: 0 };
+        return {
+          x: (p1.x + p2.x) * 0.5 + mOff.x,
+          y: (p1.y + p2.y) * 0.5 + mOff.y
+        };
+      }
+
+      function drawCurvedQuadPath(ctx, page) {
+        const c = page.corners;
+        ctx.moveTo(c[0].x, c[0].y);
+        for (let i = 0; i < 4; i++) {
+          const p1 = c[i];
+          const p2 = c[(i + 1) % 4];
+          const mOff = (page.midOffsets && page.midOffsets[i]) || { x: 0, y: 0 };
+          const cpX = (p1.x + p2.x) * 0.5 + mOff.x * 2.0;
+          const cpY = (p1.y + p2.y) * 0.5 + mOff.y * 2.0;
+          ctx.quadraticCurveTo(cpX, cpY, p2.x, p2.y);
+        }
+        ctx.closePath();
+      }
+
       function renderStage() {
         const page = getCurrentPage();
         if (!page) return;
@@ -2640,43 +2568,32 @@
           ctx.fillStyle = "rgba(15, 23, 42, 0.48)";
           ctx.beginPath();
           ctx.rect(0, 0, sW, sH);
-          ctx.moveTo(c[0].x, c[0].y);
-          ctx.lineTo(c[1].x, c[1].y);
-          ctx.lineTo(c[2].x, c[2].y);
-          ctx.lineTo(c[3].x, c[3].y);
-          ctx.closePath();
+          drawCurvedQuadPath(ctx, page);
           ctx.fill("evenodd");
           ctx.restore();
 
           const strokeW = Math.max(4, sW / 210);
           ctx.save();
-          ctx.strokeStyle = "#0a467d";
+          ctx.strokeStyle = "#ffffff";
           ctx.lineWidth = strokeW + 2;
           ctx.beginPath();
-          ctx.moveTo(c[0].x, c[0].y);
-          ctx.lineTo(c[1].x, c[1].y);
-          ctx.lineTo(c[2].x, c[2].y);
-          ctx.lineTo(c[3].x, c[3].y);
-          ctx.closePath();
+          drawCurvedQuadPath(ctx, page);
           ctx.stroke();
 
-          ctx.strokeStyle = "#38bdf8";
+          ctx.strokeStyle = "#0a467d";
           ctx.lineWidth = strokeW;
           ctx.stroke();
           ctx.restore();
 
-          const midR = Math.max(10, sW / 80);
+          const midR = Math.max(11, sW / 72);
           for (let i = 0; i < 4; i++) {
-            const p1 = c[i];
-            const p2 = c[(i + 1) % 4];
-            const mx = (p1.x + p2.x) * 0.5;
-            const my = (p1.y + p2.y) * 0.5;
+            const mp = getMidHandlePos(page, i);
             ctx.save();
-            ctx.fillStyle = "#ffffff";
+            ctx.fillStyle = "#eaf2fb";
             ctx.strokeStyle = "#0a467d";
-            ctx.lineWidth = Math.max(2.5, sW / 300);
+            ctx.lineWidth = Math.max(2.5, sW / 280);
             ctx.beginPath();
-            ctx.arc(mx, my, midR, 0, Math.PI * 2);
+            ctx.arc(mp.x, mp.y, midR, 0, Math.PI * 2);
             ctx.fill();
             ctx.stroke();
             ctx.restore();
@@ -2689,14 +2606,12 @@
           }
         } else {
           if (!page.processedCanvas) updateGeometryAndProcess(page);
-          const targetCanvas = state.holdingCompare ? page.dewarpedCanvas : page.processedCanvas;
+          const targetCanvas = page.processedCanvas;
           el.mainCanvas.width = targetCanvas.width;
           el.mainCanvas.height = targetCanvas.height;
           ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
           ctx.drawImage(targetCanvas, 0, 0);
         }
-
-        updateExportEstimate();
       }
 
       function drawHandle(ctx, x, y, r, color, label) {
@@ -2728,8 +2643,8 @@
 
         const stRect = el.stageContainer.getBoundingClientRect();
         const relX = clientX - stRect.left;
-        const leftPx = relX < stRect.width * 0.5 ? Math.max(10, stRect.width - 132) : 10;
-        const topPx = 10;
+        const leftPx = relX < stRect.width * 0.5 ? Math.max(10, stRect.width - 128) : 10;
+        const topPx = 46;
 
         el.magnifierLoupe.style.left = `${leftPx}px`;
         el.magnifierLoupe.style.top = `${topPx}px`;
@@ -2754,7 +2669,7 @@
           lh
         );
 
-        lCtx.strokeStyle = "#38bdf8";
+        lCtx.strokeStyle = "#ffffff";
         lCtx.lineWidth = 1.8;
         lCtx.beginPath();
         lCtx.moveTo(lw / 2, 0);
@@ -2777,7 +2692,6 @@
         };
       }
 
-      // Precision delta-based handle hit test (so corner doesn't jump to center of fat thumb!)
       function findHitHandle(page, pt) {
         if (state.viewMode !== "crop") return null;
         const hitRadius = Math.max(32, 44 * (pt.scaleX || 1));
@@ -2805,19 +2719,17 @@
         }
 
         for (let i = 0; i < 4; i++) {
-          const p1 = c[i];
-          const p2 = c[(i + 1) % 4];
-          const mx = (p1.x + p2.x) * 0.5;
-          const my = (p1.y + p2.y) * 0.5;
-          if (Math.hypot(pt.x - mx, pt.y - my) <= hitRadius) {
+          const mp = getMidHandlePos(page, i);
+          if (Math.hypot(pt.x - mp.x, pt.y - mp.y) <= hitRadius) {
+            const mOff = (page.midOffsets && page.midOffsets[i]) || { x: 0, y: 0 };
             return {
-              type: "edge",
+              type: "curve_mid",
               index: i,
               startX: pt.x,
               startY: pt.y,
-              origP1: { ...p1 },
-              origP2: { ...p2 },
-              label: "Cạnh " + (i + 1)
+              origOffX: mOff.x,
+              origOffY: mOff.y,
+              label: ["Uốn Cạnh Trên", "Uốn Cạnh Phải", "Uốn Cạnh Dưới", "Uốn Cạnh Trái"][i]
             };
           }
         }
@@ -2828,10 +2740,10 @@
         const page = getCurrentPage();
         if (!page) return;
 
-        // 2-FINGER PINCH-TO-ZOOM: Immediately cancel any 1-finger corner drag & restore original corners!
         if (evt.touches && evt.touches.length === 2) {
-          if (state.draggingHandle && state.preTouchCorners) {
-            page.corners = state.preTouchCorners.map((p) => ({ ...p }));
+          if (state.draggingHandle) {
+            if (state.preTouchCorners) page.corners = state.preTouchCorners.map((p) => ({ ...p }));
+            if (state.preTouchMidOffsets) page.midOffsets = state.preTouchMidOffsets.map((p) => ({ ...p }));
             renderStage();
           }
           state.draggingHandle = null;
@@ -2865,18 +2777,21 @@
           const t0 = evt.touches[0];
           const pt = getCanvasCoords(t0.clientX, t0.clientY);
           state.preTouchCorners = page.corners.map((p) => ({ ...p }));
+          state.preTouchMidOffsets = page.midOffsets.map((p) => ({ ...p }));
 
           const hit = findHitHandle(page, pt);
           if (hit) {
             state.draggingHandle = hit;
             if (hit.type === "corner") {
               updateMagnifierLoupe(hit.origX, hit.origY, pt.clientX, pt.clientY, hit.label);
+            } else if (hit.type === "curve_mid") {
+              const mp = getMidHandlePos(page, hit.index);
+              updateMagnifierLoupe(mp.x, mp.y, pt.clientX, pt.clientY, hit.label);
             }
             evt.preventDefault();
             return;
           }
 
-          // Double-tap anywhere on document to toggle 100% <-> 240% zoom
           const now = Date.now();
           if (now - state.lastTapTime < 280 && Math.hypot(t0.clientX - state.lastTapX, t0.clientY - state.lastTapY) < 32) {
             state.lastTapTime = 0;
@@ -2898,7 +2813,6 @@
           state.lastTapX = t0.clientX;
           state.lastTapY = t0.clientY;
 
-          // Pan with 1 finger when zoomed in
           if (state.stageZoom > 1.02) {
             state.draggingHandle = {
               type: "pan",
@@ -2917,11 +2831,15 @@
         if (!page) return;
         const pt = getCanvasCoords(evt.clientX, evt.clientY);
         state.preTouchCorners = page.corners.map((p) => ({ ...p }));
+        state.preTouchMidOffsets = page.midOffsets.map((p) => ({ ...p }));
         const hit = findHitHandle(page, pt);
         if (hit) {
           state.draggingHandle = hit;
           if (hit.type === "corner") {
             updateMagnifierLoupe(hit.origX, hit.origY, pt.clientX, pt.clientY, hit.label);
+          } else if (hit.type === "curve_mid") {
+            const mp = getMidHandlePos(page, hit.index);
+            updateMagnifierLoupe(mp.x, mp.y, pt.clientX, pt.clientY, hit.label);
           }
           evt.preventDefault();
           return;
@@ -2988,15 +2906,14 @@
           page.corners[idx].y = ny;
           updateMagnifierLoupe(nx, ny, pt.clientX, pt.clientY, state.draggingHandle.label);
           renderStage();
-        } else if (state.draggingHandle.type === "edge") {
+        } else if (state.draggingHandle.type === "curve_mid") {
           const idx = state.draggingHandle.index;
-          const nextIdx = (idx + 1) % 4;
           const dx = pt.x - state.draggingHandle.startX;
           const dy = pt.y - state.draggingHandle.startY;
-          page.corners[idx].x = Math.max(0, Math.min(w, Math.round(state.draggingHandle.origP1.x + dx)));
-          page.corners[idx].y = Math.max(0, Math.min(h, Math.round(state.draggingHandle.origP1.y + dy)));
-          page.corners[nextIdx].x = Math.max(0, Math.min(w, Math.round(state.draggingHandle.origP2.x + dx)));
-          page.corners[nextIdx].y = Math.max(0, Math.min(h, Math.round(state.draggingHandle.origP2.y + dy)));
+          page.midOffsets[idx].x = Math.round(state.draggingHandle.origOffX + dx);
+          page.midOffsets[idx].y = Math.round(state.draggingHandle.origOffY + dy);
+          const mp = getMidHandlePos(page, idx);
+          updateMagnifierLoupe(mp.x, mp.y, pt.clientX, pt.clientY, state.draggingHandle.label);
           renderStage();
         }
         evt.preventDefault();
@@ -3013,7 +2930,7 @@
         const dragType = state.draggingHandle.type;
         state.draggingHandle = null;
         el.magnifierLoupe.style.display = "none";
-        if (dragType === "corner" || dragType === "edge") {
+        if (dragType === "corner" || dragType === "curve_mid") {
           const page = getCurrentPage();
           if (page) {
             updateGeometryAndProcess(page);
@@ -3023,19 +2940,24 @@
       }
 
       // =========================================================================
-      // 7. PAGE QUEUE MANAGEMENT & AUTO-CROP SELECTED REGION
+      // 8. PAGE QUEUE & EXPORT
       // =========================================================================
-      function addNewPageFromCanvas(srcCanvas, name, customCorners) {
-        const detectedCorners = customCorners || detectDocumentCorners(srcCanvas);
+      function addNewPageFromCanvas(srcCanvas, name, customCorners, customMidOffsets) {
+        const detectedCorners = customCorners ? customCorners.map((p) => ({ ...p })) : detectDocumentCorners(srcCanvas);
+        const midOffsets = customMidOffsets
+          ? customMidOffsets.map((p) => ({ ...p }))
+          : [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }];
+
         const pageObj = {
           id: "page_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
           name: name || `Trang_${state.pages.length + 1}`,
           srcCanvas,
           corners: detectedCorners,
+          midOffsets,
           dewarpedCanvas: null,
           filterCache: null,
           processedCanvas: null,
-          settings: cloneSettings(state.defaultSettings)
+          settings: cloneSettings(state.defaultSettings) // Starts on "original" ("Ảnh gốc")!
         };
         updateGeometryAndProcess(pageObj);
         state.pages.push(pageObj);
@@ -3048,52 +2970,14 @@
 
       function renderPageList() {
         el.pageListContainer.innerHTML = "";
-        el.pageCountText.textContent = `${state.pages.length}`;
+        el.pageCountText.textContent = `${state.pages.length} trang`;
 
         state.pages.forEach((p, idx) => {
-          const item = document.createElement("div");
-          item.className = "page-chip-card" + (idx === state.currentPageIndex ? " active" : "");
-
-          const thumb = document.createElement("canvas");
-          thumb.className = "page-chip-thumb";
-          thumb.width = 48;
-          thumb.height = 64;
-          const tctx = thumb.getContext("2d");
-          tctx.fillStyle = "#ffffff";
-          tctx.fillRect(0, 0, thumb.width, thumb.height);
-          const src = p.processedCanvas || p.srcCanvas;
-          const sc = Math.min(thumb.width / src.width, thumb.height / src.height);
-          const dw = src.width * sc;
-          const dh = src.height * sc;
-          tctx.drawImage(src, (thumb.width - dw) / 2, (thumb.height - dh) / 2, dw, dh);
-
-          const title = document.createElement("div");
-          title.className = "page-chip-title";
-          title.textContent = `Tr.${idx + 1}`;
-
-          item.appendChild(thumb);
-          item.appendChild(title);
-
-          if (state.pages.length > 1) {
-            const delBtn = document.createElement("button");
-            delBtn.type = "button";
-            delBtn.className = "btn btn-danger";
-            delBtn.style.padding = "2px 5px";
-            delBtn.style.fontSize = "0.65rem";
-            delBtn.textContent = "✕";
-            delBtn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              state.pages.splice(idx, 1);
-              if (state.currentPageIndex >= state.pages.length) {
-                state.currentPageIndex = state.pages.length - 1;
-              }
-              syncControlsFromPage(getCurrentPage());
-              renderPageList();
-              renderStage();
-            });
-            item.appendChild(delBtn);
-          }
-
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className = "btn btn-sec" + (idx === state.currentPageIndex ? " active" : "");
+          item.style.height = "32px";
+          item.textContent = `Trang ${idx + 1}`;
           item.addEventListener("click", () => {
             state.currentPageIndex = idx;
             resetStageZoom();
@@ -3101,7 +2985,6 @@
             renderPageList();
             renderStage();
           });
-
           el.pageListContainer.appendChild(item);
         });
       }
@@ -3130,6 +3013,7 @@
             { x: midBot.x, y: midBot.y },
             { x: c[3].x, y: c[3].y }
           ],
+          midOffsets: [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }],
           dewarpedCanvas: null,
           filterCache: null,
           processedCanvas: null,
@@ -3145,6 +3029,7 @@
             { x: c[2].x, y: c[2].y },
             { x: midBot.x, y: midBot.y }
           ],
+          midOffsets: [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }],
           dewarpedCanvas: null,
           filterCache: null,
           processedCanvas: null,
@@ -3156,16 +3041,14 @@
 
         state.pages.splice(state.currentPageIndex + 1, 0, leftPage, rightPage);
         state.currentPageIndex = state.currentPageIndex + 1;
-        switchStep("color");
+        el.exportModal.classList.remove("open");
+        setViewMode("result");
         syncControlsFromPage(getCurrentPage());
         renderPageList();
         renderStage();
         showToast("Đã tách thành 2 trang riêng biệt!");
       }
 
-      // =========================================================================
-      // 8. MULTI-FORMAT EXPORT ENGINE (PDF, JPEG, PNG, WEBP, TIFF, SVG)
-      // =========================================================================
       function getScaledExportCanvas(page) {
         if (!page.processedCanvas) updateGeometryAndProcess(page);
         const src = page.processedCanvas;
@@ -3358,25 +3241,6 @@
         return (bytes / (1024 * 1024)).toFixed(2) + " MB";
       }
 
-      function updateExportEstimate() {
-        const page = getCurrentPage();
-        if (!page || !page.processedCanvas) return;
-        const scale = parseFloat(el.exportScale.value) || 1;
-        const w = Math.round(page.processedCanvas.width * scale);
-        const h = Math.round(page.processedCanvas.height * scale);
-        el.exportDimText.textContent = `${w} × ${h} px`;
-
-        const fmt = el.exportFormat.value;
-        const q = (parseInt(el.sliderQuality.value, 10) || 94) / 100;
-        let estBytes = w * h * 0.25 * q;
-        if (fmt === "png") estBytes = w * h * 0.65;
-        else if (fmt === "tiff") estBytes = w * h * 3 + 256;
-        else if (fmt === "webp") estBytes = w * h * 0.16 * q;
-        else if (fmt === "pdf") estBytes = w * h * 0.28 * q + 2048;
-
-        el.exportSizeText.textContent = `~${formatByteSize(estBytes)}`;
-      }
-
       function triggerBlobDownload(blob, filename) {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -3394,12 +3258,12 @@
         const page = getCurrentPage();
         if (!page) return;
         const fmt = overrideFmt || el.exportFormat.value;
-        const q = (parseInt(el.sliderQuality.value, 10) || 94) / 100;
-        const baseName = (el.exportFilename.value || page.name || "Tai_Lieu_Scan").trim();
+        const q = 0.94;
+        const baseName = (el.exportFilename.value || page.name || "ScanhoahocABC").trim();
         const expCanvas = getScaledExportCanvas(page);
 
         if (fmt === "pdf") {
-          const blob = generatePdfBlobFromPages([page], q);
+          const blob = generatePdfBlobFromPages(state.pages.length > 1 && overrideFmt === "pdf" ? state.pages : [page], q);
           triggerBlobDownload(blob, `${baseName}.pdf`);
           showToast(`Đã lưu PDF (${formatByteSize(blob.size)})!`);
           return;
@@ -3440,47 +3304,23 @@
         }, mime, q);
       }
 
-      function downloadAllPagesAsPdf() {
-        if (!state.pages.length) return;
-        const q = (parseInt(el.sliderQuality.value, 10) || 94) / 100;
-        const baseName = (el.exportFilename.value || "Tai_Lieu_Scan").trim();
-        const blob = generatePdfBlobFromPages(state.pages, q);
-        triggerBlobDownload(blob, `${baseName}_${state.pages.length}_trang.pdf`);
-        showToast(`Đã lưu PDF (${state.pages.length} trang)!`);
-      }
-
       // =========================================================================
-      // 9. UI SYNC & 60FPS SLIDER CONTROLLER
+      // 9. UI SYNC & REAR-ONLY CAMERA CONTROLLER
       // =========================================================================
-      function syncActiveSliderControl(page) {
-        if (!page) return;
-        const key = state.activeParamKey;
-        const meta = PARAM_META[key];
-        const val = page.settings[key] ?? 0;
-        el.activeSliderName.textContent = meta.label;
-        el.activeParamSlider.min = meta.min;
-        el.activeParamSlider.max = meta.max;
-        el.activeParamSlider.value = val;
-        el.activeSliderVal.textContent = `${val}${meta.suffix}`;
-
-        el.paramPillBar.querySelectorAll(".param-pill").forEach((pill) => {
-          pill.classList.toggle("active", pill.getAttribute("data-param") === key);
-        });
-      }
-
       function syncControlsFromPage(page) {
         if (!page) return;
         const s = page.settings;
-        el.valBgSuppress.textContent = `${s.bgSuppress}%`;
-        el.valContrast.textContent = `${s.contrast}%`;
-        el.valShadow.textContent = `${s.shadowRemoval}%`;
+        el.activeParamSlider.value = s.bgSuppress;
+        el.activeSliderVal.textContent = `${s.bgSuppress}%`;
         el.btnToggleAlpha.classList.toggle("active", !!s.transparentBg);
         el.exportPaperSize.value = s.paperSize || "auto";
 
-        el.colorPresetGrid.querySelectorAll(".filter-chip[data-mode]").forEach((b) => {
+        el.colorPresetGrid.querySelectorAll("[data-mode]").forEach((b) => {
           b.classList.toggle("active", b.getAttribute("data-mode") === s.colorMode);
         });
-        syncActiveSliderControl(page);
+
+        // Show intensity slider ONLY when a non-original filter is selected!
+        el.cleanSliderRow.classList.toggle("visible", s.colorMode !== "original");
       }
 
       function handleFilesSelected(fileList) {
@@ -3505,8 +3345,8 @@
               c.getContext("2d").drawImage(img, 0, 0, w, h);
               const cleanName = file.name.replace(/\.[^.]+$/, "");
               addNewPageFromCanvas(c, cleanName);
-              switchStep("color");
-              showToast(`Đã cắt gọn và làm sạch "${file.name}"!`);
+              setViewMode("result");
+              showToast(`Đã nhận diện & làm phẳng "${file.name}"!`);
             };
             img.src = ev.target.result;
           };
@@ -3514,9 +3354,6 @@
         });
       }
 
-      // =========================================================================
-      // 10. WIDE-ANGLE FULL-SENSOR CAMERA
-      // =========================================================================
       async function applyCameraZoomValue(zVal) {
         if (!state.cameraStream) return;
         const track = state.cameraStream.getVideoTracks()[0];
@@ -3552,10 +3389,10 @@
       async function startCamera() {
         stopCamera();
         try {
-          const mode = el.cameraDeviceSelect.value || "environment";
+          // Always use Rear Camera ("environment") for document scanning!
           const stream = await navigator.mediaDevices.getUserMedia({
             video: {
-              facingMode: { ideal: mode },
+              facingMode: { ideal: "environment" },
               width: { ideal: 1600 },
               height: { ideal: 1200 }
             },
@@ -3623,7 +3460,7 @@
               octx.fill("evenodd");
               octx.restore();
 
-              octx.strokeStyle = "#38bdf8";
+              octx.strokeStyle = "#ffffff";
               octx.lineWidth = Math.max(4, overlay.width / 200);
               octx.beginPath();
               octx.moveTo(c[0].x, c[0].y);
@@ -3660,6 +3497,7 @@
 
         page.srcCanvas = rot;
         page.corners = detectDocumentCorners(rot);
+        page.midOffsets = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }];
         updateGeometryAndProcess(page);
         resetStageZoom();
         renderPageList();
@@ -3667,42 +3505,17 @@
       }
 
       function initEvents() {
-        // 3-Step Switcher in Bottom Dock
-        el.tabStepCrop.addEventListener("click", () => switchStep("crop"));
-        el.tabStepColor.addEventListener("click", () => switchStep("color"));
-        el.tabStepExport.addEventListener("click", () => switchStep("export"));
-
-        // Press-and-Hold Compare Button
-        const startHoldCompare = (e) => {
-          e.preventDefault();
-          state.holdingCompare = true;
-          el.btnHoldCompare.classList.add("holding");
-          renderStage();
-        };
-        const endHoldCompare = () => {
-          if (!state.holdingCompare) return;
-          state.holdingCompare = false;
-          el.btnHoldCompare.classList.remove("holding");
-          renderStage();
-        };
-        el.btnHoldCompare.addEventListener("touchstart", startHoldCompare, { passive: false });
-        el.btnHoldCompare.addEventListener("touchend", endHoldCompare);
-        el.btnHoldCompare.addEventListener("touchcancel", endHoldCompare);
-        el.btnHoldCompare.addEventListener("mousedown", startHoldCompare);
-        window.addEventListener("mouseup", endHoldCompare);
-
-        // Stage Zoom Buttons & Wheel
-        el.btnZoomIn.addEventListener("click", () => setStageZoomByFactor(1.35));
-        el.btnZoomOut.addEventListener("click", () => setStageZoomByFactor(1 / 1.35));
+        el.btnEnterCrop.addEventListener("click", () => setViewMode("crop"));
+        el.btnCancelCrop.addEventListener("click", () => setViewMode("result"));
         el.btnZoomReset.addEventListener("click", resetStageZoom);
 
         el.stageContainer.addEventListener("wheel", (e) => {
           e.preventDefault();
           const factor = e.deltaY < 0 ? 1.15 : (1 / 1.15);
-          setStageZoomByFactor(factor);
+          state.stageZoom = Math.max(0.8, Math.min(5.0, state.stageZoom * factor));
+          applyStageTransform();
         }, { passive: false });
 
-        // Stage Multi-Touch Pinch-to-Zoom & Pointer Events
         el.stageContainer.addEventListener("touchstart", onStageTouchStart, { passive: false });
         window.addEventListener("touchmove", onStagePointerMove, { passive: false });
         window.addEventListener("touchend", onStagePointerUp);
@@ -3712,7 +3525,6 @@
         window.addEventListener("mousemove", onStagePointerMove);
         window.addEventListener("mouseup", onStagePointerUp);
 
-        // Upload & Paste
         el.btnTriggerUpload.addEventListener("click", () => el.fileInput.click());
         el.fileInput.addEventListener("change", (e) => {
           handleFilesSelected(e.target.files);
@@ -3725,34 +3537,25 @@
           }
         });
 
-        // Samples
         function loadSample(type, btnEl) {
-          [el.btnSampleWhiteOnWhite, el.btnSampleWoodA4, el.btnSampleBleed].forEach((b) => b.classList.remove("active"));
+          [el.btnSampleTwoTone, el.btnSampleTiltedCurved, el.btnSampleWhiteOnWhite].forEach((b) => b.classList.remove("active"));
           btnEl.classList.add("active");
           const sample = createProceduralSample(type);
-          addNewPageFromCanvas(sample.canvas, sample.name);
-          switchStep("color");
+          addNewPageFromCanvas(sample.canvas, sample.name, sample.presetCorners, sample.presetMidOffsets);
+          el.exportModal.classList.remove("open");
+          setViewMode("result");
           showToast(`Đã nạp mẫu: ${sample.name}`);
         }
 
+        el.btnSampleTwoTone.addEventListener("click", () => loadSample("two_tone", el.btnSampleTwoTone));
+        el.btnSampleTiltedCurved.addEventListener("click", () => loadSample("tilted_curved", el.btnSampleTiltedCurved));
         el.btnSampleWhiteOnWhite.addEventListener("click", () => loadSample("white_on_white", el.btnSampleWhiteOnWhite));
-        el.btnSampleWoodA4.addEventListener("click", () => loadSample("wood_a4", el.btnSampleWoodA4));
-        el.btnSampleBleed.addEventListener("click", () => loadSample("bleed", el.btnSampleBleed));
 
-        el.btnClearPages.addEventListener("click", () => {
-          const sample = createProceduralSample("white_on_white");
-          state.pages = [];
-          addNewPageFromCanvas(sample.canvas, sample.name);
-          el.exportModal.classList.remove("open");
-          switchStep("color");
-          showToast("Đã làm mới danh sách trang!");
-        });
-
-        // Crop Actions
         el.btnAutoDetectCorners.addEventListener("click", () => {
           const page = getCurrentPage();
           if (!page) return;
           page.corners = detectDocumentCorners(page.srcCanvas);
+          page.midOffsets = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }];
           updateGeometryAndProcess(page);
           renderStage();
           showToast("Đã tự động bắt chuẩn 4 góc!");
@@ -3769,12 +3572,12 @@
             { x: w - 4, y: h - 4 },
             { x: 4, y: h - 4 }
           ];
+          page.midOffsets = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }];
           updateGeometryAndProcess(page);
           renderStage();
           showToast("Đã chọn toàn khung ảnh!");
         });
 
-        el.btnRotateLeft.addEventListener("click", () => rotateCurrentPage(-1));
         el.btnRotateRight.addEventListener("click", () => rotateCurrentPage(1));
 
         el.btnApplyCropNow.addEventListener("click", () => {
@@ -3782,14 +3585,13 @@
           if (!page) return;
           updateGeometryAndProcess(page);
           renderPageList();
-          switchStep("color");
-          showToast("Đã cắt gọn chỉ lấy vùng giấy được chọn!");
+          setViewMode("result");
+          showToast("Đã làm phẳng 3D & nắn thẳng chữ!");
         });
 
         el.btnSplitTwoPagesOptional.addEventListener("click", splitCurrentPageIntoTwoHalves);
 
-        // Color Mode Chips (Instant <6ms Cached Filter)
-        el.colorPresetGrid.querySelectorAll(".filter-chip[data-mode]").forEach((btn) => {
+        el.colorPresetGrid.querySelectorAll("[data-mode]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const page = getCurrentPage();
             if (!page) return;
@@ -3801,7 +3603,6 @@
           });
         });
 
-        // Transparent Background Chip
         el.btnToggleAlpha.addEventListener("click", () => {
           const page = getCurrentPage();
           if (!page) return;
@@ -3813,24 +3614,15 @@
           applyCachedFiltersToPage(page);
           renderPageList();
           renderStage();
-          showToast(page.settings.transparentBg ? "Đã bật Tách nền trong suốt!" : "Đã tắt Tách nền.");
-        });
-
-        // Parameter Pills & 60 FPS Throttled Slider
-        el.paramPillBar.querySelectorAll(".param-pill").forEach((pill) => {
-          pill.addEventListener("click", () => {
-            state.activeParamKey = pill.getAttribute("data-param");
-            syncActiveSliderControl(getCurrentPage());
-          });
+          showToast(page.settings.transparentBg ? "Đã bật Tách nền Alpha!" : "Đã tắt Tách nền.");
         });
 
         el.activeParamSlider.addEventListener("input", () => {
           const page = getCurrentPage();
           if (!page) return;
-          const key = state.activeParamKey;
           const v = parseInt(el.activeParamSlider.value, 10) || 0;
-          page.settings[key] = v;
-          syncControlsFromPage(page);
+          page.settings.bgSuppress = v;
+          el.activeSliderVal.textContent = `${v}%`;
           if (state.sliderRafId) cancelAnimationFrame(state.sliderRafId);
           state.sliderRafId = requestAnimationFrame(() => {
             state.sliderRafId = null;
@@ -3839,47 +3631,11 @@
           });
         });
 
-        el.activeParamSlider.addEventListener("change", () => {
-          renderPageList();
-        });
-
-        el.btnResetFilters.addEventListener("click", () => {
-          const page = getCurrentPage();
-          if (!page) return;
-          page.settings = cloneSettings(state.defaultSettings);
-          syncControlsFromPage(page);
-          applyCachedFiltersToPage(page);
-          renderPageList();
-          renderStage();
-          showToast("Đã khôi phục bộ lọc chuẩn!");
-        });
-
-        el.btnApplyFiltersAll.addEventListener("click", () => {
-          const current = getCurrentPage();
-          if (!current) return;
-          state.pages.forEach((p) => {
-            p.settings = cloneSettings(current.settings);
-            applyCachedFiltersToPage(p);
-          });
-          renderPageList();
-          renderStage();
-          showToast(`Đã đồng bộ cho cả ${state.pages.length} trang!`);
-        });
-
-        // Quick 1-Tap Export & Advanced Export Modal
-        el.btnQuickPdf.addEventListener("click", () => {
-          if (state.pages.length > 1) downloadAllPagesAsPdf();
-          else downloadCurrentPage("pdf");
-        });
+        el.btnQuickPdf.addEventListener("click", () => downloadCurrentPage("pdf"));
         el.btnQuickJpg.addEventListener("click", () => downloadCurrentPage("jpeg"));
-        el.btnOpenExportModal.addEventListener("click", () => {
-          updateExportEstimate();
-          el.exportModal.classList.add("open");
-        });
+        el.btnOpenExportModal.addEventListener("click", () => el.exportModal.classList.add("open"));
         el.btnCloseExportModal.addEventListener("click", () => el.exportModal.classList.remove("open"));
 
-        el.exportFormat.addEventListener("change", updateExportEstimate);
-        el.exportScale.addEventListener("change", updateExportEstimate);
         el.exportPaperSize.addEventListener("change", () => {
           const page = getCurrentPage();
           if (!page) return;
@@ -3887,15 +3643,12 @@
           updateGeometryAndProcess(page);
           renderStage();
         });
-        el.sliderQuality.addEventListener("input", () => {
-          el.valQuality.textContent = `${el.sliderQuality.value}%`;
-          updateExportEstimate();
+
+        el.btnDownloadCurrent.addEventListener("click", () => {
+          el.exportModal.classList.remove("open");
+          downloadCurrentPage();
         });
 
-        el.btnDownloadCurrent.addEventListener("click", () => downloadCurrentPage());
-        el.btnDownloadAllPdf.addEventListener("click", downloadAllPagesAsPdf);
-
-        // Camera & Pinch-to-Zoom on Camera Viewfinder
         el.btnOpenCamera.addEventListener("click", () => {
           el.cameraModal.classList.add("open");
           startCamera();
@@ -3904,11 +3657,6 @@
           el.cameraModal.classList.remove("open");
           stopCamera();
         });
-        el.btnSwitchCamera.addEventListener("click", () => {
-          el.cameraDeviceSelect.value = el.cameraDeviceSelect.value === "environment" ? "user" : "environment";
-          startCamera();
-        });
-        el.cameraDeviceSelect.addEventListener("change", startCamera);
 
         [el.btnZoomMin, el.btnZoom1x, el.btnZoom15x].forEach((zBtn) => {
           zBtn.addEventListener("click", () => {
@@ -3953,19 +3701,16 @@
           el.cameraModal.classList.remove("open");
           stopCamera();
           addNewPageFromCanvas(c, `Scan_${state.pages.length + 1}`, capturedCorners);
-          switchStep("color");
-          showToast("Đã chụp và cắt gọn vùng giấy được chọn!");
+          setViewMode("result");
+          showToast("Đã chụp và hiển thị ảnh gốc đã làm phẳng!");
         });
-
-        el.btnOpenGuide.addEventListener("click", () => el.guideModal.classList.add("open"));
-        el.btnCloseGuide.addEventListener("click", () => el.guideModal.classList.remove("open"));
       }
 
       function initApp() {
         initEvents();
-        const initialSample = createProceduralSample("white_on_white");
+        const initialSample = createProceduralSample("two_tone");
         addNewPageFromCanvas(initialSample.canvas, initialSample.name);
-        switchStep("color");
+        setViewMode("result");
       }
 
       if (document.readyState === "loading") {
