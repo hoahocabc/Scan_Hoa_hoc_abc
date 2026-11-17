@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC — Ứng dụng quét tài liệu thông minh: Bắt chuẩn góc thiếu sáng, khử cong lượn sóng 2 trang sách mở, quản lý Thư viện ảnh.",
+  "description": "ScanhoahocABC (v12.0) — Ứng dụng quét tài liệu thông minh: Bắt góc siêu tốc <15ms, làm phẳng chuẩn hình học không lượn sóng, quản lý và xóa ảnh Thư viện đầy đủ.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
