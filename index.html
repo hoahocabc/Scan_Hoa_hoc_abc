@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0a467d" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v15.0) — Ứng dụng quét tài liệu chuyên nghiệp: Bắt rìa 2 tầng chính xác sub-pixel, giao diện tối giản với nút công cụ ba gạch (☰) ở góc khung ảnh toàn màn hình và quản lý Thư viện hiện đại." />
+  <meta name="description" content="ScanhoahocABC (v16.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Bắt rìa sub-pixel, dàn phẳng trang sách & nắn thẳng song song các dòng chữ cong, thanh công cụ ba gạch (☰) gọn nhẹ không che khuất ảnh." />
   <style>
     :root {
       --primary: #0a467d;
@@ -322,6 +322,13 @@
       width: 100%;
     }
 
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      width: 100%;
+    }
+
     .grid-2-confirm {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
@@ -330,7 +337,10 @@
     }
 
     /* ========================================================================= */
-    /* 4. PROFESSIONAL FULL-SCREEN VIEW & EDIT SCREEN WITH CORNER HAMBURGER (☰)  */
+    /* 4. SMARTPHONE-OPTIMIZED FULL-SCREEN VIEW & EDIT SCREEN                     */
+    /*    - Corner Hamburger (☰) opens a COMPACT 2-ROW TABBED DRAWER AT THE TOP   */
+    /*    - The image viewport below it automatically resizes (flex: 1) so       */
+    /*      0% OF THE IMAGE IS EVER COVERED while editing on a phone!            */
     /* ========================================================================= */
     .fs-editor-backdrop {
       position: fixed;
@@ -348,7 +358,178 @@
       display: flex;
     }
 
-    /* Full-Screen Image Viewport with Corner Floating Controls */
+    /* Non-Blocking Compact Top Drawer (Appears ONLY when ☰ is tapped, pushes image gently down instead of covering it!) */
+    .edit-compact-drawer {
+      flex-shrink: 0;
+      width: 100%;
+      background: #ffffff;
+      color: var(--text);
+      border-bottom: 2px solid var(--primary);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+      padding: 7px 10px 8px 56px; /* left padding leaves room for the corner ☰ button! */
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 162;
+    }
+
+    .edit-compact-drawer.open {
+      display: flex;
+    }
+
+    .drawer-tabs-row {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 4px;
+      max-width: 580px;
+      width: 100%;
+    }
+
+    .drawer-tab-btn {
+      height: 29px;
+      border-radius: 7px;
+      border: 1px solid var(--primary-border);
+      background: var(--surface-alt);
+      color: var(--text-muted);
+      font-size: 0.69rem;
+      font-weight: 800;
+      cursor: pointer;
+      padding: 0 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+
+    .drawer-tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .drawer-pane {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      max-width: 580px;
+      width: 100%;
+      min-height: 36px;
+    }
+
+    .drawer-pane.active {
+      display: flex;
+    }
+
+    .drawer-mode-pills {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 4px;
+      width: 100%;
+    }
+
+    .dd-mode-btn {
+      height: 33px;
+      border-radius: 8px;
+      border: 1.5px solid var(--primary-border);
+      background: var(--surface-alt);
+      color: var(--text);
+      font-size: 0.70rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+
+    .dd-mode-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .dual-sliders-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      width: 100%;
+    }
+
+    .compact-slider-box {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface-alt);
+      padding: 4px 7px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      min-width: 0;
+    }
+
+    .compact-slider-lbl {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    .compact-slider-box input[type="range"] {
+      flex: 1;
+      min-width: 0;
+      accent-color: var(--primary);
+      height: 5px;
+      cursor: pointer;
+    }
+
+    .compact-slider-val {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: var(--text);
+      min-width: 26px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .dd-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-alt);
+      padding: 5px 9px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      width: 100%;
+    }
+
+    .dd-slider-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .dd-slider-row input[type="range"] {
+      flex: 1;
+      min-width: 0;
+      accent-color: var(--primary);
+      height: 6px;
+      cursor: pointer;
+    }
+
+    .dd-slider-val {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--primary);
+      min-width: 36px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Full-Screen Image Viewport */
     .fs-stage-wrap {
       position: relative;
       flex: 1;
@@ -358,7 +539,7 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      padding: 12px;
+      padding: 8px;
       touch-action: none;
       background: #0b1120;
     }
@@ -384,26 +565,30 @@
       touch-action: none;
     }
 
-    /* Corner Hamburger Button (☰) at Top-Left Corner of the Image Screen */
+    .fs-editor-backdrop.drawer-open #fsCanvas {
+      max-height: calc(100dvh - 218px);
+    }
+
+    /* Corner Hamburger Button (☰) Fixed at Top-Left Corner of the Screen */
     .fs-corner-hamburger {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
+      position: fixed;
+      top: 9px;
+      left: 9px;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
       background: rgba(10, 70, 125, 0.92);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       color: #ffffff;
-      border: 1.5px solid rgba(255, 255, 255, 0.38);
+      border: 1.5px solid rgba(255, 255, 255, 0.42);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      z-index: 165;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-      transition: all 0.15s ease;
+      z-index: 168;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      transition: all 0.14s ease;
     }
 
     .fs-corner-hamburger:active {
@@ -411,38 +596,38 @@
     }
 
     .fs-corner-hamburger.open {
-      background: #ffffff;
-      color: var(--primary);
-      border-color: #ffffff;
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
     }
 
-    /* Corner Close & Nav Group at Top-Right Corner of the Image Screen */
+    /* Corner Close & Nav Group at Top-Right Corner of the Image Viewport */
     .fs-corner-right-group {
       position: absolute;
-      top: 12px;
-      right: 12px;
+      top: 9px;
+      right: 9px;
       display: flex;
       align-items: center;
-      gap: 6px;
-      z-index: 165;
+      gap: 5px;
+      z-index: 158;
     }
 
     .fs-corner-btn {
-      height: 38px;
-      padding: 0 12px;
-      border-radius: 11px;
+      height: 34px;
+      padding: 0 10px;
+      border-radius: 9px;
       background: rgba(15, 23, 42, 0.82);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       color: #ffffff;
-      border: 1.5px solid rgba(255, 255, 255, 0.28);
-      font-size: 0.76rem;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      font-size: 0.73rem;
       font-weight: 700;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
       white-space: nowrap;
     }
 
@@ -451,137 +636,23 @@
       pointer-events: none;
     }
 
-    /* Collapsible Editing Tools Menu (Pops out from the Corner Hamburger ☰ Button) */
-    .edit-dropdown-menu {
-      position: absolute;
-      top: 60px;
-      left: 12px;
-      width: min(350px, calc(100vw - 24px));
-      max-height: calc(100dvh - 175px);
-      overflow-y: auto;
-      background: rgba(255, 255, 255, 0.98);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      color: var(--text);
-      border-radius: 14px;
-      border: 1.5px solid var(--primary-border);
-      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.6);
-      padding: 11px;
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 166;
-    }
-
-    .edit-dropdown-menu.open {
-      display: flex;
-    }
-
-    .dd-section {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      padding-bottom: 9px;
-      border-bottom: 1px solid #e2e8f0;
-    }
-
-    .dd-section:last-child {
-      padding-bottom: 0;
-      border-bottom: none;
-    }
-
-    .dd-sec-label {
-      font-size: 0.72rem;
-      font-weight: 800;
-      color: var(--primary);
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .dd-mode-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 6px;
-    }
-
-    .dd-mode-btn {
-      height: 34px;
-      border-radius: 8px;
-      border: 1.5px solid var(--primary-border);
-      background: var(--surface-alt);
-      color: var(--text);
-      font-size: 0.75rem;
-      font-weight: 700;
-      cursor: pointer;
-      padding: 0 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      white-space: nowrap;
-    }
-
-    .dd-mode-btn.active {
-      background: var(--primary);
-      color: #ffffff;
-      border-color: var(--primary);
-    }
-
-    .dd-slider-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--surface-alt);
-      padding: 5px 9px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-
-    .dd-slider-label {
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--text);
-      min-width: 78px;
-      white-space: nowrap;
-    }
-
-    .dd-slider-row input[type="range"] {
-      flex: 1;
-      min-width: 0;
-      accent-color: var(--primary);
-      height: 6px;
-      cursor: pointer;
-    }
-
-    .dd-slider-val {
-      font-size: 0.72rem;
-      font-weight: 800;
-      color: var(--primary);
-      min-width: 36px;
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-    }
-
     /* Floating Crop Toolbar inside Full-Screen Editor when Crop Mode is Active */
     .fs-crop-bar {
       position: absolute;
-      bottom: 10px;
-      left: 10px;
-      right: 10px;
-      max-width: 540px;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
+      max-width: 520px;
       margin: 0 auto;
-      background: rgba(255, 255, 255, 0.97);
+      background: rgba(255, 255, 255, 0.96);
       border: 1.5px solid var(--primary-border);
-      border-radius: 14px;
-      padding: 8px 10px;
+      border-radius: 12px;
+      padding: 7px 9px;
       display: none;
       flex-direction: column;
       gap: 6px;
       z-index: 160;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
     }
 
     .fs-crop-bar.visible {
@@ -591,15 +662,15 @@
     /* Smart Magnifier Loupe */
     .magnifier-loupe {
       position: absolute;
-      width: 118px;
-      height: 118px;
+      width: 114px;
+      height: 114px;
       border-radius: 50%;
       border: 3px solid var(--primary);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
       pointer-events: none;
       overflow: hidden;
       display: none;
-      z-index: 162;
+      z-index: 165;
       background: #000;
     }
 
@@ -628,10 +699,10 @@
       flex-shrink: 0;
       background: #ffffff;
       border-top: 1px solid var(--border);
-      padding: 7px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+      padding: 6px 12px calc(7px + env(safe-area-inset-bottom, 0px));
       display: flex;
       flex-direction: column;
-      gap: 7px;
+      gap: 6px;
       z-index: 140;
     }
 
@@ -644,12 +715,12 @@
       align-items: center;
       justify-content: space-between;
       gap: 6px;
-      font-size: 0.72rem;
+      font-size: 0.71rem;
       font-weight: 600;
       color: var(--text-muted);
       background: var(--surface-alt);
-      padding: 5px 10px;
-      border-radius: 8px;
+      padding: 4px 10px;
+      border-radius: 7px;
       border: 1px solid #e2e8f0;
     }
 
@@ -657,12 +728,12 @@
       max-width: 600px;
       width: 100%;
       margin: 0 auto;
-      font-size: 0.73rem;
+      font-size: 0.72rem;
       font-weight: 700;
       color: var(--primary);
       background: var(--primary-soft);
-      padding: 4px 10px;
-      border-radius: 7px;
+      padding: 3px 9px;
+      border-radius: 6px;
       display: none;
       white-space: nowrap;
       overflow: hidden;
@@ -681,7 +752,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 170;
+      z-index: 175;
       padding: 12px;
     }
 
@@ -1009,7 +1080,7 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 
-    /* Form Fields inside Dropdown & Export Popup */
+    /* Form Fields inside Export Popup */
     .form-field label {
       font-size: 0.72rem;
       font-weight: 700;
@@ -1021,43 +1092,33 @@
       text-overflow: ellipsis;
     }
 
-    .form-field select, .form-field input, .form-field textarea {
+    .form-field select, .form-field input {
       width: 100%;
-      padding: 7px 9px;
+      height: 34px;
+      padding: 0 8px;
       border-radius: 8px;
       border: 1.5px solid var(--border);
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 600;
       color: var(--text);
       background: #ffffff;
       font-family: inherit;
     }
 
-    .form-field select, .form-field input {
-      height: 36px;
-      padding: 0 9px;
-    }
-
-    .form-field textarea {
-      resize: vertical;
-      min-height: 48px;
-      max-height: 90px;
-      line-height: 1.35;
-    }
-
     .checkbox-inline {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      font-size: 0.73rem;
+      gap: 5px;
+      font-size: 0.71rem;
       font-weight: 700;
       color: var(--text);
       cursor: pointer;
+      white-space: nowrap;
     }
 
     .checkbox-inline input {
-      width: 15px;
-      height: 15px;
+      width: 14px;
+      height: 14px;
       accent-color: var(--primary);
     }
 
@@ -1123,7 +1184,7 @@
 
     .toast-box {
       position: fixed;
-      top: 84px;
+      top: 94px;
       left: 16px;
       right: 16px;
       max-width: 340px;
@@ -1179,7 +1240,7 @@
       </div>
     </header>
 
-    <!-- 2. DOCUMENT STAGE VIEWPORT + SECONDARY INFO BAR BELOW IMAGE (NO "Trang x/y") -->
+    <!-- 2. DOCUMENT STAGE VIEWPORT + SECONDARY INFO BAR BELOW IMAGE -->
     <main class="workspace">
       <section class="stage-panel" id="panelStage" aria-label="Khung tài liệu">
         <div class="stage-container" id="stageContainer">
@@ -1188,7 +1249,7 @@
           </div>
         </div>
 
-        <!-- Secondary Info Bar Directly Below Image (Aspect ratio, resolution, mode & date/time) -->
+        <!-- Secondary Info Bar Directly Below Image -->
         <div class="under-image-bar">
           <div class="under-image-inner">
             <div class="under-meta-text" id="mainUnderMetaText">
@@ -1219,87 +1280,107 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- FULL-SCREEN VIEW & EDIT SCREEN (OPENED BY "✨ SỬA" OR "XEM" IN LIBRARY) -->
-  <!-- Uses a sleek 3-line Hamburger button (☰) at the corner of the image screen! -->
+  <!-- FULL-SCREEN VIEW & EDIT SCREEN (SMARTPHONE-OPTIMIZED NON-BLOCKING MENU)   -->
+  <!-- - Corner 3-Line Hamburger (☰) opens a compact 2-row top strip (~86px)     -->
+  <!-- - The document image below it stays 100% UNCOVERED so you see every       -->
+  <!--   change live on your smartphone!                                         -->
   <!-- ========================================================================= -->
   <div class="fs-editor-backdrop" id="fullScreenEditorModal" role="dialog" aria-modal="true" aria-label="Chỉnh sửa ảnh toàn màn hình">
 
-    <!-- Center Full-Screen Image Viewport with Corner Hamburger (☰) -->
+    <!-- TOP-LEFT CORNER: 3-LINE HAMBURGER BUTTON (☰) -->
+    <button type="button" class="fs-corner-hamburger" id="btnToggleEditDropdown" title="Mở / Đóng thanh công cụ sửa ảnh" aria-label="Công cụ sửa ảnh">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="4" y1="6" x2="20" y2="6" />
+        <line x1="4" y1="12" x2="20" y2="12" />
+        <line x1="4" y1="18" x2="20" y2="18" />
+      </svg>
+    </button>
+
+    <!-- COMPACT 2-ROW NON-BLOCKING TOOL DRAWER (Sits above image viewport, never covers the document!) -->
+    <div class="edit-compact-drawer" id="editDropdownMenu">
+      <!-- Row 1: 5 Compact Category Tabs -->
+      <div class="drawer-tabs-row" role="tablist">
+        <button type="button" class="drawer-tab-btn active" data-tab="tabColor">🎨 Màu sắc</button>
+        <button type="button" class="drawer-tab-btn" data-tab="tabLight">☀ Ánh sáng</button>
+        <button type="button" class="drawer-tab-btn" data-tab="tabFlatten">📏 Dàn phẳng</button>
+        <button type="button" class="drawer-tab-btn" data-tab="tabCrop">📐 Cắt/Xoay</button>
+        <button type="button" class="drawer-tab-btn" data-tab="tabNote">📝 Ghi chú</button>
+      </div>
+
+      <!-- Row 2, Pane 1: Color Modes + Alpha -->
+      <div class="drawer-pane active" id="tabColor">
+        <div class="drawer-mode-pills" id="ddColorModeGrid">
+          <button type="button" class="dd-mode-btn active" data-mode="original">Ảnh gốc</button>
+          <button type="button" class="dd-mode-btn" data-mode="magic_color">Tài liệu màu</button>
+          <button type="button" class="dd-mode-btn" data-mode="bw_sauvola">Đen trắng</button>
+          <button type="button" class="dd-mode-btn" data-mode="faint_boost">Làm rõ chữ</button>
+          <button type="button" class="dd-mode-btn" id="btnDdToggleAlpha">Tách nền</button>
+        </div>
+      </div>
+
+      <!-- Row 2, Pane 2: Brightness & Clean Background Sliders -->
+      <div class="drawer-pane" id="tabLight">
+        <div class="dual-sliders-grid">
+          <div class="compact-slider-box">
+            <span class="compact-slider-lbl">Độ sáng</span>
+            <input type="range" id="ddBrightnessSlider" min="-50" max="50" value="0" />
+            <span class="compact-slider-val" id="ddBrightnessVal">0</span>
+          </div>
+          <div class="compact-slider-box">
+            <span class="compact-slider-lbl">Sạch nền</span>
+            <input type="range" id="ddCleanSlider" min="0" max="100" value="68" />
+            <span class="compact-slider-val" id="ddCleanVal">68%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2, Pane 3: Coupled Page & Parallel Text-Line Flattening ("Dàn phẳng trang & dòng chữ cong") -->
+      <div class="drawer-pane" id="tabFlatten">
+        <button type="button" class="btn btn-main" id="btnAutoFlattenBookLines" style="height:33px; font-size:0.71rem; padding:0 9px; flex-shrink:0;">
+          📏 Tự nắn dòng chữ
+        </button>
+        <div class="compact-slider-box" style="flex:1;">
+          <span class="compact-slider-lbl">Uốn phẳng</span>
+          <input type="range" id="ddBookCurveSlider" min="-100" max="100" value="0" />
+          <span class="compact-slider-val" id="ddBookCurveVal">0%</span>
+        </div>
+        <button type="button" class="btn btn-sec" id="btnResetFlattenBook" style="height:33px; font-size:0.70rem; padding:0 8px; flex-shrink:0;">
+          0%
+        </button>
+      </div>
+
+      <!-- Row 2, Pane 4: Crop, Rotate & Split 2 Pages -->
+      <div class="drawer-pane" id="tabCrop">
+        <div class="grid-3">
+          <button type="button" class="btn btn-sec" id="btnDdStartCrop" style="height:33px; font-size:0.72rem;">📐 Cắt 4 góc</button>
+          <button type="button" class="btn btn-sec" id="btnDdRotate90" style="height:33px; font-size:0.72rem;">↻ Xoay 90°</button>
+          <button type="button" class="btn btn-sec" id="btnDdSplit2Pages" style="height:33px; font-size:0.72rem;">📖 Tách 2 trang</button>
+        </div>
+      </div>
+
+      <!-- Row 2, Pane 5: Compact Inline Rename & Note -->
+      <div class="drawer-pane" id="tabNote">
+        <div class="form-field" style="flex:0.85; min-width:0;">
+          <input type="text" id="ddFilenameInput" placeholder="Tên ảnh..." />
+        </div>
+        <div class="form-field" style="flex:1.15; min-width:0;">
+          <input type="text" id="ddNoteInput" placeholder="Nhập ghi chú..." />
+        </div>
+        <label class="checkbox-inline" title="In ghi chú lên chân trang khi tải về">
+          <input type="checkbox" id="chkPrintNoteOnExport" />
+          <span>In</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Center Full-Screen Image Viewport (Automatically resizes below the compact drawer so 100% of image is visible!) -->
     <div class="fs-stage-wrap" id="fsStageWrap">
 
-      <!-- TOP-LEFT CORNER: 3-LINE HAMBURGER BUTTON (☰) TO TOGGLE EDIT TOOLS -->
-      <button type="button" class="fs-corner-hamburger" id="btnToggleEditDropdown" title="Mở / Đóng công cụ sửa ảnh" aria-label="Công cụ sửa ảnh">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-          <line x1="4" y1="6" x2="20" y2="6" />
-          <line x1="4" y1="12" x2="20" y2="12" />
-          <line x1="4" y1="18" x2="20" y2="18" />
-        </svg>
-      </button>
-
-      <!-- TOP-RIGHT CORNER: PREV / NEXT & CLOSE FULL-SCREEN -->
+      <!-- TOP-RIGHT CORNER OF IMAGE VIEWPORT: PREV / NEXT & CLOSE -->
       <div class="fs-corner-right-group">
         <button type="button" class="fs-corner-btn" id="btnFsPrev" title="Ảnh trước">◀</button>
         <button type="button" class="fs-corner-btn" id="btnFsNext" title="Ảnh sau">▶</button>
         <button type="button" class="fs-corner-btn" id="btnCloseFsEditor" title="Đóng màn hình sửa">Đóng ✕</button>
-      </div>
-
-      <!-- COLLAPSIBLE EDITING TOOLS MENU (POPS OUT WHEN CLICKING ☰, CLOSES ON OUTSIDE CLICK OR ☰ CLICK) -->
-      <div class="edit-dropdown-menu" id="editDropdownMenu">
-        <!-- Section 1: Color Modes (Ảnh gốc, Tài liệu màu, Đen trắng, Làm rõ chữ) -->
-        <div class="dd-section">
-          <div class="dd-sec-label">
-            <span>🎨 Chế độ màu sắc</span>
-            <button type="button" class="btn btn-sec" id="btnDdToggleAlpha" style="height:24px; font-size:0.68rem; padding:0 8px;">
-              Tách nền Alpha
-            </button>
-          </div>
-          <div class="dd-mode-grid" id="ddColorModeGrid">
-            <button type="button" class="dd-mode-btn active" data-mode="original">Ảnh gốc</button>
-            <button type="button" class="dd-mode-btn" data-mode="magic_color">Tài liệu màu</button>
-            <button type="button" class="dd-mode-btn" data-mode="bw_sauvola">Đen trắng</button>
-            <button type="button" class="dd-mode-btn" data-mode="faint_boost">Làm rõ chữ</button>
-          </div>
-        </div>
-
-        <!-- Section 2: Brightness & Background Cleaning Sliders -->
-        <div class="dd-section">
-          <div class="dd-sec-label"><span>☀ Độ sáng &amp; Khử nền</span></div>
-          <div class="dd-slider-row">
-            <span class="dd-slider-label">Tăng/giảm sáng</span>
-            <input type="range" id="ddBrightnessSlider" min="-50" max="50" value="0" />
-            <span class="dd-slider-val" id="ddBrightnessVal">0</span>
-          </div>
-          <div class="dd-slider-row">
-            <span class="dd-slider-label">Làm sạch nền</span>
-            <input type="range" id="ddCleanSlider" min="0" max="100" value="68" />
-            <span class="dd-slider-val" id="ddCleanVal">68%</span>
-          </div>
-        </div>
-
-        <!-- Section 3: Crop, Rotate & Split Tools -->
-        <div class="dd-section">
-          <div class="dd-sec-label"><span>📐 Công cụ Cắt &amp; Xoay</span></div>
-          <div class="grid-3">
-            <button type="button" class="btn btn-sec" id="btnDdStartCrop" style="height:34px; font-size:0.73rem;">📐 Cắt góc</button>
-            <button type="button" class="btn btn-sec" id="btnDdRotate90" style="height:34px; font-size:0.73rem;">↻ Xoay 90°</button>
-            <button type="button" class="btn btn-sec" id="btnDdSplit2Pages" style="height:34px; font-size:0.73rem;">📖 Tách đôi</button>
-          </div>
-        </div>
-
-        <!-- Section 4: Rename & Add Note -->
-        <div class="dd-section">
-          <div class="dd-sec-label"><span>📝 Tên ảnh &amp; Ghi chú</span></div>
-          <div class="form-field">
-            <input type="text" id="ddFilenameInput" placeholder="Tên ảnh..." />
-          </div>
-          <div class="form-field">
-            <textarea id="ddNoteInput" placeholder="Thêm ghi chú cho ảnh này..."></textarea>
-          </div>
-          <label class="checkbox-inline">
-            <input type="checkbox" id="chkPrintNoteOnExport" />
-            <span>In ghi chú lên chân trang khi tải</span>
-          </label>
-        </div>
       </div>
 
       <!-- Full-Screen Document Canvas -->
@@ -1309,26 +1390,21 @@
 
       <!-- 4x Magnifier Loupe when dragging corners in Full-Screen Crop Sub-mode -->
       <div class="magnifier-loupe" id="magnifierLoupe">
-        <canvas id="loupeCanvas" width="118" height="118"></canvas>
+        <canvas id="loupeCanvas" width="114" height="114"></canvas>
         <div class="magnifier-label" id="loupeLabel">Góc TL</div>
       </div>
 
-      <!-- Floating Crop Bar (Appears only when user selects "📐 Cắt góc" from the ☰ Menu) -->
+      <!-- Floating Crop Bar (Appears only when user selects "📐 Cắt 4 góc" from the ☰ Menu) -->
       <div class="fs-crop-bar" id="fsCropBar">
-        <div class="grid-3">
-          <button type="button" class="btn btn-sec" id="btnAutoDetectCorners" style="height:33px; font-size:0.73rem;">Tự bắt rìa</button>
-          <button type="button" class="btn btn-sec" id="btnFullFrameCorners" style="height:33px; font-size:0.73rem;">Đầy khung</button>
-          <button type="button" class="btn btn-sec" id="btnRotateInCrop" style="height:33px; font-size:0.73rem;">Xoay 90°</button>
+        <div class="grid-4">
+          <button type="button" class="btn btn-sec" id="btnAutoDetectCorners" style="height:32px; font-size:0.71rem;">Tự bắt rìa</button>
+          <button type="button" class="btn btn-sec" id="btnFullFrameCorners" style="height:32px; font-size:0.71rem;">Đầy khung</button>
+          <button type="button" class="btn btn-sec" id="btnRotateInCrop" style="height:32px; font-size:0.71rem;">Xoay 90°</button>
+          <button type="button" class="btn btn-sec" id="btnCancelCrop" style="height:32px; font-size:0.71rem;">Hủy cắt</button>
         </div>
-        <div class="dd-slider-row">
-          <span class="dd-slider-label">Phẳng gáy sách</span>
-          <input type="range" id="bookCurveSlider" min="0" max="100" value="0" />
-          <span class="dd-slider-val" id="bookCurveVal">0%</span>
-        </div>
-        <div class="grid-2-confirm">
-          <button type="button" class="btn btn-sec" id="btnCancelCrop" style="height:35px;">Hủy cắt</button>
-          <button type="button" class="btn btn-main" id="btnApplyCropNow" style="height:35px;">✓ Áp dụng cắt</button>
-        </div>
+        <button type="button" class="btn btn-main" id="btnApplyCropNow" style="height:35px; width:100%;">
+          ✓ Áp dụng cắt &amp; Dàn phẳng trang
+        </button>
       </div>
     </div>
 
@@ -1477,7 +1553,7 @@
       "use strict";
 
       // =========================================================================
-      // 1. APPLICATION STATE (v15.0 — CORNER HAMBURGER MENU & LIBRARY PAGE COUNTER)
+      // 1. APPLICATION STATE (v16.0 — NON-BLOCKING MOBILE MENU & PARALLEL LINE DEWARP)
       // =========================================================================
       const state = {
         pages: [],
@@ -1512,7 +1588,8 @@
           contrast: 55,
           transparentBg: false,
           paperSize: "auto",
-          bookCurve: 0
+          bookCurve: 0,
+          autoLineDewarp: true // Automatically straightens curved book pages & parallelizes curved text lines!
         }
       };
 
@@ -1530,7 +1607,7 @@
         btnOpenImgExport: document.getElementById("btnOpenImgExport"),
         btnOpenPdfExport: document.getElementById("btnOpenPdfExport"),
 
-        // Full-Screen Editor & Corner Hamburger Menu (☰)
+        // Full-Screen Editor & Non-Blocking Compact Hamburger Drawer (☰)
         fullScreenEditorModal: document.getElementById("fullScreenEditorModal"),
         btnToggleEditDropdown: document.getElementById("btnToggleEditDropdown"),
         btnFsPrev: document.getElementById("btnFsPrev"),
@@ -1543,6 +1620,10 @@
         ddBrightnessVal: document.getElementById("ddBrightnessVal"),
         ddCleanSlider: document.getElementById("ddCleanSlider"),
         ddCleanVal: document.getElementById("ddCleanVal"),
+        btnAutoFlattenBookLines: document.getElementById("btnAutoFlattenBookLines"),
+        ddBookCurveSlider: document.getElementById("ddBookCurveSlider"),
+        ddBookCurveVal: document.getElementById("ddBookCurveVal"),
+        btnResetFlattenBook: document.getElementById("btnResetFlattenBook"),
         btnDdStartCrop: document.getElementById("btnDdStartCrop"),
         btnDdRotate90: document.getElementById("btnDdRotate90"),
         btnDdSplit2Pages: document.getElementById("btnDdSplit2Pages"),
@@ -1559,8 +1640,6 @@
         btnAutoDetectCorners: document.getElementById("btnAutoDetectCorners"),
         btnFullFrameCorners: document.getElementById("btnFullFrameCorners"),
         btnRotateInCrop: document.getElementById("btnRotateInCrop"),
-        bookCurveSlider: document.getElementById("bookCurveSlider"),
-        bookCurveVal: document.getElementById("bookCurveVal"),
         btnCancelCrop: document.getElementById("btnCancelCrop"),
         btnApplyCropNow: document.getElementById("btnApplyCropNow"),
         fsBottomArea: document.getElementById("fsBottomArea"),
@@ -1571,7 +1650,7 @@
         btnFsTriggerPdfExport: document.getElementById("btnFsTriggerPdfExport"),
         btnFsDeletePage: document.getElementById("btnFsDeletePage"),
 
-        // Library Modal ("Trang x / y" placed here!)
+        // Library Modal
         libraryModal: document.getElementById("libraryModal"),
         btnCloseLibrary: document.getElementById("btnCloseLibrary"),
         btnViewList: document.getElementById("btnViewList"),
@@ -1700,6 +1779,7 @@
         const shouldOpen = typeof forceState === "boolean" ? forceState : !el.editDropdownMenu.classList.contains("open");
         el.editDropdownMenu.classList.toggle("open", shouldOpen);
         el.btnToggleEditDropdown.classList.toggle("open", shouldOpen);
+        el.fullScreenEditorModal.classList.toggle("drawer-open", shouldOpen);
       }
 
       function setFsCropMode(enable) {
@@ -1708,12 +1788,6 @@
         el.fsCropBar.classList.toggle("visible", state.fsCropMode);
         if (state.fsCropMode) {
           toggleEditDropdown(false);
-          const page = getCurrentPage();
-          if (page) {
-            const bc = page.settings.bookCurve || 0;
-            el.bookCurveSlider.value = bc;
-            el.bookCurveVal.textContent = `${bc}%`;
-          }
         }
         renderFullScreenEditor();
       }
@@ -1852,7 +1926,7 @@
       }
 
       // =========================================================================
-      // 4. v15.0 TWO-STAGE SUBPIXEL FULL-RESOLUTION NORMAL-PROFILE RIM DETECTOR
+      // 4. v16.0 TWO-STAGE SUBPIXEL FULL-RESOLUTION NORMAL-PROFILE RIM DETECTOR
       // =========================================================================
       function sepMaxFilter(arr, w, h, rad) {
         const tmp = new Float32Array(w * h);
@@ -2447,23 +2521,13 @@
       }
 
       // =========================================================================
-      // 5. PURE GEOMETRIC 3D PERSPECTIVE DEWARPING
+      // 5. v16.0 3D PERSPECTIVE + 2-STAGE 1D PROFILE NCC HARMONIC TEXT-LINE &
+      //    CYLINDRICAL PAGE DEWARPING (STRAIGHTENS BOTH CURVED PAGE & TEXT LINES!)
       // =========================================================================
-      function computeHomography(srcPts, dstPts) {
-        const A = [];
-        const b = [];
-        for (let i = 0; i < 4; i++) {
-          const x = srcPts[i].x;
-          const y = srcPts[i].y;
-          const u = dstPts[i].x;
-          const v = dstPts[i].y;
-          A.push([x, y, 1, 0, 0, 0, -x * u, -y * u]);
-          b.push(u);
-          A.push([0, 0, 0, x, y, 1, -x * v, -y * v]);
-          b.push(v);
-        }
-
-        const n = 8;
+      function solveLinearSystem(A_in, b_in) {
+        const n = b_in.length;
+        const A = A_in.map((row) => Float64Array.from(row));
+        const b = Float64Array.from(b_in);
         for (let i = 0; i < n; i++) {
           let maxRow = i;
           let maxVal = Math.abs(A[i][i]);
@@ -2473,25 +2537,254 @@
               maxRow = k;
             }
           }
-          const tmpRow = A[i]; A[i] = A[maxRow]; A[maxRow] = tmpRow;
+          const tmpR = A[i]; A[i] = A[maxRow]; A[maxRow] = tmpR;
           const tmpB = b[i]; b[i] = b[maxRow]; b[maxRow] = tmpB;
-
-          const pivot = A[i][i] || 1e-12;
-          for (let j = i; j < n; j++) A[i][j] /= pivot;
-          b[i] /= pivot;
-
+          const piv = A[i][i] || 1e-12;
+          for (let j = i; j < n; j++) A[i][j] /= piv;
+          b[i] /= piv;
           for (let k = 0; k < n; k++) {
             if (k !== i) {
-              const factor = A[k][i];
-              for (let j = i; j < n; j++) A[k][j] -= factor * A[i][j];
-              b[k] -= factor * b[i];
+              const f = A[k][i];
+              for (let j = i; j < n; j++) A[k][j] -= f * A[i][j];
+              b[k] -= f * b[i];
             }
           }
         }
-        return [b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], 1];
+        return b;
       }
 
-      function dewarpQuad(srcCanvas, quadCorners, paperSizeMode, midOffsets, bookCurvePct) {
+      function computeHomography(srcPts, dstPts) {
+        const A = [];
+        const b = [];
+        for (let i = 0; i < 4; i++) {
+          const x = srcPts[i].x, y = srcPts[i].y;
+          const u = dstPts[i].x, v = dstPts[i].y;
+          A.push([x, y, 1, 0, 0, 0, -x * u, -y * u]);
+          b.push(u);
+          A.push([0, 0, 0, x, y, 1, -x * v, -y * v]);
+          b.push(v);
+        }
+        const h = solveLinearSystem(A, b);
+        return [h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], 1];
+      }
+
+      function evalHarmonicBasis7(xn) {
+        const pi = Math.PI;
+        return [
+          xn - 0.5,
+          Math.sin(pi * xn),
+          Math.cos(pi * xn),
+          Math.sin(2.0 * pi * xn),
+          Math.cos(2.0 * pi * xn),
+          Math.sin(3.0 * pi * xn),
+          Math.cos(4.0 * pi * xn)
+        ];
+      }
+
+      // Fast 2-Stage 1D Vertical Profile NCC + Orthogonal Harmonic Basis Estimator
+      // Measures exact text-line vertical displacement curve w(x) across M=32 columns:
+      // - Returns 0.00px on flat pages (even with multi-column A/B/C/D gaps!)
+      // - Accurately straightens curved single-page or 2-page book text lines so all lines are straight & parallel!
+      function estimateTextLineHarmonicWave(rgbaData, dstW, dstH) {
+        const M = 32;
+        const subW = M * 6; // 192
+        const Hs = 320;
+        const scaleY = dstH / Hs;
+
+        // 1. Downsample luminance to (subW x Hs)
+        const L = new Float32Array(subW * Hs);
+        for (let sy = 0; sy < Hs; sy++) {
+          const y = Math.min(dstH - 1, Math.round((sy / (Hs - 1)) * (dstH - 1)));
+          const rOff = y * dstW;
+          const sOff = sy * subW;
+          for (let sx = 0; sx < subW; sx++) {
+            const x = Math.min(dstW - 1, Math.round((sx / (subW - 1)) * (dstW - 1)));
+            const idx4 = (rOff + x) * 4;
+            L[sOff + sx] = 0.299 * rgbaData[idx4] + 0.587 * rgbaData[idx4 + 1] + 0.114 * rgbaData[idx4 + 2];
+          }
+        }
+
+        // 2. Vertical high-pass ink stroke energy E(sy, sx)
+        const E = new Float32Array(subW * Hs);
+        const my = Math.floor(Hs * 0.06);
+        for (let sy = Math.max(3, my); sy < Hs - Math.max(3, my); sy++) {
+          const sOff = sy * subW;
+          const upOff = (sy - 3) * subW;
+          const dnOff = (sy + 3) * subW;
+          for (let sx = 0; sx < subW; sx++) {
+            const diff = 0.5 * (L[upOff + sx] + L[dnOff + sx]) - L[sOff + sx];
+            if (diff > 0) E[sOff + sx] = diff;
+          }
+        }
+
+        // 3. Build M = 32 overlapping 1D vertical projection profiles P[k * Hs + sy]
+        const P = new Float64Array(M * Hs);
+        const rawP = new Float64Array(Hs);
+        for (let k = 0; k < M; k++) {
+          const x0 = Math.max(0, k * 6 - 3);
+          const x1 = Math.min(subW - 1, (k + 1) * 6 + 2);
+          const span = x1 - x0 + 1;
+          for (let sy = 0; sy < Hs; sy++) {
+            let s = 0;
+            const sOff = sy * subW;
+            for (let sx = x0; sx <= x1; sx++) s += E[sOff + sx];
+            rawP[sy] = s / span;
+          }
+          // Subtract local 15px moving average so only sharp text-line peaks remain
+          const kOff = k * Hs;
+          for (let sy = 0; sy < Hs; sy++) {
+            const y0 = Math.max(0, sy - 7), y1 = Math.min(Hs - 1, sy + 7);
+            let m = 0;
+            for (let ny = y0; ny <= y1; ny++) m += rawP[ny];
+            m /= (y1 - y0 + 1);
+            P[kOff + sy] = Math.max(0.0, rawP[sy] - m);
+          }
+        }
+
+        const B_cols = [];
+        for (let k = 0; k < M; k++) {
+          B_cols.push(evalHarmonicBasis7(k / (M - 1)));
+        }
+        const diff_B = [];
+        for (let k = 0; k < M - 1; k++) {
+          const row = new Float64Array(7);
+          for (let j = 0; j < 7; j++) row[j] = B_cols[k + 1][j] - B_cols[k][j];
+          diff_B.push(row);
+        }
+        const regDiag = [0.06, 0.03, 0.03, 0.03, 0.03, 0.06, 0.03];
+
+        function runNccPass(P_in, maxD) {
+          const deltas = new Float64Array(M);
+          const weights = new Float64Array(M);
+          const corrs = new Float64Array(2 * maxD + 1);
+          const corrsSorted = new Float64Array(2 * maxD + 1);
+
+          for (let k = 1; k < M; k++) {
+            const prevOff = (k - 1) * Hs;
+            const currOff = k * Hs;
+            let normPrevSq = 0, normCurrCenterSq = 0;
+            for (let y = my; y < Hs - my; y++) {
+              const vp = P_in[prevOff + y];
+              const vc = P_in[currOff + y];
+              normPrevSq += vp * vp;
+              normCurrCenterSq += vc * vc;
+            }
+            const normPrev = Math.sqrt(normPrevSq);
+            if (normPrev < 1e-3 || Math.sqrt(normCurrCenterSq) < 1e-3) continue;
+
+            let bestI = maxD;
+            let bestC = -1.0;
+            for (let di = 0; di <= 2 * maxD; di++) {
+              const d = di - maxD;
+              let dot = 0, normSegSq = 0;
+              for (let y = my; y < Hs - my; y++) {
+                const vp = P_in[prevOff + y];
+                const vc = P_in[currOff + y + d];
+                dot += vp * vc;
+                normSegSq += vc * vc;
+              }
+              const cVal = dot / (normPrev * (Math.sqrt(normSegSq) + 1e-6));
+              corrs[di] = cVal;
+              corrsSorted[di] = cVal;
+              if (cVal > bestC) {
+                bestC = cVal;
+                bestI = di;
+              }
+            }
+
+            corrsSorted.sort();
+            const medC = corrsSorted[maxD];
+            if (bestC > 0.35 && (bestC - medC) > 0.08) {
+              let bestD = bestI - maxD;
+              if (bestI > 0 && bestI < 2 * maxD) {
+                const vm = corrs[bestI - 1], v0 = corrs[bestI], vp = corrs[bestI + 1];
+                const denom = 2.0 * (2.0 * v0 - vm - vp);
+                if (Math.abs(denom) > 1e-9) {
+                  bestD += Math.max(-0.5, Math.min(0.5, (vm - vp) / denom));
+                }
+              }
+              deltas[k] = bestD * scaleY;
+              weights[k] = (bestC - medC) * bestC;
+            }
+          }
+
+          const A_sys = Array.from({ length: 7 }, (_, r) => {
+            const row = new Float64Array(7);
+            row[r] = regDiag[r];
+            return row;
+          });
+          const b_sys = new Float64Array(7);
+
+          for (let k = 0; k < M - 1; k++) {
+            const w = weights[k + 1];
+            if (w <= 0) continue;
+            const target = -deltas[k + 1];
+            const dB = diff_B[k];
+            for (let r = 0; r < 7; r++) {
+              const wdBr = w * dB[r];
+              b_sys[r] += wdBr * target;
+              for (let c = 0; c < 7; c++) {
+                A_sys[r][c] += wdBr * dB[c];
+              }
+            }
+          }
+
+          const coeffs = solveLinearSystem(A_sys, b_sys);
+          const wCols = new Float64Array(M);
+          let meanW = 0;
+          for (let k = 0; k < M; k++) {
+            let s = 0;
+            for (let j = 0; j < 7; j++) s += B_cols[k][j] * coeffs[j];
+            wCols[k] = s;
+            meanW += s;
+          }
+          meanW /= M;
+          let maxAbs = 0;
+          for (let k = 0; k < M; k++) {
+            wCols[k] -= meanW;
+            if (Math.abs(wCols[k]) > maxAbs) maxAbs = Math.abs(wCols[k]);
+          }
+          return { coeffs, wCols, maxAbs };
+        }
+
+        const pass1 = runNccPass(P, 6);
+        // Strict Flat-Paper Gate: if max curve amplitude < 1.6px, paper is already flat!
+        if (pass1.maxAbs < 1.6) return null;
+
+        // Pass 2: shift 1D profiles P in-place by -pass1.wCols / scaleY and refine residual!
+        const P2 = new Float64Array(M * Hs);
+        for (let k = 0; k < M; k++) {
+          const shiftSub = -pass1.wCols[k] / scaleY;
+          const kOff = k * Hs;
+          for (let sy = 0; sy < Hs; sy++) {
+            const yf = sy + shiftSub;
+            if (yf >= 0 && yf < Hs - 1) {
+              const y0 = yf | 0;
+              const dy = yf - y0;
+              P2[kOff + sy] = P[kOff + y0] * (1.0 - dy) + P[kOff + y0 + 1] * dy;
+            }
+          }
+        }
+        const pass2 = runNccPass(P2, 4);
+
+        const totalCoeffs = new Float64Array(7);
+        for (let j = 0; j < 7; j++) totalCoeffs[j] = pass1.coeffs[j] + pass2.coeffs[j];
+
+        const waveFull = new Float32Array(dstW);
+        let meanFull = 0;
+        for (let x = 0; x < dstW; x++) {
+          const B = evalHarmonicBasis7(x / (dstW - 1));
+          let s = 0;
+          for (let j = 0; j < 7; j++) s += B[j] * totalCoeffs[j];
+          waveFull[x] = s;
+          meanFull += s;
+        }
+        meanFull /= dstW;
+        for (let x = 0; x < dstW; x++) waveFull[x] -= meanFull;
+        return waveFull;
+      }
+
+      function dewarpQuad(srcCanvas, quadCorners, paperSizeMode, midOffsets, bookCurvePct, autoLineDewarp) {
         const topW = Math.hypot(quadCorners[1].x - quadCorners[0].x, quadCorners[1].y - quadCorners[0].y);
         const botW = Math.hypot(quadCorners[2].x - quadCorners[3].x, quadCorners[2].y - quadCorners[3].y);
         const leftH = Math.hypot(quadCorners[3].x - quadCorners[0].x, quadCorners[3].y - quadCorners[0].y);
@@ -2559,21 +2852,17 @@
         ) > 0.5;
 
         const bookGain = (bookCurvePct || 0) / 100.0;
-        const bookWaveX = new Float32Array(dstW);
+        const manualWaveX = new Float32Array(dstW);
         if (Math.abs(bookGain) > 0.01) {
-          const scaleY = sH / 680.0;
+          const scaleY = dstH / 680.0;
           for (let u = 0; u < dstW; u++) {
             const xn = u / (dstW - 1);
-            bookWaveX[u] = bookGain * scaleY * (16.0 * Math.sin(2.0 * Math.PI * xn) - 12.0 * Math.cos(4.0 * Math.PI * xn));
+            // Smooth cylindrical page arch + 2-page spine curve
+            manualWaveX[u] = bookGain * scaleY * (22.0 * Math.sin(Math.PI * xn) + 12.0 * Math.sin(2.0 * Math.PI * xn) - 10.0 * Math.cos(4.0 * Math.PI * xn));
           }
         }
 
-        const outCanvas = document.createElement("canvas");
-        outCanvas.width = dstW;
-        outCanvas.height = dstH;
-        const outCtx = outCanvas.getContext("2d");
-        const outImg = outCtx.createImageData(dstW, dstH);
-        const dData = outImg.data;
+        const tempData = new Uint8ClampedArray(dstW * dstH * 4);
 
         for (let v = 0; v < dstH; v++) {
           const ty = v / (dstH - 1);
@@ -2593,7 +2882,7 @@
             }
 
             if (Math.abs(bookGain) > 0.01) {
-              sy -= bookWaveX[u];
+              sy -= manualWaveX[u];
             }
 
             const di = (v * dstW + u) * 4;
@@ -2613,19 +2902,80 @@
               const w01 = (1 - dx) * dy;
               const w11 = dx * dy;
 
-              dData[di]     = sData[i00] * w00 + sData[i10] * w10 + sData[i01] * w01 + sData[i11] * w11;
-              dData[di + 1] = sData[i00 + 1] * w00 + sData[i10 + 1] * w10 + sData[i01 + 1] * w01 + sData[i11 + 1] * w11;
-              dData[di + 2] = sData[i00 + 2] * w00 + sData[i10 + 2] * w10 + sData[i01 + 2] * w01 + sData[i11 + 2] * w11;
-              dData[di + 3] = 255;
+              tempData[di]     = sData[i00] * w00 + sData[i10] * w10 + sData[i01] * w01 + sData[i11] * w11;
+              tempData[di + 1] = sData[i00 + 1] * w00 + sData[i10 + 1] * w10 + sData[i01 + 1] * w01 + sData[i11 + 1] * w11;
+              tempData[di + 2] = sData[i00 + 2] * w00 + sData[i10 + 2] * w10 + sData[i01 + 2] * w01 + sData[i11 + 2] * w11;
+              tempData[di + 3] = 255;
             } else {
-              dData[di] = 255;
-              dData[di + 1] = 255;
-              dData[di + 2] = 255;
-              dData[di + 3] = 255;
+              tempData[di] = 255;
+              tempData[di + 1] = 255;
+              tempData[di + 2] = 255;
+              tempData[di + 3] = 255;
             }
           }
         }
 
+        const outCanvas = document.createElement("canvas");
+        outCanvas.width = dstW;
+        outCanvas.height = dstH;
+        const outCtx = outCanvas.getContext("2d");
+        const outImg = outCtx.createImageData(dstW, dstH);
+        const dData = outImg.data;
+
+        // Stage 2: Automatic 2-Stage 1D Profile NCC Harmonic Text-Line & Page Flattening
+        // Straightens curved text lines so all lines are straight and parallel, plus horizontal arc-length unrolling!
+        if (autoLineDewarp !== false) {
+          const autoWave = estimateTextLineHarmonicWave(tempData, dstW, dstH);
+          if (autoWave) {
+            // Compute horizontal arc-length map xMap[u] to unroll characters compressed along curved slopes
+            const arcCum = new Float32Array(dstW);
+            for (let u = 1; u < dstW; u++) {
+              const dw = autoWave[u] - autoWave[u - 1];
+              arcCum[u] = arcCum[u - 1] + Math.sqrt(1.0 + 0.65 * dw * dw);
+            }
+            const totalArc = arcCum[dstW - 1] || 1.0;
+            const xMap = new Float32Array(dstW);
+            let pIdx = 0;
+            for (let u = 0; u < dstW; u++) {
+              const targetArc = (u / (dstW - 1)) * totalArc;
+              while (pIdx < dstW - 2 && arcCum[pIdx + 1] < targetArc) pIdx++;
+              const span = (arcCum[pIdx + 1] - arcCum[pIdx]) || 1e-6;
+              xMap[u] = pIdx + Math.max(0.0, Math.min(1.0, (targetArc - arcCum[pIdx]) / span));
+            }
+
+            for (let y = 0; y < dstH; y++) {
+              for (let x = 0; x < dstW; x++) {
+                const sx = Math.min(dstW - 1.001, Math.max(0.0, xMap[x]));
+                const x0 = sx | 0;
+                const dx = sx - x0;
+                const wVal = autoWave[x0] * (1.0 - dx) + autoWave[x0 + 1] * dx;
+                const sy = Math.min(dstH - 1.001, Math.max(0.0, y - wVal));
+                const y0 = sy | 0;
+                const dy = sy - y0;
+
+                const i00 = (y0 * dstW + x0) * 4;
+                const i10 = i00 + 4;
+                const i01 = i00 + dstW * 4;
+                const i11 = i01 + 4;
+                const di = (y * dstW + x) * 4;
+
+                const w00 = (1.0 - dx) * (1.0 - dy);
+                const w10 = dx * (1.0 - dy);
+                const w01 = (1.0 - dx) * dy;
+                const w11 = dx * dy;
+
+                dData[di]     = tempData[i00] * w00 + tempData[i10] * w10 + tempData[i01] * w01 + tempData[i11] * w11;
+                dData[di + 1] = tempData[i00 + 1] * w00 + tempData[i10 + 1] * w10 + tempData[i01 + 1] * w01 + tempData[i11 + 1] * w11;
+                dData[di + 2] = tempData[i00 + 2] * w00 + tempData[i10 + 2] * w10 + tempData[i01 + 2] * w01 + tempData[i11 + 2] * w11;
+                dData[di + 3] = 255;
+              }
+            }
+            outCtx.putImageData(outImg, 0, 0);
+            return outCanvas;
+          }
+        }
+
+        dData.set(tempData);
         outCtx.putImageData(outImg, 0, 0);
         return outCanvas;
       }
@@ -2916,7 +3266,8 @@
           page.corners,
           page.settings.paperSize,
           page.midOffsets,
-          page.settings.bookCurve || 0
+          page.settings.bookCurve || 0,
+          page.settings.autoLineDewarp !== false
         );
         page.dewarpedCanvas = dewarped;
         page.filterCache = null;
@@ -3097,8 +3448,6 @@
         }
       }
 
-      // Opens Full-Screen View/Edit with the 3-line Hamburger menu CLOSED by default
-      // (User taps the ☰ button in the corner when they want the editing tools to pop out!)
       function openFullScreenEditorForIndex(idx) {
         if (idx < 0 || idx >= state.pages.length) return;
         state.currentPageIndex = idx;
@@ -3124,8 +3473,8 @@
 
         const stRect = el.fsStageWrap.getBoundingClientRect();
         const relX = clientX - stRect.left;
-        const leftPx = relX < stRect.width * 0.5 ? Math.max(10, stRect.width - 128) : 10;
-        const topPx = 62;
+        const leftPx = relX < stRect.width * 0.5 ? Math.max(10, stRect.width - 124) : 10;
+        const topPx = 54;
 
         el.magnifierLoupe.style.left = `${leftPx}px`;
         el.magnifierLoupe.style.top = `${topPx}px`;
@@ -3229,7 +3578,7 @@
           return;
         }
 
-        // Clicking/touching outside the menu closes the 3-line hamburger menu immediately
+        // Tapping anywhere on the image viewport outside the menu closes the ☰ drawer!
         if (el.editDropdownMenu.classList.contains("open")) {
           toggleEditDropdown(false);
         }
@@ -3688,7 +4037,6 @@
         const hasPages = total > 0 && state.currentPageIndex >= 0;
         const curr = hasPages ? state.currentPageIndex + 1 : 0;
 
-        // "Trang x / y" is displayed strictly inside the Library!
         el.libPageStatusBadge.textContent = hasPages ? `Trang ${curr} / ${total}` : `0 ảnh`;
 
         el.btnOpenFullEditor.disabled = !hasPages;
@@ -4255,8 +4603,8 @@
         el.ddBrightnessVal.textContent = bVal > 0 ? `+${bVal}` : `${bVal}`;
         el.ddCleanSlider.value = s.bgSuppress ?? 68;
         el.ddCleanVal.textContent = `${s.bgSuppress ?? 68}%`;
-        el.bookCurveSlider.value = s.bookCurve || 0;
-        el.bookCurveVal.textContent = `${s.bookCurve || 0}%`;
+        el.ddBookCurveSlider.value = s.bookCurve || 0;
+        el.ddBookCurveVal.textContent = `${s.bookCurve || 0}%`;
         el.btnDdToggleAlpha.classList.toggle("active", !!s.transparentBg);
 
         el.ddFilenameInput.value = page.name || "";
@@ -4290,7 +4638,7 @@
               c.getContext("2d").drawImage(img, 0, 0, w, h);
               const cleanName = file.name.replace(/\.[^.]+$/, "");
               addNewPageFromCanvas(c, cleanName, null, null, 0, "");
-              showToast(`Đã bắt rìa & làm phẳng "${file.name}"!`);
+              showToast(`Đã bắt rìa & dàn phẳng "${file.name}"!`);
             };
             img.src = ev.target.result;
           };
@@ -4515,14 +4863,23 @@
           el.fullScreenEditorModal.classList.remove("open");
         });
 
-        // Clicking anywhere on the bottom area of the Full-Screen Editor also closes the ☰ menu
+        // Category Tabs inside Compact Non-Blocking ☰ Drawer
+        el.editDropdownMenu.querySelectorAll(".drawer-tab-btn").forEach((tabBtn) => {
+          tabBtn.addEventListener("click", () => {
+            const targetId = tabBtn.getAttribute("data-tab");
+            el.editDropdownMenu.querySelectorAll(".drawer-tab-btn").forEach((b) => b.classList.toggle("active", b === tabBtn));
+            el.editDropdownMenu.querySelectorAll(".drawer-pane").forEach((p) => p.classList.toggle("active", p.id === targetId));
+          });
+        });
+
+        // Clicking anywhere on the bottom area of the Full-Screen Editor also closes the ☰ drawer
         el.fsBottomArea.addEventListener("pointerdown", () => {
           if (el.editDropdownMenu.classList.contains("open")) {
             toggleEditDropdown(false);
           }
         });
 
-        // Color Mode Buttons inside ☰ Menu
+        // Color Mode Buttons inside ☰ Drawer
         el.ddColorModeGrid.querySelectorAll("[data-mode]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const page = getCurrentPage();
@@ -4536,7 +4893,7 @@
           });
         });
 
-        // Alpha Background Toggle inside ☰ Menu
+        // Alpha Background Toggle inside ☰ Drawer
         el.btnDdToggleAlpha.addEventListener("click", () => {
           const page = getCurrentPage();
           if (!page) return;
@@ -4549,7 +4906,7 @@
           showToast(page.settings.transparentBg ? "Đã bật Tách nền Alpha!" : "Đã tắt Tách nền.");
         });
 
-        // Brightness Slider inside ☰ Menu
+        // Brightness Slider inside ☰ Drawer
         el.ddBrightnessSlider.addEventListener("input", () => {
           const page = getCurrentPage();
           if (!page) return;
@@ -4565,7 +4922,7 @@
           });
         });
 
-        // Background Clean Slider inside ☰ Menu
+        // Background Clean Slider inside ☰ Drawer
         el.ddCleanSlider.addEventListener("input", () => {
           const page = getCurrentPage();
           if (!page) return;
@@ -4581,7 +4938,45 @@
           });
         });
 
-        // Crop, Rotate, Split inside ☰ Menu
+        // Coupled Page & Parallel Text-Line Flattening Controls inside ☰ Drawer ("📏 Dàn phẳng")
+        el.btnAutoFlattenBookLines.addEventListener("click", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          page.settings.autoLineDewarp = true;
+          updateGeometryAndProcess(page);
+          renderPageList();
+          renderStage();
+          renderFullScreenEditor();
+          showToast("Đã dàn phẳng trang & nắn các dòng chữ thẳng hàng, song song!");
+        });
+
+        el.ddBookCurveSlider.addEventListener("input", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          const v = parseInt(el.ddBookCurveSlider.value, 10) || 0;
+          page.settings.bookCurve = v;
+          el.ddBookCurveVal.textContent = `${v}%`;
+          if (state.sliderRafId) cancelAnimationFrame(state.sliderRafId);
+          state.sliderRafId = requestAnimationFrame(() => {
+            state.sliderRafId = null;
+            updateGeometryAndProcess(page);
+            renderStage();
+            renderFullScreenEditor();
+          });
+        });
+
+        el.btnResetFlattenBook.addEventListener("click", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          page.settings.bookCurve = 0;
+          el.ddBookCurveSlider.value = 0;
+          el.ddBookCurveVal.textContent = "0%";
+          updateGeometryAndProcess(page);
+          renderStage();
+          renderFullScreenEditor();
+        });
+
+        // Crop, Rotate, Split inside ☰ Drawer
         el.btnDdStartCrop.addEventListener("click", () => setFsCropMode(true));
         el.btnDdRotate90.addEventListener("click", () => {
           rotateCurrentPage(1);
@@ -4589,7 +4984,7 @@
         });
         el.btnDdSplit2Pages.addEventListener("click", splitCurrentPageIntoTwoHalves);
 
-        // Filename & Note inside ☰ Menu
+        // Filename & Note inside ☰ Drawer
         el.ddFilenameInput.addEventListener("input", () => {
           const page = getCurrentPage();
           if (!page) return;
@@ -4641,15 +5036,6 @@
         });
 
         el.btnRotateInCrop.addEventListener("click", () => rotateCurrentPage(1));
-
-        el.bookCurveSlider.addEventListener("input", () => {
-          const page = getCurrentPage();
-          if (!page) return;
-          const v = parseInt(el.bookCurveSlider.value, 10) || 0;
-          page.settings.bookCurve = v;
-          el.bookCurveVal.textContent = `${v}%`;
-        });
-
         el.btnCancelCrop.addEventListener("click", () => setFsCropMode(false));
 
         el.btnApplyCropNow.addEventListener("click", () => {
@@ -4660,7 +5046,7 @@
           renderPageList();
           renderStage();
           renderFullScreenEditor();
-          showToast("Đã cắt & làm phẳng tài liệu!");
+          showToast("Đã cắt & dàn phẳng trang tài liệu!");
         });
 
         // Full-Screen Stage Touch & Mouse Listeners

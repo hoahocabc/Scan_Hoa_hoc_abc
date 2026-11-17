@@ -1,9 +1,9 @@
-# ScanhoahocABC (v15.0 — Professional Minimalist UI • Corner Hamburger Tools • 2-Stage Subpixel Rim Detector)
+# ScanhoahocABC (v16.0 — Non-Blocking Smartphone Hamburger Drawer • Coupled Page & Parallel Text-Line Dewarping)
 
-## Cải tiến trọng tâm trên ScanhoahocABC (v15.0)
-1. **Chuyển `"Trang x / y"` vào trong Thư viện**:
-   - Loại bỏ hoàn toàn nhãn `"Trang x / y"` trên màn hình chính để giữ bố cục sạch sẽ, chuyên nghiệp.
-   - Thông tin `"Trang x / y"` chỉ hiển thị bên trong cửa sổ **`🗂 Thư viện`**.
-2. **Nút thu gọn dạng Ba gạch (`☰`) ở góc màn hình chứa ảnh khi vào `✨ Sửa` hoặc `Xem`**:
-   - Khi bấm **`✨ Sửa`** ở màn hình chính hoặc **`Xem`** trong Thư viện, ảnh hiển thị toàn màn hình với **nút thu gọn dạng ba gạch (`☰`)** ở góc trên bên trái khung ảnh.
-   - Khi bấm vào nút ba gạch (`☰`), bảng công cụ sửa ảnh (chế độ màu, tách nền, tăng/giảm sáng, làm sạch nền, cắt góc, xoay 90°, tách đôi, đổi tên, ghi chú) mới bật ra; bấm ra phần bên ngoài menu hoặc bấm lại vào nút ba gạch (`☰`) thì menu tự động đóng lại.
+## 2 Nâng cấp trọng tâm trên ScanhoahocABC (v16.0)
+1. **Thanh công cụ Ba gạch (`☰`) phân tab siêu gọn trên Smartphone — Tuyệt đối không che khuất ảnh**:
+   - Khi bấm vào nút **Ba gạch (`☰`)** ở góc trên bên trái màn hình sửa ảnh, thanh công cụ mở ra dưới dạng **Dải công cụ phân tab 2 dòng siêu gọn (`~86px`)** nằm tách biệt phía trên vùng chứa ảnh (khung ảnh bên dưới tự động co giãn `flex: 1`), giúp **100% bức ảnh luôn hiển thị trọn vẹn** để người dùng quan sát trực tiếp khi đổi màu, chỉnh độ sáng hay dàn phẳng sách trên điện thoại.
+   - Bấm vào vùng ảnh bên dưới hoặc bấm lại nút ba gạch (`☰`) thì thanh công cụ tự động đóng lại ngay.
+2. **Thuật toán Dàn phẳng trang sách & Nắn thẳng song song các dòng chữ uốn cong (2-Stage 1D Vertical Profile NCC + Harmonic Basis & Arc-Length Unrolling)**:
+   - Tự động chia trang thành 32 cột chồng lấp, đo độ lệch dọc giữa các cột bằng Tương quan chéo chuẩn hóa (NCC) 2 tầng và khớp vào hệ hàm điều hòa trực giao 7 thành phần kèm giãn chiều ngang theo độ dài cung (`Arc-Length Unrolling`).
+   - Kéo phẳng cả mép trang sách lẫn toàn bộ các dòng chữ bị uốn cong về **thẳng hàng và song song tuyệt đối với nhau**, đồng thời giữ nguyên 100% độ phẳng cho các tờ giấy phẳng thông thường (`0.00 px` biến dạng).

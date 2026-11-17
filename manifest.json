@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v15.0) — Ứng dụng quét tài liệu chuyên nghiệp: Bắt rìa 2 tầng chính xác sub-pixel, nút công cụ ba gạch (☰) ở góc khung ảnh toàn màn hình và quản lý Thư viện hiện đại.",
+  "description": "ScanhoahocABC (v16.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Bắt rìa sub-pixel, dàn phẳng trang sách & nắn thẳng song song các dòng chữ cong, thanh công cụ ba gạch (☰) gọn nhẹ không che khuất ảnh.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
