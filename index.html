@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0a467d" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v16.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Bắt rìa sub-pixel, dàn phẳng trang sách & nắn thẳng song song các dòng chữ cong, thanh công cụ ba gạch (☰) gọn nhẹ không che khuất ảnh." />
+  <meta name="description" content="ScanhoahocABC (v17.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Bắt rìa sub-pixel, dàn phẳng trang sách & nắn thẳng song song các dòng chữ cong, thanh công cụ ba gạch (☰) gọn nhẹ không che khuất ảnh." />
   <style>
     :root {
       --primary: #0a467d;
@@ -337,10 +337,11 @@
     }
 
     /* ========================================================================= */
-    /* 4. SMARTPHONE-OPTIMIZED FULL-SCREEN VIEW & EDIT SCREEN                     */
-    /*    - Corner Hamburger (☰) opens a COMPACT 2-ROW TABBED DRAWER AT THE TOP   */
-    /*    - The image viewport below it automatically resizes (flex: 1) so       */
-    /*      0% OF THE IMAGE IS EVER COVERED while editing on a phone!            */
+    /* 4. SMARTPHONE-OPTIMIZED FULL-SCREEN VIEW & EDIT SCREEN (v17.0)             */
+    /*    - Dedicated 46px Top Bar holds ☰ Button on left & ◀/▶/Đóng on right    */
+    /*    - ☰ Menu opens at FULL 100% SCREEN WIDTH with 2-to-3 buttons per row   */
+    /*      so 100% of button labels are spacious & crystal-clear on phones!     */
+    /*    - Image stage below flexes automatically so 0% of image is covered!    */
     /* ========================================================================= */
     .fs-editor-backdrop {
       position: fixed;
@@ -358,18 +359,98 @@
       display: flex;
     }
 
-    /* Non-Blocking Compact Top Drawer (Appears ONLY when ☰ is tapped, pushes image gently down instead of covering it!) */
+    /* Dedicated Full-Width Top Bar in Full-Screen Editor (Never overlaps menu or image!) */
+    .fs-top-bar {
+      flex-shrink: 0;
+      width: 100%;
+      background: #0f172a;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 10px;
+      z-index: 168;
+    }
+
+    .fs-top-bar-inner {
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    /* Corner Hamburger Button (☰ Công cụ) at Top-Left */
+    .fs-corner-hamburger {
+      height: 36px;
+      padding: 0 12px;
+      border-radius: 9px;
+      background: var(--primary);
+      color: #ffffff;
+      border: 1.5px solid rgba(255, 255, 255, 0.45);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-size: 0.80rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+      transition: all 0.14s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .fs-corner-hamburger:active {
+      transform: scale(0.96);
+    }
+
+    .fs-corner-hamburger.open {
+      background: #ffffff;
+      color: var(--primary);
+      border-color: #ffffff;
+    }
+
+    /* Right Nav & Close Group at Top-Right */
+    .fs-corner-right-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .fs-corner-btn {
+      height: 36px;
+      padding: 0 11px;
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .fs-corner-btn:disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    /* Full-Width 100% Readable Hamburger Dropdown Drawer (Zero left-padding cutoff, max 3 buttons/row!) */
     .edit-compact-drawer {
       flex-shrink: 0;
       width: 100%;
       background: #ffffff;
       color: var(--text);
       border-bottom: 2px solid var(--primary);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-      padding: 7px 10px 8px 56px; /* left padding leaves room for the corner ☰ button! */
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      padding: 9px 12px 10px 12px;
       display: none;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
       z-index: 162;
     }
 
@@ -377,139 +458,121 @@
       display: flex;
     }
 
+    .edit-drawer-inner {
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* 3 Spacious Category Tabs across full width (~108px each on 360px phone!) */
     .drawer-tabs-row {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 4px;
-      max-width: 580px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
       width: 100%;
     }
 
     .drawer-tab-btn {
-      height: 29px;
-      border-radius: 7px;
-      border: 1px solid var(--primary-border);
+      height: 35px;
+      border-radius: 8px;
+      border: 1.5px solid var(--primary-border);
       background: var(--surface-alt);
       color: var(--text-muted);
-      font-size: 0.69rem;
+      font-size: 0.79rem;
       font-weight: 800;
       cursor: pointer;
-      padding: 0 3px;
+      padding: 0 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      min-width: 0;
     }
 
     .drawer-tab-btn.active {
       background: var(--primary);
       color: #ffffff;
       border-color: var(--primary);
+      box-shadow: 0 2px 6px rgba(10, 70, 125, 0.22);
     }
 
     .drawer-pane {
       display: none;
-      align-items: center;
-      gap: 6px;
-      max-width: 580px;
+      flex-direction: column;
+      gap: 7px;
       width: 100%;
-      min-height: 36px;
     }
 
     .drawer-pane.active {
       display: flex;
     }
 
-    .drawer-mode-pills {
+    /* 3-Column & 2-Column Spacious Mode Grids (108px to 165px per button on 360px phone!) */
+    .drawer-grid-3 {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 4px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
       width: 100%;
     }
 
-    .dd-mode-btn {
-      height: 33px;
-      border-radius: 8px;
-      border: 1.5px solid var(--primary-border);
-      background: var(--surface-alt);
-      color: var(--text);
-      font-size: 0.70rem;
-      font-weight: 700;
-      cursor: pointer;
-      padding: 0 3px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      min-width: 0;
-    }
-
-    .dd-mode-btn.active {
-      background: var(--primary);
-      color: #ffffff;
-      border-color: var(--primary);
-    }
-
-    .dual-sliders-grid {
+    .drawer-grid-2 {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 6px;
       width: 100%;
     }
 
-    .compact-slider-box {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      background: var(--surface-alt);
-      padding: 4px 7px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      min-width: 0;
+    .drawer-grid-flatten {
+      display: grid;
+      grid-template-columns: minmax(0, 1.85fr) minmax(0, 1fr);
+      gap: 6px;
+      width: 100%;
     }
 
-    .compact-slider-lbl {
-      font-size: 0.68rem;
-      font-weight: 800;
-      color: var(--primary);
+    .dd-mode-btn {
+      height: 36px;
+      border-radius: 8px;
+      border: 1.5px solid var(--primary-border);
+      background: var(--surface-alt);
+      color: var(--text);
+      font-size: 0.80rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
       white-space: nowrap;
     }
 
-    .compact-slider-box input[type="range"] {
-      flex: 1;
-      min-width: 0;
-      accent-color: var(--primary);
-      height: 5px;
-      cursor: pointer;
-    }
-
-    .compact-slider-val {
-      font-size: 0.68rem;
-      font-weight: 800;
-      color: var(--text);
-      min-width: 26px;
-      text-align: right;
-      font-variant-numeric: tabular-nums;
+    .dd-mode-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 2px 6px rgba(10, 70, 125, 0.22);
     }
 
     .dd-slider-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 9px;
       background: var(--surface-alt);
-      padding: 5px 9px;
+      padding: 6px 10px;
       border-radius: 8px;
       border: 1px solid var(--border);
       width: 100%;
     }
 
     .dd-slider-label {
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--text);
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--primary);
       white-space: nowrap;
+      min-width: 66px;
     }
 
     .dd-slider-row input[type="range"] {
@@ -521,12 +584,19 @@
     }
 
     .dd-slider-val {
-      font-size: 0.72rem;
+      font-size: 0.78rem;
       font-weight: 800;
-      color: var(--primary);
-      min-width: 36px;
+      color: var(--text);
+      min-width: 38px;
       text-align: right;
       font-variant-numeric: tabular-nums;
+    }
+
+    .drawer-note-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
     }
 
     /* Full-Screen Image Viewport */
@@ -559,81 +629,14 @@
     #fsCanvas {
       display: block;
       max-width: 100%;
-      max-height: calc(100dvh - 135px);
+      max-height: calc(100dvh - 150px);
       width: auto;
       height: auto;
       touch-action: none;
     }
 
     .fs-editor-backdrop.drawer-open #fsCanvas {
-      max-height: calc(100dvh - 218px);
-    }
-
-    /* Corner Hamburger Button (☰) Fixed at Top-Left Corner of the Screen */
-    .fs-corner-hamburger {
-      position: fixed;
-      top: 9px;
-      left: 9px;
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      background: rgba(10, 70, 125, 0.92);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      color: #ffffff;
-      border: 1.5px solid rgba(255, 255, 255, 0.42);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 168;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-      transition: all 0.14s ease;
-    }
-
-    .fs-corner-hamburger:active {
-      transform: scale(0.94);
-    }
-
-    .fs-corner-hamburger.open {
-      background: var(--primary);
-      color: #ffffff;
-      border-color: var(--primary);
-    }
-
-    /* Corner Close & Nav Group at Top-Right Corner of the Image Viewport */
-    .fs-corner-right-group {
-      position: absolute;
-      top: 9px;
-      right: 9px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      z-index: 158;
-    }
-
-    .fs-corner-btn {
-      height: 34px;
-      padding: 0 10px;
-      border-radius: 9px;
-      background: rgba(15, 23, 42, 0.82);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.28);
-      font-size: 0.73rem;
-      font-weight: 700;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-      white-space: nowrap;
-    }
-
-    .fs-corner-btn:disabled {
-      opacity: 0.35;
-      pointer-events: none;
+      max-height: calc(100dvh - 330px);
     }
 
     /* Floating Crop Toolbar inside Full-Screen Editor when Crop Mode is Active */
@@ -644,13 +647,13 @@
       right: 8px;
       max-width: 520px;
       margin: 0 auto;
-      background: rgba(255, 255, 255, 0.96);
+      background: rgba(255, 255, 255, 0.97);
       border: 1.5px solid var(--primary-border);
       border-radius: 12px;
-      padding: 7px 9px;
+      padding: 8px 10px;
       display: none;
       flex-direction: column;
-      gap: 6px;
+      gap: 7px;
       z-index: 160;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
     }
@@ -659,7 +662,7 @@
       display: flex;
     }
 
-    /* Smart Magnifier Loupe */
+        /* Smart Magnifier Loupe */
     .magnifier-loupe {
       position: absolute;
       width: 114px;
@@ -1280,108 +1283,116 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- FULL-SCREEN VIEW & EDIT SCREEN (SMARTPHONE-OPTIMIZED NON-BLOCKING MENU)   -->
-  <!-- - Corner 3-Line Hamburger (☰) opens a compact 2-row top strip (~86px)     -->
-  <!-- - The document image below it stays 100% UNCOVERED so you see every       -->
-  <!--   change live on your smartphone!                                         -->
+  <!-- FULL-SCREEN VIEW & EDIT SCREEN (v17.0 — SPACIOUS 100% READABLE ☰ MENU)   -->
+  <!-- - Dedicated Top Bar holds ☰ Công cụ on left & ◀ / ▶ / Đóng ✕ on right     -->
+  <!-- - ☰ Menu opens at 100% full width with at most 2–3 buttons per row        -->
+  <!-- - Document image below resizes cleanly so 0% of the image is covered!     -->
   <!-- ========================================================================= -->
   <div class="fs-editor-backdrop" id="fullScreenEditorModal" role="dialog" aria-modal="true" aria-label="Chỉnh sửa ảnh toàn màn hình">
 
-    <!-- TOP-LEFT CORNER: 3-LINE HAMBURGER BUTTON (☰) -->
-    <button type="button" class="fs-corner-hamburger" id="btnToggleEditDropdown" title="Mở / Đóng thanh công cụ sửa ảnh" aria-label="Công cụ sửa ảnh">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-        <line x1="4" y1="6" x2="20" y2="6" />
-        <line x1="4" y1="12" x2="20" y2="12" />
-        <line x1="4" y1="18" x2="20" y2="18" />
-      </svg>
-    </button>
-
-    <!-- COMPACT 2-ROW NON-BLOCKING TOOL DRAWER (Sits above image viewport, never covers the document!) -->
-    <div class="edit-compact-drawer" id="editDropdownMenu">
-      <!-- Row 1: 5 Compact Category Tabs -->
-      <div class="drawer-tabs-row" role="tablist">
-        <button type="button" class="drawer-tab-btn active" data-tab="tabColor">🎨 Màu sắc</button>
-        <button type="button" class="drawer-tab-btn" data-tab="tabLight">☀ Ánh sáng</button>
-        <button type="button" class="drawer-tab-btn" data-tab="tabFlatten">📏 Dàn phẳng</button>
-        <button type="button" class="drawer-tab-btn" data-tab="tabCrop">📐 Cắt/Xoay</button>
-        <button type="button" class="drawer-tab-btn" data-tab="tabNote">📝 Ghi chú</button>
-      </div>
-
-      <!-- Row 2, Pane 1: Color Modes + Alpha -->
-      <div class="drawer-pane active" id="tabColor">
-        <div class="drawer-mode-pills" id="ddColorModeGrid">
-          <button type="button" class="dd-mode-btn active" data-mode="original">Ảnh gốc</button>
-          <button type="button" class="dd-mode-btn" data-mode="magic_color">Tài liệu màu</button>
-          <button type="button" class="dd-mode-btn" data-mode="bw_sauvola">Đen trắng</button>
-          <button type="button" class="dd-mode-btn" data-mode="faint_boost">Làm rõ chữ</button>
-          <button type="button" class="dd-mode-btn" id="btnDdToggleAlpha">Tách nền</button>
-        </div>
-      </div>
-
-      <!-- Row 2, Pane 2: Brightness & Clean Background Sliders -->
-      <div class="drawer-pane" id="tabLight">
-        <div class="dual-sliders-grid">
-          <div class="compact-slider-box">
-            <span class="compact-slider-lbl">Độ sáng</span>
-            <input type="range" id="ddBrightnessSlider" min="-50" max="50" value="0" />
-            <span class="compact-slider-val" id="ddBrightnessVal">0</span>
-          </div>
-          <div class="compact-slider-box">
-            <span class="compact-slider-lbl">Sạch nền</span>
-            <input type="range" id="ddCleanSlider" min="0" max="100" value="68" />
-            <span class="compact-slider-val" id="ddCleanVal">68%</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Row 2, Pane 3: Coupled Page & Parallel Text-Line Flattening ("Dàn phẳng trang & dòng chữ cong") -->
-      <div class="drawer-pane" id="tabFlatten">
-        <button type="button" class="btn btn-main" id="btnAutoFlattenBookLines" style="height:33px; font-size:0.71rem; padding:0 9px; flex-shrink:0;">
-          📏 Tự nắn dòng chữ
+    <!-- DEDICATED TOP BAR: 3-LINE HAMBURGER (☰) ON LEFT, NAV & CLOSE ON RIGHT -->
+    <div class="fs-top-bar">
+      <div class="fs-top-bar-inner">
+        <button type="button" class="fs-corner-hamburger" id="btnToggleEditDropdown" title="Mở / Đóng menu công cụ sửa ảnh" aria-label="Công cụ sửa ảnh">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+          <span>Công cụ</span>
         </button>
-        <div class="compact-slider-box" style="flex:1;">
-          <span class="compact-slider-lbl">Uốn phẳng</span>
-          <input type="range" id="ddBookCurveSlider" min="-100" max="100" value="0" />
-          <span class="compact-slider-val" id="ddBookCurveVal">0%</span>
-        </div>
-        <button type="button" class="btn btn-sec" id="btnResetFlattenBook" style="height:33px; font-size:0.70rem; padding:0 8px; flex-shrink:0;">
-          0%
-        </button>
-      </div>
 
-      <!-- Row 2, Pane 4: Crop, Rotate & Split 2 Pages -->
-      <div class="drawer-pane" id="tabCrop">
-        <div class="grid-3">
-          <button type="button" class="btn btn-sec" id="btnDdStartCrop" style="height:33px; font-size:0.72rem;">📐 Cắt 4 góc</button>
-          <button type="button" class="btn btn-sec" id="btnDdRotate90" style="height:33px; font-size:0.72rem;">↻ Xoay 90°</button>
-          <button type="button" class="btn btn-sec" id="btnDdSplit2Pages" style="height:33px; font-size:0.72rem;">📖 Tách 2 trang</button>
+        <div class="fs-corner-right-group">
+          <button type="button" class="fs-corner-btn" id="btnFsPrev" title="Ảnh trước">◀ Trước</button>
+          <button type="button" class="fs-corner-btn" id="btnFsNext" title="Ảnh sau">Sau ▶</button>
+          <button type="button" class="fs-corner-btn" id="btnCloseFsEditor" title="Đóng màn hình sửa">Đóng ✕</button>
         </div>
-      </div>
-
-      <!-- Row 2, Pane 5: Compact Inline Rename & Note -->
-      <div class="drawer-pane" id="tabNote">
-        <div class="form-field" style="flex:0.85; min-width:0;">
-          <input type="text" id="ddFilenameInput" placeholder="Tên ảnh..." />
-        </div>
-        <div class="form-field" style="flex:1.15; min-width:0;">
-          <input type="text" id="ddNoteInput" placeholder="Nhập ghi chú..." />
-        </div>
-        <label class="checkbox-inline" title="In ghi chú lên chân trang khi tải về">
-          <input type="checkbox" id="chkPrintNoteOnExport" />
-          <span>In</span>
-        </label>
       </div>
     </div>
 
-    <!-- Center Full-Screen Image Viewport (Automatically resizes below the compact drawer so 100% of image is visible!) -->
-    <div class="fs-stage-wrap" id="fsStageWrap">
+    <!-- SPACIOUS 100%-WIDTH HAMBURGER MENU (Max 2–3 buttons per row, 100% readable labels!) -->
+    <div class="edit-compact-drawer" id="editDropdownMenu">
+      <div class="edit-drawer-inner">
+        <!-- Row 1: 3 Spacious Category Tabs (~108px each on 360px phone) -->
+        <div class="drawer-tabs-row" role="tablist">
+          <button type="button" class="drawer-tab-btn active" data-tab="tabColor">🎨 Màu &amp; Sáng</button>
+          <button type="button" class="drawer-tab-btn" data-tab="tabCropFlatten">📐 Cắt &amp; Phẳng</button>
+          <button type="button" class="drawer-tab-btn" data-tab="tabNote">📝 Ghi chú</button>
+        </div>
 
-      <!-- TOP-RIGHT CORNER OF IMAGE VIEWPORT: PREV / NEXT & CLOSE -->
-      <div class="fs-corner-right-group">
-        <button type="button" class="fs-corner-btn" id="btnFsPrev" title="Ảnh trước">◀</button>
-        <button type="button" class="fs-corner-btn" id="btnFsNext" title="Ảnh sau">▶</button>
-        <button type="button" class="fs-corner-btn" id="btnCloseFsEditor" title="Đóng màn hình sửa">Đóng ✕</button>
+        <!-- Pane 1: Color Modes (3+2 spacious grid) + Full-Width Brightness & Clean Sliders -->
+        <div class="drawer-pane active" id="tabColor">
+          <div id="ddColorModeGrid" style="display:flex; flex-direction:column; gap:6px; width:100%;">
+            <div class="drawer-grid-3">
+              <button type="button" class="dd-mode-btn active" data-mode="original">Ảnh gốc</button>
+              <button type="button" class="dd-mode-btn" data-mode="magic_color">Tài liệu màu</button>
+              <button type="button" class="dd-mode-btn" data-mode="bw_sauvola">Đen trắng</button>
+            </div>
+            <div class="drawer-grid-2">
+              <button type="button" class="dd-mode-btn" data-mode="faint_boost">Làm rõ chữ</button>
+              <button type="button" class="dd-mode-btn" id="btnDdToggleAlpha">Tách nền</button>
+            </div>
+          </div>
+
+          <div class="dd-slider-row">
+            <span class="dd-slider-label">Độ sáng</span>
+            <input type="range" id="ddBrightnessSlider" min="-50" max="50" value="0" />
+            <span class="dd-slider-val" id="ddBrightnessVal">0</span>
+          </div>
+
+          <div class="dd-slider-row">
+            <span class="dd-slider-label">Sạch nền</span>
+            <input type="range" id="ddCleanSlider" min="0" max="100" value="68" />
+            <span class="dd-slider-val" id="ddCleanVal">68%</span>
+          </div>
+        </div>
+
+        <!-- Pane 2: Crop 4 Corners, Rotate 90° & Book/Line Flattening (Removed "Tách 2 trang") -->
+        <div class="drawer-pane" id="tabCropFlatten">
+          <div class="drawer-grid-2">
+            <button type="button" class="btn btn-sec" id="btnDdStartCrop" style="height:37px; font-size:0.81rem;">📐 Cắt 4 góc</button>
+            <button type="button" class="btn btn-sec" id="btnDdRotate90" style="height:37px; font-size:0.81rem;">↻ Xoay 90°</button>
+          </div>
+
+          <div class="drawer-grid-flatten">
+            <button type="button" class="btn btn-main" id="btnAutoFlattenBookLines" style="height:37px; font-size:0.80rem;">
+              📏 Tự nắn dòng chữ
+            </button>
+            <button type="button" class="btn btn-sec" id="btnResetFlattenBook" style="height:37px; font-size:0.79rem;">
+              Đặt lại 0%
+            </button>
+          </div>
+
+          <div class="dd-slider-row">
+            <span class="dd-slider-label">Uốn phẳng</span>
+            <input type="range" id="ddBookCurveSlider" min="-100" max="100" value="0" />
+            <span class="dd-slider-val" id="ddBookCurveVal">0%</span>
+          </div>
+        </div>
+
+        <!-- Pane 3: Spacious Full-Width Rename & Note Inputs -->
+        <div class="drawer-pane" id="tabNote">
+          <div class="drawer-note-row">
+            <span class="dd-slider-label" style="min-width:62px;">Tên ảnh</span>
+            <div class="form-field" style="flex:1; min-width:0;">
+              <input type="text" id="ddFilenameInput" placeholder="Nhập tên tệp ảnh..." />
+            </div>
+          </div>
+          <div class="drawer-note-row">
+            <div class="form-field" style="flex:1; min-width:0;">
+              <input type="text" id="ddNoteInput" placeholder="Nhập ghi chú cho trang này..." />
+            </div>
+            <label class="checkbox-inline" title="In ghi chú lên chân trang khi tải về" style="padding:0 4px;">
+              <input type="checkbox" id="chkPrintNoteOnExport" />
+              <span>In lên ảnh</span>
+            </label>
+          </div>
+        </div>
       </div>
+    </div>
+
+    <!-- Center Full-Screen Image Viewport (Automatically resizes below the drawer so 100% of image is visible!) -->
+    <div class="fs-stage-wrap" id="fsStageWrap">
 
       <!-- Full-Screen Document Canvas -->
       <div class="fs-canvas-holder" id="fsCanvasHolder">
@@ -1396,19 +1407,21 @@
 
       <!-- Floating Crop Bar (Appears only when user selects "📐 Cắt 4 góc" from the ☰ Menu) -->
       <div class="fs-crop-bar" id="fsCropBar">
-        <div class="grid-4">
-          <button type="button" class="btn btn-sec" id="btnAutoDetectCorners" style="height:32px; font-size:0.71rem;">Tự bắt rìa</button>
-          <button type="button" class="btn btn-sec" id="btnFullFrameCorners" style="height:32px; font-size:0.71rem;">Đầy khung</button>
-          <button type="button" class="btn btn-sec" id="btnRotateInCrop" style="height:32px; font-size:0.71rem;">Xoay 90°</button>
-          <button type="button" class="btn btn-sec" id="btnCancelCrop" style="height:32px; font-size:0.71rem;">Hủy cắt</button>
+        <div class="drawer-grid-3">
+          <button type="button" class="btn btn-sec" id="btnAutoDetectCorners" style="height:36px; font-size:0.79rem;">Tự bắt rìa</button>
+          <button type="button" class="btn btn-sec" id="btnFullFrameCorners" style="height:36px; font-size:0.79rem;">Đầy khung</button>
+          <button type="button" class="btn btn-sec" id="btnRotateInCrop" style="height:36px; font-size:0.79rem;">Xoay 90°</button>
         </div>
-        <button type="button" class="btn btn-main" id="btnApplyCropNow" style="height:35px; width:100%;">
-          ✓ Áp dụng cắt &amp; Dàn phẳng trang
-        </button>
+        <div class="grid-2-confirm">
+          <button type="button" class="btn btn-sec" id="btnCancelCrop" style="height:37px; font-size:0.80rem;">Hủy cắt</button>
+          <button type="button" class="btn btn-main" id="btnApplyCropNow" style="height:37px; font-size:0.80rem;">
+            ✓ Áp dụng cắt &amp; Dàn phẳng
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Secondary Info Directly Below Image + Quick Export Actions -->
+        <!-- Secondary Info Directly Below Image + Quick Export Actions -->
     <div class="fs-bottom-area" id="fsBottomArea">
       <div class="fs-note-preview" id="fsNotePreview"></div>
       <div class="fs-meta-strip">
@@ -1626,7 +1639,6 @@
         btnResetFlattenBook: document.getElementById("btnResetFlattenBook"),
         btnDdStartCrop: document.getElementById("btnDdStartCrop"),
         btnDdRotate90: document.getElementById("btnDdRotate90"),
-        btnDdSplit2Pages: document.getElementById("btnDdSplit2Pages"),
         ddFilenameInput: document.getElementById("ddFilenameInput"),
         ddNoteInput: document.getElementById("ddNoteInput"),
         chkPrintNoteOnExport: document.getElementById("chkPrintNoteOnExport"),
@@ -4202,80 +4214,6 @@
         });
       }
 
-      function splitCurrentPageIntoTwoHalves() {
-        const page = getCurrentPage();
-        if (!page) return;
-        const c = page.corners;
-        const midTop = {
-          x: Math.round((c[0].x + c[1].x) * 0.5),
-          y: Math.round((c[0].y + c[1].y) * 0.5)
-        };
-        const midBot = {
-          x: Math.round((c[3].x + c[2].x) * 0.5),
-          y: Math.round((c[3].y + c[2].y) * 0.5)
-        };
-
-        const baseName = page.name.replace(/_Tr[12].*$/, "");
-        const leftSettings = cloneSettings(page.settings);
-        leftSettings.bookCurve = 0;
-        const rightSettings = cloneSettings(page.settings);
-        rightSettings.bookCurve = 0;
-
-        const nowStr = formatTimeStr(new Date());
-        const leftPage = {
-          id: "page_" + Date.now() + "_L",
-          name: `${baseName}_Tr1`,
-          createdAt: nowStr,
-          note: page.note || "",
-          includeNoteOnExport: page.includeNoteOnExport,
-          srcCanvas: page.srcCanvas,
-          corners: [
-            { x: c[0].x, y: c[0].y },
-            { x: midTop.x, y: midTop.y },
-            { x: midBot.x, y: midBot.y },
-            { x: c[3].x, y: c[3].y }
-          ],
-          midOffsets: [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }],
-          dewarpedCanvas: null,
-          filterCache: null,
-          processedCanvas: null,
-          settings: leftSettings
-        };
-        const rightPage = {
-          id: "page_" + Date.now() + "_R",
-          name: `${baseName}_Tr2`,
-          createdAt: nowStr,
-          note: page.note || "",
-          includeNoteOnExport: page.includeNoteOnExport,
-          srcCanvas: page.srcCanvas,
-          corners: [
-            { x: midTop.x, y: midTop.y },
-            { x: c[1].x, y: c[1].y },
-            { x: c[2].x, y: c[2].y },
-            { x: midBot.x, y: midBot.y }
-          ],
-          midOffsets: [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }],
-          dewarpedCanvas: null,
-          filterCache: null,
-          processedCanvas: null,
-          settings: rightSettings
-        };
-
-        updateGeometryAndProcess(leftPage);
-        updateGeometryAndProcess(rightPage);
-
-        state.pages.splice(state.currentPageIndex + 1, 0, leftPage, rightPage);
-        state.currentPageIndex = state.currentPageIndex + 1;
-        state.fsCropMode = false;
-        el.fsCropBar.classList.remove("visible");
-        toggleEditDropdown(false);
-        syncControlsFromPage(getCurrentPage());
-        renderPageList();
-        renderStage();
-        renderFullScreenEditor();
-        showToast("Đã tách thành 2 trang sách riêng biệt!");
-      }
-
       // =========================================================================
       // 9. DEDICATED EXPORT POPUP & EXPORT ENGINE ("LƯU PDF" / "TẢI ẢNH NÀY")
       // =========================================================================
@@ -4982,7 +4920,6 @@
           rotateCurrentPage(1);
           showToast("Đã xoay ảnh 90°!");
         });
-        el.btnDdSplit2Pages.addEventListener("click", splitCurrentPageIntoTwoHalves);
 
         // Filename & Note inside ☰ Drawer
         el.ddFilenameInput.addEventListener("input", () => {
