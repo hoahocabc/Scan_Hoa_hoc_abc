@@ -7,12 +7,13 @@
   <meta name="theme-color" content="#0a467d" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC — Ứng dụng quét tài liệu thông minh: Nhận diện chuẩn tài liệu đa vùng màu (nửa trắng nửa màu khác), nền trắng & bàn gỗ, tự động làm phẳng 3D và hiển thị ảnh gốc trung thực." />
+  <meta name="description" content="ScanhoahocABC — Ứng dụng quét tài liệu thông minh: Bắt chuẩn góc trong điều kiện ánh sáng yếu trên bàn sẫm màu, khử cong lượn sóng 2 trang sách mở, quản lý Thư viện dạng danh sách & biểu tượng thu nhỏ." />
   <style>
     :root {
       --primary: #0a467d;
       --primary-dark: #073259;
       --primary-soft: #eaf2fb;
+      --primary-border: #b8d0eb;
       --bg: #0f172a;
       --surface: #ffffff;
       --surface-alt: #f8fafc;
@@ -49,19 +50,27 @@
       overflow: hidden;
     }
 
-    /* 1. MODERN MINIMALIST HEADER (50px, Zero Overlap) */
+    /* 1. TWO-TIER HEADER: Title Row on Top, 3 Action Buttons ("Chụp ảnh", "Chọn ảnh", "Thư viện") Below */
     .app-header {
-      height: 50px;
       flex-shrink: 0;
-      background: var(--primary);
+      background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
       color: #ffffff;
-      padding: 0 12px;
+      padding: 7px 12px 9px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.28);
+      z-index: 40;
+    }
+
+    .header-top-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
-      z-index: 40;
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
     }
 
     .brand-group {
@@ -69,48 +78,60 @@
       align-items: center;
       gap: 8px;
       min-width: 0;
-      flex: 1;
     }
 
     .brand-logo {
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.16);
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.18);
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.35);
       flex-shrink: 0;
     }
 
     .brand-title {
-      font-size: 1.0rem;
+      font-size: 1.02rem;
       font-weight: 800;
-      letter-spacing: -0.2px;
+      letter-spacing: 0.2px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       color: #ffffff;
     }
 
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
+    .header-status-pill {
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      white-space: nowrap;
     }
 
-    /* MODERN UNIFIED BUTTON SYSTEM (#0a467d Palette, Zero Overflow) */
+    .header-btn-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* BALANCED SYNCHRONIZED BUTTON SYSTEM (#0a467d Palette, Zero Overflow) */
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 5px;
       height: 38px;
-      padding: 0 10px;
+      padding: 0 8px;
       border-radius: 10px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.14s ease;
@@ -126,17 +147,22 @@
       transform: scale(0.97);
     }
 
+    .btn:disabled {
+      opacity: 0.42;
+      pointer-events: none;
+    }
+
     .btn-main {
       background: var(--primary);
       color: #ffffff;
       border-color: var(--primary);
-      box-shadow: 0 2px 8px rgba(10, 70, 125, 0.24);
+      box-shadow: 0 2px 6px rgba(10, 70, 125, 0.22);
     }
 
     .btn-sec {
       background: var(--primary-soft);
       color: var(--primary);
-      border-color: rgba(10, 70, 125, 0.28);
+      border-color: var(--primary-border);
     }
 
     .btn-sec.active {
@@ -146,28 +172,26 @@
       box-shadow: 0 2px 6px rgba(10, 70, 125, 0.22);
     }
 
-    .btn-hdr-main {
+    .btn-hdr-primary {
       background: #ffffff;
       color: var(--primary);
-      height: 34px;
-      padding: 0 11px;
-      border-radius: 8px;
-      font-size: 0.78rem;
+      border-color: #ffffff;
+      height: 36px;
+      font-size: 0.77rem;
       font-weight: 800;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
 
-    .btn-hdr-sec {
-      background: rgba(255, 255, 255, 0.16);
+    .btn-hdr-outline {
+      background: rgba(255, 255, 255, 0.15);
       color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      height: 34px;
-      padding: 0 11px;
-      border-radius: 8px;
-      font-size: 0.78rem;
+      border-color: rgba(255, 255, 255, 0.42);
+      height: 36px;
+      font-size: 0.77rem;
       font-weight: 700;
     }
 
-    /* 2. DOCUMENT STAGE VIEWPORT */
+    /* 2. DOCUMENT STAGE VIEWPORT & QUICK PAGE NAV BAR */
     .workspace {
       flex: 1;
       min-height: 0;
@@ -187,35 +211,6 @@
       overflow: hidden;
     }
 
-    .stage-top-bar {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      right: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 20;
-      pointer-events: none;
-    }
-
-    .stage-top-bar > * {
-      pointer-events: auto;
-    }
-
-    .stage-pill {
-      background: rgba(15, 23, 42, 0.78);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      padding: 6px 11px;
-      border-radius: 999px;
-      font-size: 0.73rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
     .stage-container {
       position: relative;
       flex: 1;
@@ -226,7 +221,7 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      padding: 16px;
+      padding: 12px 12px 46px 12px;
       touch-action: none;
     }
 
@@ -246,17 +241,86 @@
     #mainCanvas {
       display: block;
       max-width: 100%;
-      max-height: calc(100dvh - 220px);
+      max-height: calc(100dvh - 268px);
       width: auto;
       height: auto;
       touch-action: none;
     }
 
+    /* Floating Prev / Next / Delete / Zoom Bar at Bottom of Stage */
+    .stage-nav-bar {
+      position: absolute;
+      bottom: 7px;
+      left: 10px;
+      right: 10px;
+      max-width: 580px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .stage-nav-bar > * {
+      pointer-events: auto;
+    }
+
+    .nav-pill-group {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.84);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 999px;
+      padding: 3px;
+      gap: 3px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    .stage-mini-btn {
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .stage-mini-btn:active {
+      background: var(--primary);
+    }
+
+    .stage-mini-btn:disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .stage-page-indicator {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #ffffff;
+      padding: 0 8px;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      cursor: pointer;
+    }
+
     /* Smart Magnifier Loupe */
     .magnifier-loupe {
       position: absolute;
-      width: 118px;
-      height: 118px;
+      width: 116px;
+      height: 116px;
       border-radius: 50%;
       border: 3px solid var(--primary);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
@@ -287,7 +351,7 @@
       white-space: nowrap;
     }
 
-    /* 3. SLEEK MODERN BOTTOM BAR (Max 2 Rows, Zero Overflow Guaranteed via minmax(0, 1fr)) */
+    /* 3. SLEEK BOTTOM CONTROL DOCK */
     .bottom-dock {
       flex-shrink: 0;
       width: 100%;
@@ -295,7 +359,7 @@
       background: var(--surface);
       border-top: 1px solid var(--border);
       border-radius: 16px 16px 0 0;
-      padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+      padding: 9px 10px calc(9px + env(safe-area-inset-bottom, 0px));
       z-index: 35;
       box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
     }
@@ -303,7 +367,7 @@
     .dock-pane {
       display: none;
       flex-direction: column;
-      gap: 8px;
+      gap: 7px;
       max-width: 600px;
       width: 100%;
       margin: 0 auto;
@@ -313,27 +377,26 @@
       display: flex;
     }
 
-    /* Mode Selector Segmented Control (4 Equal Columns, Never Overflows) */
     .mode-segmented-4 {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 5px;
+      gap: 4px;
       width: 100%;
       background: var(--surface-alt);
       padding: 4px;
-      border-radius: 12px;
+      border-radius: 11px;
       border: 1px solid var(--border);
     }
 
     .mode-pill {
-      height: 34px;
+      height: 33px;
       border: none;
-      border-radius: 9px;
+      border-radius: 8px;
       background: transparent;
       color: var(--text-muted);
-      font-size: 0.74rem;
+      font-size: 0.73rem;
       font-weight: 700;
-      padding: 0 4px;
+      padding: 0 3px;
       cursor: pointer;
       white-space: nowrap;
       overflow: hidden;
@@ -348,14 +411,13 @@
       box-shadow: 0 2px 6px rgba(10, 70, 125, 0.25);
     }
 
-    /* Optional Single Slider Row (Hidden on "Ảnh gốc", shown on enhanced modes) */
     .clean-slider-row {
       display: none;
       align-items: center;
       gap: 8px;
       background: var(--primary-soft);
-      padding: 6px 10px;
-      border-radius: 10px;
+      padding: 5px 10px;
+      border-radius: 9px;
       width: 100%;
     }
 
@@ -364,7 +426,7 @@
     }
 
     .clean-slider-label {
-      font-size: 0.74rem;
+      font-size: 0.73rem;
       font-weight: 700;
       color: var(--primary);
       white-space: nowrap;
@@ -379,7 +441,7 @@
     }
 
     .clean-slider-val {
-      font-size: 0.74rem;
+      font-size: 0.73rem;
       font-weight: 800;
       color: var(--primary);
       min-width: 34px;
@@ -387,11 +449,17 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* 3-Column Action Grid (Guaranteed Zero Overflow) */
     .grid-3 {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 7px;
+      width: 100%;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
       width: 100%;
     }
 
@@ -402,7 +470,7 @@
       width: 100%;
     }
 
-    /* Modals */
+    /* 4. MODALS: CAMERA & "THƯ VIỆN" (LIST VIEW / THUMBNAIL GRID VIEW + IMAGE CUSTOMIZATION) */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -421,9 +489,9 @@
     .modal-card {
       background: #ffffff;
       border-radius: 16px;
-      max-width: 560px;
+      max-width: 580px;
       width: 100%;
-      max-height: 94dvh;
+      max-height: 92dvh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -431,7 +499,7 @@
     }
 
     .modal-header {
-      padding: 12px 14px;
+      padding: 11px 14px;
       background: var(--primary);
       color: #ffffff;
       font-weight: 800;
@@ -439,15 +507,210 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
     .modal-body {
       padding: 12px;
       overflow-y: auto;
-      font-size: 0.82rem;
+      font-size: 0.81rem;
       display: flex;
       flex-direction: column;
       gap: 10px;
+    }
+
+    /* Library View Toggle Bar */
+    .lib-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .view-toggle-group {
+      display: inline-flex;
+      background: var(--surface-alt);
+      padding: 3px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      gap: 3px;
+    }
+
+    .view-toggle-btn {
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 7px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .view-toggle-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    /* Library List View vs Thumbnail Grid View */
+    .lib-container.list-mode {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      max-height: 210px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .lib-container.grid-mode {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .lib-item-list {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 9px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--surface-alt);
+      cursor: pointer;
+    }
+
+    .lib-item-list.active {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .lib-thumb-list {
+      width: 42px;
+      height: 56px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .lib-meta-list {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .lib-meta-title {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lib-meta-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .lib-item-grid {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 7px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--surface-alt);
+      cursor: pointer;
+      gap: 5px;
+    }
+
+    .lib-item-grid.active {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .lib-thumb-grid {
+      width: 100%;
+      height: 86px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      object-fit: contain;
+    }
+
+    .lib-grid-del {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      border: none;
+      background: rgba(15, 23, 42, 0.78);
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Customization Section inside Library */
+    .lib-custom-box {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .lib-custom-header {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .form-field label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .form-field select, .form-field input {
+      width: 100%;
+      height: 36px;
+      padding: 0 9px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text);
+      background: #ffffff;
     }
 
     .camera-video-wrap {
@@ -510,33 +773,9 @@
       color: var(--primary);
     }
 
-    .export-grid-modal {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    .export-grid-modal label {
-      font-size: 0.74rem;
-      font-weight: 700;
-      color: var(--primary);
-      display: block;
-      margin-bottom: 3px;
-    }
-
-    .export-grid-modal select, .export-grid-modal input {
-      width: 100%;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1.5px solid var(--border);
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text);
-    }
-
     .toast-box {
       position: fixed;
-      top: 58px;
+      top: 96px;
       left: 16px;
       right: 16px;
       max-width: 320px;
@@ -564,58 +803,78 @@
 </head>
 <body>
   <div class="app-shell">
-    <!-- 1. MODERN MINIMALIST HEADER -->
+    <!-- 1. TWO-TIER HEADER: Title Above, "Chụp ảnh" + "Chọn ảnh" + "Thư viện" Below -->
     <header class="app-header">
-      <div class="brand-group">
-        <div class="brand-logo" aria-hidden="true">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
-            <path d="M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3"/>
-            <rect x="7" y="7" width="10" height="10" rx="1.5"/>
-          </svg>
+      <div class="header-top-row">
+        <div class="brand-group">
+          <div class="brand-logo" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <path d="M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3"/>
+              <rect x="7" y="7" width="10" height="10" rx="1.5"/>
+            </svg>
+          </div>
+          <span class="brand-title">ScanhoahocABC</span>
         </div>
-        <span class="brand-title">ScanhoahocABC</span>
+        <span class="header-status-pill" id="headerPageStatus">Trang 1 / 3</span>
       </div>
 
-      <div class="header-actions">
+      <div class="header-btn-row">
         <input type="file" id="fileInput" accept="image/*" multiple style="display:none" />
-        <button type="button" class="btn btn-hdr-main" id="btnOpenCamera">
+        <button type="button" class="btn btn-hdr-primary" id="btnOpenCamera">
           📸 Chụp ảnh
         </button>
-        <button type="button" class="btn btn-hdr-sec" id="btnTriggerUpload">
+        <button type="button" class="btn btn-hdr-outline" id="btnTriggerUpload">
           📁 Chọn ảnh
+        </button>
+        <button type="button" class="btn btn-hdr-outline" id="btnOpenLibrary">
+          🗂 Thư viện (<span id="pageCountText">3</span>)
         </button>
       </div>
     </header>
 
-    <!-- 2. DOCUMENT STAGE VIEWPORT -->
+    <!-- 2. DOCUMENT STAGE VIEWPORT + PREV / NEXT / DELETE BAR -->
     <main class="workspace">
       <section class="stage-panel" id="panelStage" aria-label="Khung tài liệu">
-        <div class="stage-top-bar">
-          <button type="button" class="stage-pill" id="btnOpenExportModal">
-            ⚙️ Mẫu thử &amp; Tùy chọn (<span id="pageCountText">1</span>)
-          </button>
-          <button type="button" class="stage-pill" id="btnZoomReset" style="display:none;">
-            100%
-          </button>
-        </div>
-
         <div class="stage-container" id="stageContainer">
           <div class="canvas-wrapper" id="canvasWrapper">
             <canvas id="mainCanvas" width="800" height="1131"></canvas>
           </div>
           <div class="magnifier-loupe" id="magnifierLoupe">
-            <canvas id="loupeCanvas" width="118" height="118"></canvas>
+            <canvas id="loupeCanvas" width="116" height="116"></canvas>
             <div class="magnifier-label" id="loupeLabel">Góc TL</div>
+          </div>
+        </div>
+
+        <!-- Quick Prev / Next Navigation + Delete Image + Zoom Reset -->
+        <div class="stage-nav-bar">
+          <div class="nav-pill-group">
+            <button type="button" class="stage-mini-btn" id="btnPrevPage" title="Ảnh trước">
+              ◀ Trước
+            </button>
+            <span class="stage-page-indicator" id="stagePageIndicator" title="Mở Thư viện">
+              1 / 3
+            </span>
+            <button type="button" class="stage-mini-btn" id="btnNextPage" title="Ảnh sau">
+              Sau ▶
+            </button>
+          </div>
+
+          <div class="nav-pill-group">
+            <button type="button" class="stage-mini-btn" id="btnZoomReset" style="display:none;">
+              100% ✕
+            </button>
+            <button type="button" class="stage-mini-btn" id="btnDeleteCurrentPage" title="Xóa ảnh đang xem">
+              🗑 Xóa ảnh
+            </button>
           </div>
         </div>
       </section>
 
-      <!-- 3. SLEEK MODERN BOTTOM BAR (2 Rows Only, Zero Overflow) -->
+      <!-- 3. SLEEK MODERN BOTTOM BAR (Zero Overflow Guaranteed) -->
       <section class="bottom-dock" id="panelControls" aria-label="Điều khiển">
 
         <!-- PANE A: MAIN RESULT VIEW (Default Active, Starts on "Ảnh gốc") -->
         <div class="dock-pane active" id="paneResult">
-          <!-- Row 1: 4 Mode Pills (Starts on "Ảnh gốc" per Requirement #4!) -->
           <div class="mode-segmented-4" id="colorPresetGrid" role="tablist">
             <button type="button" class="mode-pill active" data-mode="original">Ảnh gốc</button>
             <button type="button" class="mode-pill" data-mode="magic_color">Tài liệu màu</button>
@@ -623,14 +882,12 @@
             <button type="button" class="mode-pill" data-mode="faint_boost">Rõ chữ mờ</button>
           </div>
 
-          <!-- Optional Clean Intensity Slider (Shown only when an enhancement mode is selected) -->
           <div class="clean-slider-row" id="cleanSliderRow">
             <span class="clean-slider-label">Làm sạch nền</span>
             <input type="range" id="activeParamSlider" min="0" max="100" value="68" />
             <span class="clean-slider-val" id="activeSliderVal">68%</span>
           </div>
 
-          <!-- Row 2: 3 Primary Synchronized Actions -->
           <div class="grid-3">
             <button type="button" class="btn btn-sec" id="btnEnterCrop">
               📐 Cắt &amp; Xoay
@@ -644,12 +901,13 @@
           </div>
         </div>
 
-        <!-- PANE B: CROP & ROTATE VIEW (3 Tools + Confirm, Zero Overflow) -->
+        <!-- PANE B: CROP & ROTATE VIEW (4 Tools + Confirm, Zero Overflow) -->
         <div class="dock-pane" id="paneCrop">
-          <div class="grid-3">
+          <div class="grid-4">
             <button type="button" class="btn btn-sec" id="btnAutoDetectCorners">Tự bắt góc</button>
             <button type="button" class="btn btn-sec" id="btnFullFrameCorners">Đầy khung</button>
             <button type="button" class="btn btn-sec" id="btnRotateRight">Xoay 90°</button>
+            <button type="button" class="btn btn-sec" id="btnSplitTwoPagesOptional">Tách 2 trang</button>
           </div>
           <div class="grid-2-confirm">
             <button type="button" class="btn btn-sec" id="btnCancelCrop">Hủy</button>
@@ -661,12 +919,12 @@
     </main>
   </div>
 
-  <!-- REAR-CAMERA-ONLY MODAL (No Redundant Camera Switch Button!) -->
+  <!-- REAR-CAMERA-ONLY MODAL -->
   <div class="modal-backdrop" id="cameraModal" role="dialog" aria-modal="true" aria-labelledby="cameraModalTitle">
     <div class="modal-card">
       <div class="modal-header">
         <span id="cameraModalTitle">Chụp Tài Liệu</span>
-        <button type="button" class="btn btn-hdr-sec" id="btnCloseCamera">Đóng ✕</button>
+        <button type="button" class="btn btn-hdr-outline" id="btnCloseCamera" style="height:30px; padding:0 10px;">Đóng ✕</button>
       </div>
       <div class="modal-body">
         <div class="camera-video-wrap" id="cameraVideoWrap">
@@ -678,72 +936,98 @@
             <button type="button" class="zoom-pill" data-zoom="1.5" id="btnZoom15x">1.5x</button>
           </div>
         </div>
-        <button type="button" class="btn btn-main" id="btnCapturePhoto" style="width:100%; height:42px; font-size:0.88rem;">
+        <button type="button" class="btn btn-main" id="btnCapturePhoto" style="width:100%; height:42px; font-size:0.86rem;">
           📸 Chụp tài liệu
         </button>
       </div>
     </div>
   </div>
 
-  <!-- SAMPLES & ADVANCED EXPORT MODAL -->
-  <div class="modal-backdrop" id="exportModal" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
+  <!-- "THƯ VIỆN" (LIBRARY) MODAL: LIST / THUMBNAIL GRID VIEW + IMAGE CUSTOMIZATION & DELETE -->
+  <div class="modal-backdrop" id="libraryModal" role="dialog" aria-modal="true" aria-labelledby="libraryModalTitle">
     <div class="modal-card">
       <div class="modal-header">
-        <span id="exportModalTitle">Mẫu Kiểm Thử &amp; Tùy Chọn Xuất File</span>
-        <button type="button" class="btn btn-hdr-sec" id="btnCloseExportModal">Đóng ✕</button>
+        <span id="libraryModalTitle">Thư Viện Ảnh Đã Quét</span>
+        <button type="button" class="btn btn-hdr-outline" id="btnCloseLibrary" style="height:30px; padding:0 10px;">Đóng ✕</button>
       </div>
       <div class="modal-body">
-        <div style="font-size:0.76rem; font-weight:700; color:var(--primary);">Mẫu thử nhận diện góc thông minh:</div>
-        <div class="grid-3">
-          <button type="button" class="btn btn-sec active" id="btnSampleTwoTone">Nửa trắng / màu</button>
-          <button type="button" class="btn btn-sec" id="btnSampleTiltedCurved">Nghiêng &amp; Cong</button>
-          <button type="button" class="btn btn-sec" id="btnSampleWhiteOnWhite">Trắng đè trắng</button>
+
+        <!-- Library Toolbar: List vs Grid View Toggle + Add Sample -->
+        <div class="lib-toolbar">
+          <div class="view-toggle-group" role="tablist">
+            <button type="button" class="view-toggle-btn active" id="btnViewList">☰ Danh sách</button>
+            <button type="button" class="view-toggle-btn" id="btnViewGrid">⊞ Thu nhỏ</button>
+          </div>
+          <button type="button" class="btn btn-sec" id="btnDeleteSelectedInLib" style="height:30px; font-size:0.73rem;">
+            🗑 Xóa ảnh này
+          </button>
         </div>
 
-        <div id="pageListContainer" style="display:flex; gap:6px; overflow-x:auto; padding:2px 0;"></div>
+        <!-- Scanned Images Container (List or Thumbnail Grid) -->
+        <div class="lib-container list-mode" id="pageListContainer"></div>
 
-        <div class="export-grid-modal">
-          <div>
-            <label for="exportFormat">Định dạng</label>
-            <select id="exportFormat">
-              <option value="pdf">PDF (.pdf)</option>
-              <option value="jpeg" selected>JPEG (.jpg)</option>
-              <option value="png">PNG (.png)</option>
-              <option value="webp">WebP (.webp)</option>
-              <option value="tiff">TIFF (.tif)</option>
-              <option value="svg">SVG (.svg)</option>
-            </select>
+        <!-- Selected Image Customization Box -->
+        <div class="lib-custom-box">
+          <div class="lib-custom-header">
+            <span id="selectedImgCustomTitle">Tùy chỉnh ảnh đang chọn</span>
+            <button type="button" class="btn btn-sec" id="btnToggleAlpha" style="height:28px; font-size:0.71rem; padding:0 8px;">
+              Tách nền Alpha
+            </button>
           </div>
-          <div>
-            <label for="exportPaperSize">Khổ giấy</label>
-            <select id="exportPaperSize">
-              <option value="auto">Chuẩn A4 (Tự động 3D)</option>
-              <option value="a4_portrait">A4 Dọc</option>
-              <option value="a4_landscape">A4 Ngang</option>
-              <option value="letter">Letter</option>
-              <option value="a5">A5</option>
-            </select>
+
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label for="exportFilename">Tên ảnh</label>
+              <input type="text" id="exportFilename" value="ScanhoahocABC_1" />
+            </div>
+            <div class="form-field">
+              <label for="libColorSelect">Chế độ hiển thị</label>
+              <select id="libColorSelect">
+                <option value="original">Ảnh gốc (Trung thực)</option>
+                <option value="magic_color">Tài liệu màu (Sạch nền)</option>
+                <option value="bw_sauvola">Đen trắng (Sắc nét)</option>
+                <option value="faint_boost">Rõ chữ mờ (Tăng nét)</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="exportFormat">Định dạng tải về</label>
+              <select id="exportFormat">
+                <option value="pdf">PDF Tài liệu (.pdf)</option>
+                <option value="jpeg" selected>Ảnh JPEG (.jpg)</option>
+                <option value="png">Ảnh PNG (.png)</option>
+                <option value="webp">Ảnh WebP (.webp)</option>
+                <option value="tiff">Ảnh TIFF (.tif)</option>
+                <option value="svg">Ảnh SVG (.svg)</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="exportScale">Chất lượng / DPI</label>
+              <select id="exportScale">
+                <option value="0.75">150 DPI (Nhẹ)</option>
+                <option value="1" selected>200 DPI (Chuẩn)</option>
+                <option value="1.5">300 DPI (In rõ)</option>
+                <option value="2">600 DPI (Siêu nét)</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label for="exportScale">Độ nét (DPI)</label>
-            <select id="exportScale">
-              <option value="0.75">150 DPI</option>
-              <option value="1" selected>200 DPI</option>
-              <option value="1.5">300 DPI</option>
-              <option value="2">600 DPI</option>
-            </select>
-          </div>
-          <div>
-            <label for="exportFilename">Tên tệp</label>
-            <input type="text" id="exportFilename" value="ScanhoahocABC" />
+
+          <div class="grid-3">
+            <button type="button" class="btn btn-sec" id="btnEditCropFromLib">📐 Cắt &amp; Xoay</button>
+            <button type="button" class="btn btn-main" id="btnDownloadCurrent">⬇ Tải ảnh này</button>
+            <button type="button" class="btn btn-main" id="btnDownloadAllPdf">📑 PDF tất cả</button>
           </div>
         </div>
 
-        <div class="grid-3">
-          <button type="button" class="btn btn-sec" id="btnToggleAlpha">Tách nền Alpha</button>
-          <button type="button" class="btn btn-sec" id="btnSplitTwoPagesOptional">Tách 2 trang</button>
-          <button type="button" class="btn btn-main" id="btnDownloadCurrent">⬇ Tải file</button>
+        <!-- Built-in Test Samples Row -->
+        <div style="display:flex; flex-direction:column; gap:5px;">
+          <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Nạp thêm mẫu kiểm thử vào Thư viện:</div>
+          <div class="grid-3">
+            <button type="button" class="btn btn-sec" id="btnSampleBookWave" style="height:32px; font-size:0.71rem;">+ Sách mở cong</button>
+            <button type="button" class="btn btn-sec" id="btnSampleLowLight" style="height:32px; font-size:0.71rem;">+ Thiếu sáng</button>
+            <button type="button" class="btn btn-sec" id="btnSampleTwoTone" style="height:32px; font-size:0.71rem;">+ Nửa trắng/màu</button>
+          </div>
         </div>
+
       </div>
     </div>
   </div>
@@ -756,12 +1040,13 @@
       "use strict";
 
       // =========================================================================
-      // 1. APPLICATION STATE (v10.0 — STARTS ON ORIGINAL IMAGE, MULTI-COLOR DETECTOR)
+      // 1. APPLICATION STATE (v11.0 — LOW-LIGHT DETECTOR, BOOK DEWARP & LIBRARY)
       // =========================================================================
       const state = {
         pages: [],
         currentPageIndex: 0,
         viewMode: "result", // 'result' | 'crop'
+        libViewMode: "list", // 'list' | 'grid'
         draggingHandle: null,
         preTouchCorners: null,
         preTouchMidOffsets: null,
@@ -778,7 +1063,7 @@
         cameraAnimId: null,
         lastCameraCorners: null,
         defaultSettings: {
-          colorMode: "original", // REQUIREMENT #4: Initially display original image ("Ảnh gốc")!
+          colorMode: "original", // Always starts on Original Image ("Ảnh gốc")
           bgSuppress: 68,
           contrast: 55,
           shadowRemoval: 100,
@@ -791,16 +1076,18 @@
         fileInput: document.getElementById("fileInput"),
         btnTriggerUpload: document.getElementById("btnTriggerUpload"),
         btnOpenCamera: document.getElementById("btnOpenCamera"),
-        btnSampleTwoTone: document.getElementById("btnSampleTwoTone"),
-        btnSampleTiltedCurved: document.getElementById("btnSampleTiltedCurved"),
-        btnSampleWhiteOnWhite: document.getElementById("btnSampleWhiteOnWhite"),
-        pageListContainer: document.getElementById("pageListContainer"),
+        btnOpenLibrary: document.getElementById("btnOpenLibrary"),
+        headerPageStatus: document.getElementById("headerPageStatus"),
         pageCountText: document.getElementById("pageCountText"),
+        btnPrevPage: document.getElementById("btnPrevPage"),
+        btnNextPage: document.getElementById("btnNextPage"),
+        stagePageIndicator: document.getElementById("stagePageIndicator"),
+        btnDeleteCurrentPage: document.getElementById("btnDeleteCurrentPage"),
+        btnZoomReset: document.getElementById("btnZoomReset"),
         paneResult: document.getElementById("paneResult"),
         paneCrop: document.getElementById("paneCrop"),
         btnEnterCrop: document.getElementById("btnEnterCrop"),
         btnCancelCrop: document.getElementById("btnCancelCrop"),
-        btnZoomReset: document.getElementById("btnZoomReset"),
         btnAutoDetectCorners: document.getElementById("btnAutoDetectCorners"),
         btnFullFrameCorners: document.getElementById("btnFullFrameCorners"),
         btnRotateRight: document.getElementById("btnRotateRight"),
@@ -816,17 +1103,26 @@
         cleanSliderRow: document.getElementById("cleanSliderRow"),
         activeParamSlider: document.getElementById("activeParamSlider"),
         activeSliderVal: document.getElementById("activeSliderVal"),
-        btnToggleAlpha: document.getElementById("btnToggleAlpha"),
         btnQuickPdf: document.getElementById("btnQuickPdf"),
         btnQuickJpg: document.getElementById("btnQuickJpg"),
-        btnOpenExportModal: document.getElementById("btnOpenExportModal"),
-        exportModal: document.getElementById("exportModal"),
-        btnCloseExportModal: document.getElementById("btnCloseExportModal"),
-        exportFormat: document.getElementById("exportFormat"),
-        exportPaperSize: document.getElementById("exportPaperSize"),
-        exportScale: document.getElementById("exportScale"),
+        libraryModal: document.getElementById("libraryModal"),
+        btnCloseLibrary: document.getElementById("btnCloseLibrary"),
+        btnViewList: document.getElementById("btnViewList"),
+        btnViewGrid: document.getElementById("btnViewGrid"),
+        btnDeleteSelectedInLib: document.getElementById("btnDeleteSelectedInLib"),
+        pageListContainer: document.getElementById("pageListContainer"),
+        selectedImgCustomTitle: document.getElementById("selectedImgCustomTitle"),
+        btnToggleAlpha: document.getElementById("btnToggleAlpha"),
         exportFilename: document.getElementById("exportFilename"),
+        libColorSelect: document.getElementById("libColorSelect"),
+        exportFormat: document.getElementById("exportFormat"),
+        exportScale: document.getElementById("exportScale"),
+        btnEditCropFromLib: document.getElementById("btnEditCropFromLib"),
         btnDownloadCurrent: document.getElementById("btnDownloadCurrent"),
+        btnDownloadAllPdf: document.getElementById("btnDownloadAllPdf"),
+        btnSampleBookWave: document.getElementById("btnSampleBookWave"),
+        btnSampleLowLight: document.getElementById("btnSampleLowLight"),
+        btnSampleTwoTone: document.getElementById("btnSampleTwoTone"),
         cameraModal: document.getElementById("cameraModal"),
         cameraVideoWrap: document.getElementById("cameraVideoWrap"),
         btnCloseCamera: document.getElementById("btnCloseCamera"),
@@ -879,7 +1175,7 @@
         el.canvasWrapper.style.transform = `translate3d(${state.stagePanX.toFixed(1)}px, ${state.stagePanY.toFixed(1)}px, 0) scale(${state.stageZoom.toFixed(3)})`;
         const pct = Math.round(state.stageZoom * 100);
         el.btnZoomReset.textContent = `${pct}% ✕`;
-        el.btnZoomReset.style.display = pct === 100 ? "none" : "inline-block";
+        el.btnZoomReset.style.display = pct === 100 ? "none" : "inline-flex";
       }
 
       function resetStageZoom() {
@@ -903,15 +1199,18 @@
       }
 
       // =========================================================================
-      // 3. REALISTIC TEST SAMPLES (INCLUDING HALF-WHITE / HALF-COLOR DOCUMENT!)
+      // 3. REALISTIC TEST SAMPLES:
+      //    - Open 2-Page Book with Wavy Curved Spine ("Sach_Mo_2_Trang_Cong")
+      //    - Low-Light White Paper on Dark Desk ("Giay_Trang_Ban_Toi_Thieu_Sang")
+      //    - Half-White / Half-Color Document ("Tai_Lieu_Nua_Trang_Nua_Mau")
       // =========================================================================
-      function drawWoodDeskBackground(ctx, w, h, c1, c2) {
+      function drawDeskTexture(ctx, w, h, c1, c2) {
         const img = ctx.createImageData(w, h);
         const d = img.data;
         for (let y = 0; y < h; y++) {
           for (let x = 0; x < w; x++) {
             const grain = 0.5 + 0.5 * Math.sin(y * 0.13 + 3.2 * Math.sin(x * 0.014 + y * 0.007));
-            const t = 0.36 * grain;
+            const t = 0.34 * grain;
             const idx = (y * w + x) * 4;
             d[idx]     = Math.round(c1[0] * (1 - t) + c2[0] * t);
             d[idx + 1] = Math.round(c1[1] * (1 - t) + c2[1] * t);
@@ -922,6 +1221,79 @@
         ctx.putImageData(img, 0, 0);
       }
 
+      function buildOpenBookSpreadCanvas() {
+        const docW = 1040;
+        const docH = 740;
+        const docCanvas = document.createElement("canvas");
+        docCanvas.width = docW;
+        docCanvas.height = docH;
+        const dctx = docCanvas.getContext("2d");
+
+        dctx.fillStyle = "#f7f6f0";
+        dctx.fillRect(0, 0, docW, docH);
+
+        // Subtle center book spine shading around x = 520
+        const grad = dctx.createLinearGradient(485, 0, 555, 0);
+        grad.addColorStop(0, "rgba(15, 23, 42, 0)");
+        grad.addColorStop(0.5, "rgba(15, 23, 42, 0.16)");
+        grad.addColorStop(1, "rgba(15, 23, 42, 0)");
+        dctx.fillStyle = grad;
+        dctx.fillRect(485, 0, 70, docH);
+
+        dctx.fillStyle = "#0a467d";
+        dctx.font = "bold 18px Arial";
+        dctx.fillText("TRANG 14 — CHƯƠNG 1: ESTE VÀ LIPIT", 55, 58);
+        dctx.fillText("TRANG 15 — BÀI TẬP VẬN DỤNG CAO", 560, 58);
+
+        dctx.strokeStyle = "#0a467d";
+        dctx.lineWidth = 2;
+        dctx.beginPath();
+        dctx.moveTo(55, 74); dctx.lineTo(475, 74);
+        dctx.moveTo(560, 74); dctx.lineTo(985, 74);
+        dctx.stroke();
+
+        dctx.fillStyle = "#1e293b";
+        dctx.font = "15px Arial";
+        const leftLines = [
+          "1. Khái niệm: Khi thay nhóm OH ở nhóm cacboxyl",
+          "của axit cacboxylic bằng nhóm OR' thì được este.",
+          "2. Công thức tổng quát este no, đơn chức, mạch hở:",
+          "   CnH2nO2 (với n >= 2) hoặc RCOOR'.",
+          "3. Tính chất vật lí: Các este thường là chất lỏng,",
+          "nhẹ hơn nước, rất ít tan trong nước và có mùi thơm:",
+          "• Isoamyl axetat: mùi chuối chín (CH3COOCH2CH2CH(CH3)2)",
+          "• Etyl butirat và etyl propionat: mùi dứa chín.",
+          "• Geranyl axetat: mùi hoa hồng thơm dịu.",
+          "4. Phản ứng thủy phân trong môi trường axit (thuận nghịch):",
+          "   RCOOR' + H2O  <== (H2SO4 đặc, t°) ==> RCOOH + R'OH",
+          "5. Phản ứng xà phòng hóa (một chiều, đun nóng):",
+          "   RCOOR' + NaOH  ---(t°)--->  RCOONa + R'OH"
+        ];
+        const rightLines = [
+          "Câu 1: Thủy phân hoàn toàn 8,8 gam este CH3COOC2H5",
+          "trong 150 ml dung dịch NaOH 1M đun nóng. Khối lượng",
+          "chất rắn khan thu được sau khi cô cạn dung dịch là:",
+          "   A. 8,2 gam     B. 10,2 gam     C. 12,3 gam     D. 4,1 gam",
+          "Câu 2: Đốt cháy hoàn toàn 0,15 mol hỗn hợp hai este",
+          "no, đơn chức, mạch hở cần vừa đủ 10,08 lít O2 (đktc).",
+          "Khối lượng CO2 thu được sau phản ứng cháy là:",
+          "   A. 17,6 gam    B. 13,2 gam     C. 22,0 gam     D. 15,4 gam",
+          "Câu 3: Xà phòng hóa hoàn toàn 17,8 gam chất béo X",
+          "cần vừa đủ 0,06 mol NaOH, thu được glixerol và m gam",
+          "muối natri. Giá trị của m là:",
+          "   A. 18,36 gam   B. 19,12 gam    C. 18,24 gam    D. 17,96 gam",
+          "Ghi chú: Bấm 'Tách 2 trang' trong mục Cắt & Xoay nếu cần tách."
+        ];
+
+        for (let i = 0; i < leftLines.length; i++) {
+          const y = 112 + i * 44;
+          dctx.fillText(leftLines[i], 55, y);
+          dctx.fillText(rightLines[i], 560, y);
+        }
+
+        return docCanvas;
+      }
+
       function buildExamSheetCanvas(bgColor, isTwoTone) {
         const docW = 800;
         const docH = 1131;
@@ -930,11 +1302,9 @@
         docCanvas.height = docH;
         const dctx = docCanvas.getContext("2d");
 
-        // Top half: White paper
         dctx.fillStyle = bgColor || "#f8f7f3";
         dctx.fillRect(0, 0, docW, docH);
 
-        // If isTwoTone: Bottom half of the document has a distinct colored background (e.g. blue/teal panel)!
         if (isTwoTone) {
           dctx.fillStyle = "#dbeafe";
           dctx.fillRect(0, Math.floor(docH * 0.50), docW, docH - Math.floor(docH * 0.50));
@@ -979,7 +1349,7 @@
         dctx.strokeRect(55, 600, 690, 175);
         dctx.fillStyle = "#073259";
         dctx.font = "bold 17px Arial";
-        dctx.fillText("Phần II — Bảng thông số & Ghi chú chuyên đề (Vùng màu khác):", 75, 633);
+        dctx.fillText("Phần II — Bảng thông số & Ghi chú chuyên đề:", 75, 633);
         dctx.fillStyle = "#1e293b";
         dctx.font = "16px Arial";
         dctx.fillText("• Câu 1: Ancol bậc hai là CH3-CH(OH)-CH3 => Chọn đáp án A.", 75, 669);
@@ -1005,72 +1375,63 @@
       function createProceduralSample(type) {
         const c = document.createElement("canvas");
         const ctx = c.getContext("2d");
+
+        if (type === "book_wave") {
+          // Sample 1: Open 2-page book where center spine arches up and text lines curve like a wave!
+          c.width = 1120;
+          c.height = 860;
+          drawDeskTexture(ctx, c.width, c.height, [48, 56, 68], [32, 38, 48]);
+          const bookCanvas = buildOpenBookSpreadCanvas();
+          const dstCorners = [
+            { x: 75,  y: 75 },
+            { x: 1045, y: 85 },
+            { x: 1065, y: 785 },
+            { x: 55,  y: 775 }
+          ];
+          renderWarpedQuadToCanvas(bookCanvas, c, dstCorners, 0.18, false, "book_m_wave");
+          return {
+            canvas: c,
+            name: "Sach_Mo_2_Trang_Cong"
+          };
+        }
+
         c.width = 960;
         c.height = 1140;
 
-        if (type === "two_tone") {
-          // Sample 1: Document with White Top Half and Colored Bottom Half on Wooden Desk!
-          drawWoodDeskBackground(ctx, c.width, c.height, [168, 122, 78], [136, 94, 56]);
-          const topSheet = buildExamSheetCanvas("#f8f8f5", true);
+        if (type === "low_light") {
+          // Sample 2: Dim / Low-light White Paper on a Dark Desk (paper brightness ~82, desk brightness ~20!)
+          drawDeskTexture(ctx, c.width, c.height, [26, 24, 22], [16, 15, 14]);
+          const sheet = buildExamSheetCanvas("#f4f3ee", false);
           const dstCorners = [
-            { x: 155, y: 105 },
-            { x: 815, y: 145 },
-            { x: 765, y: 1025 },
-            { x: 95,  y: 975 }
+            { x: 150, y: 105 },
+            { x: 820, y: 140 },
+            { x: 770, y: 1025 },
+            { x: 95,  y: 980 }
           ];
-          renderWarpedQuadToCanvas(topSheet, c, dstCorners, 0.28, false, 0);
+          renderWarpedQuadToCanvas(sheet, c, dstCorners, 0.62, false, "none");
           return {
             canvas: c,
-            name: "Tai_Lieu_Nua_Trang_Nua_Mau"
+            name: "Giay_Trang_Ban_Toi_Thieu_Sang"
           };
         }
 
-        if (type === "tilted_curved") {
-          c.height = 1080;
-          drawWoodDeskBackground(ctx, c.width, c.height, [152, 110, 72], [122, 84, 52]);
-          const topSheet = buildExamSheetCanvas("#f8f7f2", false);
-          const dstCorners = [
-            { x: 245, y: 155 },
-            { x: 715, y: 175 },
-            { x: 885, y: 855 },
-            { x: 75,  y: 830 }
-          ];
-          renderWarpedQuadToCanvas(topSheet, c, dstCorners, 0.32, false, 26.0);
-          return {
-            canvas: c,
-            name: "Tai_Lieu_Nghieng_Cong",
-            presetCorners: dstCorners,
-            presetMidOffsets: [
-              { x: 0, y: -16 },
-              { x: 0, y: 0 },
-              { x: 0, y: -16 },
-              { x: 0, y: 0 }
-            ]
-          };
-        }
-
-        // White on White
-        ctx.fillStyle = "#ecece8";
-        ctx.fillRect(0, 0, c.width, c.height);
-        const underSheet = buildExamSheetCanvas("#f1f1ed", false);
-        renderWarpedQuadToCanvas(underSheet, c, [
-          { x: 65, y: 115 },
-          { x: 865, y: 65 },
-          { x: 905, y: 1065 },
-          { x: 105, y: 1090 }
-        ], 0, true, 0);
-
-        const topSheet = buildExamSheetCanvas("#f8f8f5", false);
-        renderWarpedQuadToCanvas(topSheet, c, [
-          { x: 155, y: 115 },
-          { x: 815, y: 165 },
-          { x: 755, y: 1015 },
-          { x: 95, y: 965 }
-        ], 0.25, true, 0);
-        return { canvas: c, name: "Giay_Trang_Tren_Nen_Trang" };
+        // Sample 3: Two-tone document (White top half, Blue bottom half)
+        drawDeskTexture(ctx, c.width, c.height, [168, 122, 78], [136, 94, 56]);
+        const topSheet = buildExamSheetCanvas("#f8f8f5", true);
+        const dstCorners = [
+          { x: 155, y: 105 },
+          { x: 815, y: 145 },
+          { x: 765, y: 1025 },
+          { x: 95,  y: 975 }
+        ];
+        renderWarpedQuadToCanvas(topSheet, c, dstCorners, 0.25, false, "none");
+        return {
+          canvas: c,
+          name: "Tai_Lieu_Nua_Trang_Nua_Mau"
+        };
       }
 
-      function renderWarpedQuadToCanvas(srcCanvas, dstCanvas, corners, shadowStrength, addPaperDropShadow, curlAmp) {
+      function renderWarpedQuadToCanvas(srcCanvas, dstCanvas, corners, shadowStrength, addPaperDropShadow, waveType) {
         const sW = srcCanvas.width;
         const sH = srcCanvas.height;
         const dW = dstCanvas.width;
@@ -1104,7 +1465,6 @@
           { x: 0, y: sH }
         ];
         const Hinv = computeHomography(corners, srcPts);
-        const cAmp = curlAmp || 0;
 
         for (let y = 0; y < dH; y++) {
           for (let x = 0; x < dW; x++) {
@@ -1114,9 +1474,11 @@
               const sx = (Hinv[0] * x + Hinv[1] * y + Hinv[2]) / denom;
               let sy = (Hinv[3] * x + Hinv[4] * y + Hinv[5]) / denom;
 
-              if (cAmp !== 0) {
+              if (waveType === "book_m_wave") {
                 const xn = sx / sW;
-                sy += cAmp * (4.0 * (xn - 0.5) * (xn - 0.5));
+                // Realistic open-book wave: left page arches, center spine dips, right page arches!
+                const wave = 18.0 * Math.sin(2.0 * Math.PI * xn) - 14.0 * Math.cos(4.0 * Math.PI * xn);
+                sy += wave;
               }
 
               if (sx >= 0 && sx < sW - 1 && sy >= 0 && sy < sH - 1) {
@@ -1134,19 +1496,25 @@
                 const w01 = (1 - dx) * dy;
                 const w11 = dx * dy;
 
-                dData[di]     = sData[i00] * w00 + sData[i10] * w10 + sData[i01] * w01 + sData[i11] * w11;
-                dData[di + 1] = sData[i00 + 1] * w00 + sData[i10 + 1] * w10 + sData[i01 + 1] * w01 + sData[i11 + 1] * w11;
-                dData[di + 2] = sData[i00 + 2] * w00 + sData[i10 + 2] * w10 + sData[i01 + 2] * w01 + sData[i11 + 2] * w11;
+                let r = sData[i00] * w00 + sData[i10] * w10 + sData[i01] * w01 + sData[i11] * w11;
+                let g = sData[i00 + 1] * w00 + sData[i10 + 1] * w10 + sData[i01 + 1] * w01 + sData[i11 + 1] * w11;
+                let b = sData[i00 + 2] * w00 + sData[i10 + 2] * w10 + sData[i01 + 2] * w01 + sData[i11 + 2] * w11;
+
+                if (shadowStrength > 0.5) {
+                  // Low-light overall dimming inside the document sheet
+                  const dim = 0.36 + 0.14 * Math.cos((x / dW - 0.3) * 2.0);
+                  r *= dim; g *= dim; b *= dim;
+                } else if (shadowStrength > 0) {
+                  const sig = 1.0 / (1.0 + Math.exp(-((x - dW * 0.44) * 0.009 + (y - dH * 0.48) * 0.009)));
+                  const shFactor = Math.max(0.45, 1.0 - shadowStrength * sig);
+                  r *= shFactor; g *= shFactor; b *= shFactor;
+                }
+
+                dData[di]     = Math.round(r);
+                dData[di + 1] = Math.round(g);
+                dData[di + 2] = Math.round(b);
                 dData[di + 3] = 255;
               }
-            }
-
-            if (shadowStrength > 0) {
-              const sig = 1.0 / (1.0 + Math.exp(-((x - dW * 0.44) * 0.009 + (y - dH * 0.48) * 0.009)));
-              const shFactor = Math.max(0.45, 1.0 - shadowStrength * sig);
-              dData[di]     = Math.round(dData[di] * shFactor);
-              dData[di + 1] = Math.round(dData[di + 1] * shFactor);
-              dData[di + 2] = Math.round(dData[di + 2] * shFactor);
             }
           }
         }
@@ -1154,8 +1522,7 @@
       }
 
       // =========================================================================
-      // 4. v10.0 INTELLIGENT MULTI-ZONE & OUTER-BORDER HYBRID CORNER DETECTOR
-      //    (Accurately detects Half-White/Half-Color, White-on-White & Wood Desk!)
+      // 4. v11.0 LOW-LIGHT AUTO-STRETCH + MULTI-ZONE CORNER DETECTOR
       // =========================================================================
       function getPercentile(arr, p) {
         if (!arr.length) return 0;
@@ -1266,7 +1633,20 @@
         const imgData = tctx.getImageData(0, 0, w, h).data;
 
         const nPix = w * h;
+        const L_raw = new Float32Array(nPix);
+        for (let i = 0; i < nPix; i++) {
+          const idx = i * 4;
+          L_raw[i] = 0.299 * imgData[idx] + 0.587 * imgData[idx + 1] + 0.114 * imgData[idx + 2];
+        }
+
+        // 1. Auto-Exposure Dynamic Range Stretch on Text-Erased Surface (Solves Low-Light Dark-Desk Detection!)
+        const L_surf_raw = morphErodeFloat(morphDilateFloat(L_raw, w, h, 2), w, h, 2);
+        const p05 = getPercentile(L_surf_raw, 0.05);
+        const p96 = getPercentile(L_surf_raw, 0.96);
+        const autoGain = 245.0 / Math.max(25.0, p96 - p05);
+
         const L = new Float32Array(nPix);
+        const L_surf = new Float32Array(nPix);
         const rn = new Float32Array(nPix);
         const gn = new Float32Array(nPix);
         const bn = new Float32Array(nPix);
@@ -1275,10 +1655,11 @@
 
         for (let i = 0; i < nPix; i++) {
           const idx = i * 4;
-          const R = imgData[idx];
-          const G = imgData[idx + 1];
-          const B = imgData[idx + 2];
+          const R = Math.min(255, Math.max(0, (imgData[idx] - p05) * autoGain));
+          const G = Math.min(255, Math.max(0, (imgData[idx + 1] - p05) * autoGain));
+          const B = Math.min(255, Math.max(0, (imgData[idx + 2] - p05) * autoGain));
           L[i] = 0.299 * R + 0.587 * G + 0.114 * B;
+          L_surf[i] = Math.min(255, Math.max(0, (L_surf_raw[i] - p05) * autoGain));
           const maxC = Math.max(R, G, B);
           const minC = Math.min(R, G, B);
           sat[i] = (maxC - minC) / (maxC + 20.0);
@@ -1289,13 +1670,11 @@
           bn[i] = B / sumRGB;
         }
 
-        // 1. Text-erased surface via morphological closing radius 2
-        const L_surf = morphErodeFloat(morphDilateFloat(L, w, h, 2), w, h, 2);
         const rn_surf = morphErodeFloat(morphDilateFloat(rn, w, h, 2), w, h, 2);
         const gn_surf = morphErodeFloat(morphDilateFloat(gn, w, h, 2), w, h, 2);
         const bn_surf = morphErodeFloat(morphDilateFloat(bn, w, h, 2), w, h, 2);
 
-        // 2. Sample OUTER BORDER RING (outer 4% frame) to model the Background / Desk Surface!
+        // 2. Sample OUTER BORDER RING (outer 4% frame) to model the Desk / Background Surface
         const bd = Math.max(2, Math.floor(Math.min(w, h) * 0.04));
         const bRn = [], bGn = [], bBn = [], bSat = [], bWarm = [], bL = [];
         for (let y = 0; y < h; y++) {
@@ -1318,6 +1697,7 @@
         const bgWarm = getPercentile(bWarm, 0.5);
         const bgL = getPercentile(bL, 0.5);
 
+        // Full-weight stretched luminance + chromaticity distance from outer border background
         const distFromBg = new Float32Array(nPix);
         for (let i = 0; i < nPix; i++) {
           const dr = rn_surf[i] - bgRn;
@@ -1326,17 +1706,16 @@
           const ds = sat[i] - bgSat;
           const dw = warmth[i] - bgWarm;
           const dL = (L_surf[i] - bgL) / 255.0;
-          distFromBg[i] = Math.sqrt(dr * dr + dg * dg + db * db + 0.5 * ds * ds + 0.5 * dw * dw + 0.08 * dL * dL);
+          distFromBg[i] = Math.sqrt(dr * dr + dg * dg + db * db + 0.5 * ds * ds + 0.5 * dw * dw + 0.85 * dL * dL);
         }
 
-        // 3. Sample 3 Interior Document Zones (Top: 18..42%, Mid: 38..62%, Bot: 58..82%, x: 28..72%)
-        // This ensures a document with a White Top Half and a Colored Bottom Half has BOTH halves in its foreground palette!
+        // 3. Sample 3 Interior Document Zones (Top: 18..42%, Mid: 38..62%, Bot: 58..82%, x: 24..76%)
         const zoneRanges = [
           [0.18, 0.42],
           [0.38, 0.62],
           [0.58, 0.82]
         ];
-        const cx0 = Math.floor(w * 0.28), cx1 = Math.ceil(w * 0.72);
+        const cx0 = Math.floor(w * 0.24), cx1 = Math.ceil(w * 0.76);
         const docClusters = [];
         let maxZoneBgDist = 0;
         let minZoneBgDist = Infinity;
@@ -1365,15 +1744,14 @@
 
           const dr = cr - bgRn, dg = cg - bgGn, db = cb - bgBn;
           const ds = cs - bgSat, dw = cw - bgWarm, dL = (cL - bgL) / 255.0;
-          const zBgDist = Math.sqrt(dr * dr + dg * dg + db * db + 0.5 * ds * ds + 0.5 * dw * dw + 0.08 * dL * dL);
+          const zBgDist = Math.sqrt(dr * dr + dg * dg + db * db + 0.5 * ds * ds + 0.5 * dw * dw + 0.85 * dL * dL);
 
           if (zBgDist > maxZoneBgDist) maxZoneBgDist = zBgDist;
           if (zBgDist < minZoneBgDist) minZoneBgDist = zBgDist;
           docClusters.push({ cr, cg, cb, cs, cw, cL, zBgDist });
         }
 
-        // Check if image is already a full-bleed / full-frame document (e.g. screenshot with top half white, bottom half colored)
-        // where top border matches top zone and bottom border matches bottom zone!
+        // Check full-bleed two-tone image
         let topBorderMatchesTopZone = 0, botBorderMatchesBotZone = 0;
         for (let x = Math.floor(w * 0.2); x < Math.floor(w * 0.8); x++) {
           const iTop = bd * w + x;
@@ -1384,12 +1762,11 @@
           if (dBot < 0.025) botBorderMatchesBotZone++;
         }
         const spanW = Math.floor(w * 0.6);
-        const isFullBleedTwoTone = (
+        if (
           topBorderMatchesTopZone > spanW * 0.75 &&
           botBorderMatchesBotZone > spanW * 0.75 &&
           Math.hypot(docClusters[0].cr - docClusters[2].cr, docClusters[0].cg - docClusters[2].cg, docClusters[0].cb - docClusters[2].cb) > 0.03
-        );
-        if (isFullBleedTwoTone) {
+        ) {
           return [
             { x: 4, y: 4 },
             { x: origW - 4, y: 4 },
@@ -1398,8 +1775,8 @@
           ];
         }
 
-        // ENGINE 1: Multi-Zone Document Palette vs Outer Border Background (For Wooden & Colored Desks, including Multi-Color Documents!)
-        if (minZoneBgDist > 0.038 && maxZoneBgDist > 0.045) {
+        // ENGINE 1: Multi-Zone Document Palette + Low-Light Stretched Luminance Affinity
+        if (minZoneBgDist > 0.042 && maxZoneBgDist > 0.055) {
           const maskF = new Float32Array(nPix);
           for (let i = 0; i < nPix; i++) {
             let minDistDoc = 1e9;
@@ -1411,10 +1788,10 @@
               const ds = sat[i] - c.cs;
               const dw = warmth[i] - c.cw;
               const dL = (L_surf[i] - c.cL) / 255.0;
-              const d = Math.sqrt(dr * dr + dg * dg + db * db + 0.5 * ds * ds + 0.5 * dw * dw + 0.04 * dL * dL);
+              const d = Math.sqrt(dr * dr + dg * dg + db * db + 0.5 * ds * ds + 0.5 * dw * dw + 0.65 * dL * dL);
               if (d < minDistDoc) minDistDoc = d;
             }
-            const affinity = distFromBg[i] / (distFromBg[i] + minDistDoc + 0.015);
+            const affinity = distFromBg[i] / (distFromBg[i] + minDistDoc + 0.012);
             maskF[i] = affinity >= 0.50 ? 1.0 : 0.0;
           }
 
@@ -1580,7 +1957,7 @@
           }
         }
 
-        // ENGINE 2: Universal Crease + Multi-Color Outer-Background Step Radon Detector
+        // ENGINE 2: Universal Crease + Outer-Background Step Radon Detector
         const rawLeft = new Float32Array(nPix);
         const rawRight = new Float32Array(nPix);
         const rawTop = new Float32Array(nPix);
@@ -1597,28 +1974,28 @@
             const minXCrease = Math.min(cVal, L[i - 1], L[i + 1]);
             const minYCrease = Math.min(cVal, L[i - w], L[i + w]);
 
-            if (distFromBg[i - 3] < 0.055) {
+            if (distFromBg[i - 3] < 0.065) {
               const stepL = Math.max(0, L[i + 3] - Math.min(minXCrease, L[i - 2], L[i - 4]));
               const stepC = Math.hypot(rn[i + 3] - rn[i - 3], gn[i + 3] - gn[i - 3], bn[i + 3] - bn[i - 3]) * 320 + Math.abs(L_surf[i + 3] - L_surf[i - 3]) * 0.45;
               const v = Math.max(stepL, stepC);
               rawLeft[i] = v;
               eLeft[i] = Math.tanh(v / 4.5);
             }
-            if (distFromBg[i + 3] < 0.055) {
+            if (distFromBg[i + 3] < 0.065) {
               const stepL = Math.max(0, L[i - 3] - Math.min(minXCrease, L[i + 2], L[i + 4]));
               const stepC = Math.hypot(rn[i - 3] - rn[i + 3], gn[i - 3] - gn[i + 3], bn[i - 3] - bn[i + 3]) * 320 + Math.abs(L_surf[i - 3] - L_surf[i + 3]) * 0.45;
               const v = Math.max(stepL, stepC);
               rawRight[i] = v;
               eRight[i] = Math.tanh(v / 4.5);
             }
-            if (distFromBg[i - 3 * w] < 0.055) {
+            if (distFromBg[i - 3 * w] < 0.065) {
               const stepL = Math.max(0, L[i + 3 * w] - Math.min(minYCrease, L[i - 2 * w], L[i - 4 * w]));
               const stepC = Math.hypot(rn[i + 3 * w] - rn[i - 3 * w], gn[i + 3 * w] - gn[i - 3 * w], bn[i + 3 * w] - bn[i - 3 * w]) * 320 + Math.abs(L_surf[i + 3 * w] - L_surf[i - 3 * w]) * 0.45;
               const v = Math.max(stepL, stepC);
               rawTop[i] = v;
               eTop[i] = Math.tanh(v / 4.5);
             }
-            if (distFromBg[i + 3 * w] < 0.055) {
+            if (distFromBg[i + 3 * w] < 0.065) {
               const stepL = Math.max(0, L[i - 3 * w] - Math.min(minYCrease, L[i + 2 * w], L[i + 4 * w]));
               const stepC = Math.hypot(rn[i - 3 * w] - rn[i + 3 * w], gn[i - 3 * w] - gn[i + 3 * w], bn[i - 3 * w] - bn[i + 3 * w]) * 320 + Math.abs(L_surf[i - 3 * w] - L_surf[i + 3 * w]) * 0.45;
               const v = Math.max(stepL, stepC);
@@ -1850,7 +2227,7 @@
       }
 
       // =========================================================================
-      // 5. TRUE-3D ASPECT RECOVERY + COONS PATCH + PARABOLIC TEXT-LINE RECTIFIER
+      // 5. v11.0 3D ASPECT RECOVERY + HORIZONTAL TEXT-RIBBON WAVY BOOK FLATTENING
       // =========================================================================
       function computeHomography(srcPts, dstPts) {
         const A = [];
@@ -1894,43 +2271,227 @@
         return [b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], 1];
       }
 
-      function fitParabola3(xs, ys) {
-        const n = xs.length;
-        if (n < 3) return [0, 0, 0];
-        let s4 = 0, s3 = 0, s2 = 0, s1 = 0, s0 = n;
-        let syx2 = 0, syx1 = 0, sy0 = 0;
-        for (let i = 0; i < n; i++) {
-          const x = xs[i], y = ys[i];
-          const x2 = x * x;
-          s1 += x;
-          s2 += x2;
-          s3 += x2 * x;
-          s4 += x2 * x2;
-          sy0 += y;
-          syx1 += y * x;
-          syx2 += y * x2;
-        }
-        const M = [
-          [s4, s3, s2, syx2],
-          [s3, s2, s1, syx1],
-          [s2, s1, s0, sy0]
-        ];
-        for (let i = 0; i < 3; i++) {
-          let piv = i;
-          for (let k = i + 1; k < 3; k++) {
-            if (Math.abs(M[k][i]) > Math.abs(M[piv][i])) piv = k;
+      // Fast Horizontal Text-Ribbon Tracing for Wavy / Open-Book Spreads (Eliminates M-wave & S-wave curvature!)
+      function computeHorizontalRibbonWave(tempData, dstW, dstH) {
+        // Work at 1/2 vertical, 64 horizontal columns for ultra-fast (<4ms) ribbon tracing
+        const nCols = 64;
+        const subH = Math.max(120, dstH >> 1);
+        const yScale = dstH / subH;
+        const winRadX = Math.max(4, Math.floor(dstW / 72));
+
+        // 1. Estimate local paper ceiling per column to handle low-light or shaded pages
+        const rawRib = new Float32Array(subH * nCols);
+        for (let c = 0; c < nCols; c++) {
+          const xc = Math.min(dstW - 1, Math.round((c / (nCols - 1)) * (dstW - 1)));
+          const x0 = Math.max(0, xc - winRadX);
+          const x1 = Math.min(dstW - 1, xc + winRadX);
+          let colMaxLum = 80;
+          for (let sy = 8; sy < subH - 8; sy += 4) {
+            const y = Math.min(dstH - 1, Math.round(sy * yScale));
+            const idx = (y * dstW + xc) * 4;
+            const lum = 0.299 * tempData[idx] + 0.587 * tempData[idx + 1] + 0.114 * tempData[idx + 2];
+            if (lum > colMaxLum) colMaxLum = lum;
           }
-          const tmp = M[i]; M[i] = M[piv]; M[piv] = tmp;
-          const div = M[i][i] || 1e-9;
-          for (let j = i; j < 4; j++) M[i][j] /= div;
-          for (let k = 0; k < 3; k++) {
-            if (k !== i) {
-              const f = M[k][i];
-              for (let j = i; j < 4; j++) M[k][j] -= f * M[i][j];
+          const paperCeil = colMaxLum * 0.92;
+
+          for (let sy = 0; sy < subH; sy++) {
+            const y = Math.min(dstH - 1, Math.round(sy * yScale));
+            const rOff = y * dstW * 4;
+            let maxInk = 0;
+            let sumInk = 0;
+            let cnt = 0;
+            for (let x = x0; x <= x1; x += 2) {
+              const idx = rOff + x * 4;
+              const lum = 0.299 * tempData[idx] + 0.587 * tempData[idx + 1] + 0.114 * tempData[idx + 2];
+              const ink = Math.max(0, paperCeil - lum);
+              if (ink > maxInk) maxInk = ink;
+              sumInk += ink;
+              cnt++;
+            }
+            rawRib[sy * nCols + c] = 0.55 * maxInk + 0.45 * (sumInk / Math.max(1, cnt));
+          }
+        }
+
+        // 2. Smooth horizontally (radius 2 cols) and vertically (radius 2 rows) to form continuous text-line ribbons
+        const tmpH = new Float32Array(subH * nCols);
+        const rib = new Float32Array(subH * nCols);
+        for (let sy = 0; sy < subH; sy++) {
+          const rOff = sy * nCols;
+          for (let c = 0; c < nCols; c++) {
+            const c0 = Math.max(0, c - 2), c1 = Math.min(nCols - 1, c + 2);
+            let s = 0;
+            for (let k = c0; k <= c1; k++) s += rawRib[rOff + k];
+            tmpH[rOff + c] = s / (c1 - c0 + 1);
+          }
+        }
+        for (let sy = 0; sy < subH; sy++) {
+          const y0 = Math.max(0, sy - 2), y1 = Math.min(subH - 1, sy + 2);
+          const cnt = y1 - y0 + 1;
+          for (let c = 0; c < nCols; c++) {
+            let s = 0;
+            for (let ny = y0; ny <= y1; ny++) s += tmpH[ny * nCols + c];
+            rib[sy * nCols + c] = s / cnt;
+          }
+        }
+
+        // 3. Trace text-line ribbons from Left-Half center (c=16 across 0..31) and Right-Half center (c=48 across 32..63)
+        function traceHalf(cStart, cMin, cMax) {
+          const peaks = [];
+          const marginY = Math.max(10, Math.floor(subH * 0.05));
+          for (let sy = marginY; sy < subH - marginY; sy++) {
+            const v = rib[sy * nCols + cStart];
+            if (v > 6.0) {
+              let isMax = true;
+              for (let dy = -5; dy <= 5; dy++) {
+                if (rib[(sy + dy) * nCols + cStart] > v) {
+                  isMax = false;
+                  break;
+                }
+              }
+              if (isMax) {
+                peaks.push(sy);
+                sy += 4;
+              }
             }
           }
+          if (peaks.length < 3) return null;
+
+          const nP = peaks.length;
+          const traces = [];
+          const valid = [];
+          for (let p = 0; p < nP; p++) {
+            const tr = new Float32Array(nCols);
+            const vl = new Uint8Array(nCols);
+            tr[cStart] = peaks[p];
+            vl[cStart] = 1;
+
+            let currY = peaks[p];
+            for (let c = cStart - 1; c >= cMin; c--) {
+              const yi = Math.round(currY);
+              const yLo = Math.max(6, yi - 3), yHi = Math.min(subH - 7, yi + 3);
+              let bestY = yi, bestV = -1;
+              for (let ny = yLo; ny <= yHi; ny++) {
+                const val = rib[ny * nCols + c];
+                if (val > bestV) { bestV = val; bestY = ny; }
+              }
+              if (bestV > 4.5) {
+                const ym = rib[(bestY - 1) * nCols + c];
+                const y0 = bestV;
+                const yp = rib[(bestY + 1) * nCols + c];
+                const den = 2.0 * (2.0 * y0 - ym - yp);
+                currY = bestY + (Math.abs(den) > 1e-4 ? Math.max(-0.5, Math.min(0.5, (ym - yp) / den)) : 0);
+                vl[c] = 1;
+              }
+              tr[c] = currY;
+            }
+
+            currY = peaks[p];
+            for (let c = cStart + 1; c <= cMax; c++) {
+              const yi = Math.round(currY);
+              const yLo = Math.max(6, yi - 3), yHi = Math.min(subH - 7, yi + 3);
+              let bestY = yi, bestV = -1;
+              for (let ny = yLo; ny <= yHi; ny++) {
+                const val = rib[ny * nCols + c];
+                if (val > bestV) { bestV = val; bestY = ny; }
+              }
+              if (bestV > 4.5) {
+                const ym = rib[(bestY - 1) * nCols + c];
+                const y0 = bestV;
+                const yp = rib[(bestY + 1) * nCols + c];
+                const den = 2.0 * (2.0 * y0 - ym - yp);
+                currY = bestY + (Math.abs(den) > 1e-4 ? Math.max(-0.5, Math.min(0.5, (ym - yp) / den)) : 0);
+                vl[c] = 1;
+              }
+              tr[c] = currY;
+            }
+            traces.push(tr);
+            valid.push(vl);
+          }
+          return { traces, valid, nP };
         }
-        return [M[0][3], M[1][3], M[2][3]];
+
+        const halfL = traceHalf(16, 0, 31);
+        const halfR = traceHalf(48, 32, 63);
+        if (!halfL && !halfR) return null;
+
+        const subWave = new Float32Array(nCols);
+
+        if (halfL && halfR) {
+          const nCommon = Math.min(halfL.nP, halfR.nP);
+          const targetY = new Float32Array(nCommon);
+          for (let p = 0; p < nCommon; p++) {
+            let sumY = 0, cnt = 0;
+            for (let c = 2; c <= 29; c++) {
+              if (halfL.valid[p][c]) { sumY += halfL.traces[p][c]; cnt++; }
+            }
+            for (let c = 34; c <= 61; c++) {
+              if (halfR.valid[p][c]) { sumY += halfR.traces[p][c]; cnt++; }
+            }
+            targetY[p] = cnt > 0 ? sumY / cnt : halfL.traces[p][16];
+          }
+
+          for (let c = 0; c <= 31; c++) {
+            const diffs = [];
+            for (let p = 0; p < nCommon; p++) {
+              diffs.push(halfL.traces[p][c] - targetY[p]);
+            }
+            subWave[c] = getPercentile(diffs, 0.5) * yScale;
+          }
+          for (let c = 32; c <= 63; c++) {
+            const diffs = [];
+            for (let p = 0; p < nCommon; p++) {
+              diffs.push(halfR.traces[p][c] - targetY[p]);
+            }
+            subWave[c] = getPercentile(diffs, 0.5) * yScale;
+          }
+        } else {
+          const activeHalf = halfL || halfR;
+          for (let c = 0; c < nCols; c++) {
+            const diffs = [];
+            for (let p = 0; p < activeHalf.nP; p++) {
+              let sumY = 0, cnt = 0;
+              for (let k = 0; k < nCols; k++) {
+                if (activeHalf.valid[p][k]) { sumY += activeHalf.traces[p][k]; cnt++; }
+              }
+              const meanY = cnt > 0 ? sumY / cnt : activeHalf.traces[p][16];
+              diffs.push(activeHalf.traces[p][c] - meanY);
+            }
+            subWave[c] = getPercentile(diffs, 0.5) * yScale;
+          }
+        }
+
+        // Smooth subWave across the 64 columns (2 passes of radius-2 box filter)
+        const sm1 = new Float32Array(nCols);
+        const sm2 = new Float32Array(nCols);
+        for (let c = 0; c < nCols; c++) {
+          const c0 = Math.max(0, c - 2), c1 = Math.min(nCols - 1, c + 2);
+          let s = 0;
+          for (let k = c0; k <= c1; k++) s += subWave[k];
+          sm1[c] = s / (c1 - c0 + 1);
+        }
+        let meanW = 0;
+        for (let c = 0; c < nCols; c++) {
+          const c0 = Math.max(0, c - 2), c1 = Math.min(nCols - 1, c + 2);
+          let s = 0;
+          for (let k = c0; k <= c1; k++) s += sm1[k];
+          sm2[c] = s / (c1 - c0 + 1);
+          meanW += sm2[c];
+        }
+        meanW /= nCols;
+        for (let c = 0; c < nCols; c++) sm2[c] -= meanW;
+
+        const fullWave = new Float32Array(dstW);
+        let maxAbs = 0;
+        for (let x = 0; x < dstW; x++) {
+          const gf = (x / (dstW - 1)) * (nCols - 1);
+          const c0 = Math.min(nCols - 2, gf | 0);
+          const t = gf - c0;
+          const wVal = sm2[c0] * (1 - t) + sm2[c0 + 1] * t;
+          fullWave[x] = wVal;
+          if (Math.abs(wVal) > maxAbs) maxAbs = Math.abs(wVal);
+        }
+
+        return maxAbs >= 1.0 ? fullWave : null;
       }
 
       function dewarpQuad(srcCanvas, quadCorners, paperSizeMode, midOffsets) {
@@ -1957,7 +2518,7 @@
         } else {
           if (ratioHW >= 0.90 && ratioHW <= 1.88) {
             ratioHW = 1.4142;
-          } else if (ratioHW >= 0.52 && ratioHW < 0.90) {
+          } else if (ratioHW >= 0.58 && ratioHW < 0.90) {
             ratioHW = 1.0 / 1.4142;
           }
         }
@@ -2040,92 +2601,6 @@
           }
         }
 
-        // Stage 3: Automatic 16-Strip Parabolic Text-Line Curl Straightening
-        const nStrips = 16;
-        const stripW = Math.floor(dstW / nStrips);
-        const y0 = Math.floor(dstH * 0.06);
-        const y1 = Math.floor(dstH * 0.94);
-        const yLen = y1 - y0;
-
-        const profiles = [];
-        const pNorms = new Float32Array(nStrips);
-
-        for (let k = 0; k < nStrips; k++) {
-          const xs0 = k * stripW + Math.floor(stripW * 0.1);
-          const xs1 = (k + 1) * stripW - Math.floor(stripW * 0.1);
-          const prof = new Float32Array(yLen);
-          for (let y = y0; y < y1; y++) {
-            let sumGy = 0;
-            const rPrev = (y - 1) * dstW * 4;
-            const rNext = (y + 1) * dstW * 4;
-            for (let x = xs0; x < xs1; x += 2) {
-              const cOff = x * 4;
-              const lPrev = 0.299 * tempData[rPrev + cOff] + 0.587 * tempData[rPrev + cOff + 1] + 0.114 * tempData[rPrev + cOff + 2];
-              const lNext = 0.299 * tempData[rNext + cOff] + 0.587 * tempData[rNext + cOff + 1] + 0.114 * tempData[rNext + cOff + 2];
-              sumGy += Math.abs(lNext - lPrev);
-            }
-            prof[y - y0] = sumGy / Math.max(1, Math.ceil((xs1 - xs0) / 2));
-          }
-          const hp = new Float32Array(yLen);
-          let normSq = 0;
-          for (let i = 0; i < yLen; i++) {
-            const a0 = Math.max(0, i - 16), a1 = Math.min(yLen - 1, i + 16);
-            let s = 0;
-            for (let j = a0; j <= a1; j++) s += prof[j];
-            const v = prof[i] - s / (a1 - a0 + 1);
-            hp[i] = v;
-            normSq += v * v;
-          }
-          profiles.push(hp);
-          pNorms[k] = Math.sqrt(normSq);
-        }
-
-        const refProf = new Float32Array(yLen);
-        let refNormSq = 0;
-        for (let i = 0; i < yLen; i++) {
-          const v = (profiles[6][i] + profiles[7][i] + profiles[8][i] + profiles[9][i]) * 0.25;
-          refProf[i] = v;
-          refNormSq += v * v;
-        }
-        const refNorm = Math.sqrt(refNormSq) + 1e-5;
-
-        const validXs = [];
-        const validShifts = [];
-        const maxShift = Math.min(38, Math.floor(dstH * 0.04));
-
-        for (let k = 0; k < nStrips; k++) {
-          const xNorm = (k + 0.5) / nStrips - 0.5;
-          if (k >= 6 && k <= 9) {
-            validXs.push(xNorm);
-            validShifts.push(0);
-            continue;
-          }
-          if (pNorms[k] < refNorm * 0.35) continue;
-
-          const p = profiles[k];
-          const denomNorm = refNorm * pNorms[k] + 1e-5;
-          let bestS = 0;
-          let bestScore = -1e9;
-
-          for (let s = -maxShift; s <= maxShift; s++) {
-            let dot = 0;
-            const iStart = Math.max(0, s);
-            const iEnd = Math.min(yLen, yLen + s);
-            for (let i = iStart; i < iEnd; i++) {
-              dot += refProf[i] * p[i - s];
-            }
-            const score = (dot / denomNorm) - 0.0012 * (s * s);
-            if (score > bestScore) {
-              bestScore = score;
-              bestS = s;
-            }
-          }
-          if (bestScore > 0.20) {
-            validXs.push(xNorm);
-            validShifts.push(bestS);
-          }
-        }
-
         const outCanvas = document.createElement("canvas");
         outCanvas.width = dstW;
         outCanvas.height = dstH;
@@ -2133,36 +2608,26 @@
         const outImg = outCtx.createImageData(dstW, dstH);
         const dData = outImg.data;
 
-        if (validXs.length >= 6) {
-          const [a, b] = fitParabola3(validXs, validShifts);
-          const shiftCol = new Float32Array(dstW);
-          let maxAbsShift = 0;
-          for (let x = 0; x < dstW; x++) {
-            const xn = x / dstW - 0.5;
-            const sh = a * xn * xn + b * xn;
-            shiftCol[x] = sh;
-            if (Math.abs(sh) > maxAbsShift) maxAbsShift = Math.abs(sh);
-          }
-
-          if (maxAbsShift >= 1.2) {
-            for (let y = 0; y < dstH; y++) {
-              const borderTaper = Math.min(1.0, Math.min(y, dstH - 1 - y) / (dstH * 0.03 + 1));
-              for (let x = 0; x < dstW; x++) {
-                const sy = Math.min(dstH - 1.001, Math.max(0, y - shiftCol[x] * borderTaper));
-                const y0i = sy | 0;
-                const dy = sy - y0i;
-                const i0 = (y0i * dstW + x) * 4;
-                const i1 = ((y0i + 1) * dstW + x) * 4;
-                const di = (y * dstW + x) * 4;
-                dData[di]     = tempData[i0] * (1 - dy) + tempData[i1] * dy;
-                dData[di + 1] = tempData[i0 + 1] * (1 - dy) + tempData[i1 + 1] * dy;
-                dData[di + 2] = tempData[i0 + 2] * (1 - dy) + tempData[i1 + 2] * dy;
-                dData[di + 3] = 255;
-              }
+        // Stage 3: Horizontal Text-Ribbon Wave Flattening (Straightens Open-Book Wavy Spine & Curved Margins!)
+        const fullWave = computeHorizontalRibbonWave(tempData, dstW, dstH);
+        if (fullWave) {
+          for (let y = 0; y < dstH; y++) {
+            const borderTaper = Math.min(1.0, Math.min(y, dstH - 1 - y) / (dstH * 0.03 + 1));
+            for (let x = 0; x < dstW; x++) {
+              const sy = Math.min(dstH - 1.001, Math.max(0, y + fullWave[x] * borderTaper));
+              const y0i = sy | 0;
+              const dy = sy - y0i;
+              const i0 = (y0i * dstW + x) * 4;
+              const i1 = ((y0i + 1) * dstW + x) * 4;
+              const di = (y * dstW + x) * 4;
+              dData[di]     = tempData[i0] * (1 - dy) + tempData[i1] * dy;
+              dData[di + 1] = tempData[i0 + 1] * (1 - dy) + tempData[i1 + 1] * dy;
+              dData[di + 2] = tempData[i0 + 2] * (1 - dy) + tempData[i1 + 2] * dy;
+              dData[di + 3] = 255;
             }
-            outCtx.putImageData(outImg, 0, 0);
-            return outCanvas;
           }
+          outCtx.putImageData(outImg, 0, 0);
+          return outCanvas;
         }
 
         dData.set(tempData);
@@ -2333,10 +2798,10 @@
           const rOff = y * w;
           for (let x = 0; x < w; x++) {
             const i = rOff + x;
-            const eL = Math.max(40.0, sampleEnvelopeGrid(gridL, x, y));
-            const eR = Math.max(40.0, sampleEnvelopeGrid(gridR, x, y));
-            const eG = Math.max(40.0, sampleEnvelopeGrid(gridG, x, y));
-            const eB = Math.max(40.0, sampleEnvelopeGrid(gridB, x, y));
+            const eL = Math.max(22.0, sampleEnvelopeGrid(gridL, x, y));
+            const eR = Math.max(22.0, sampleEnvelopeGrid(gridR, x, y));
+            const eG = Math.max(22.0, sampleEnvelopeGrid(gridG, x, y));
+            const eB = Math.max(22.0, sampleEnvelopeGrid(gridB, x, y));
 
             const nr = Math.min(255, Math.max(0, Math.round((255.0 * chR[i]) / eR)));
             const ng = Math.min(255, Math.max(0, Math.round((255.0 * chG[i]) / eG)));
@@ -2643,8 +3108,8 @@
 
         const stRect = el.stageContainer.getBoundingClientRect();
         const relX = clientX - stRect.left;
-        const leftPx = relX < stRect.width * 0.5 ? Math.max(10, stRect.width - 128) : 10;
-        const topPx = 46;
+        const leftPx = relX < stRect.width * 0.5 ? Math.max(10, stRect.width - 126) : 10;
+        const topPx = 10;
 
         el.magnifierLoupe.style.left = `${leftPx}px`;
         el.magnifierLoupe.style.top = `${topPx}px`;
@@ -2940,7 +3405,7 @@
       }
 
       // =========================================================================
-      // 8. PAGE QUEUE & EXPORT
+      // 8. "THƯ VIỆN" (LIBRARY) MANAGEMENT: LIST / GRID VIEW, PREV / NEXT & DELETE
       // =========================================================================
       function addNewPageFromCanvas(srcCanvas, name, customCorners, customMidOffsets) {
         const detectedCorners = customCorners ? customCorners.map((p) => ({ ...p })) : detectDocumentCorners(srcCanvas);
@@ -2950,14 +3415,14 @@
 
         const pageObj = {
           id: "page_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
-          name: name || `Trang_${state.pages.length + 1}`,
+          name: name || `ScanhoahocABC_${state.pages.length + 1}`,
           srcCanvas,
           corners: detectedCorners,
           midOffsets,
           dewarpedCanvas: null,
           filterCache: null,
           processedCanvas: null,
-          settings: cloneSettings(state.defaultSettings) // Starts on "original" ("Ảnh gốc")!
+          settings: cloneSettings(state.defaultSettings)
         };
         updateGeometryAndProcess(pageObj);
         state.pages.push(pageObj);
@@ -2968,24 +3433,159 @@
         renderStage();
       }
 
+      function deletePageAtIndex(idx) {
+        if (state.pages.length <= 1) {
+          // If deleting the last remaining image, replace with a fresh default sample and notify
+          state.pages.splice(0, 1);
+          const fresh = createProceduralSample("book_wave");
+          addNewPageFromCanvas(fresh.canvas, fresh.name);
+          showToast("Đã xóa ảnh và tạo trang mới!");
+          return;
+        }
+        const removedName = state.pages[idx].name;
+        state.pages.splice(idx, 1);
+        if (state.currentPageIndex >= state.pages.length) {
+          state.currentPageIndex = state.pages.length - 1;
+        } else if (idx < state.currentPageIndex) {
+          state.currentPageIndex--;
+        }
+        resetStageZoom();
+        syncControlsFromPage(getCurrentPage());
+        renderPageList();
+        renderStage();
+        showToast(`Đã xóa "${removedName}"!`);
+      }
+
+      function goToAdjacentPage(delta) {
+        const nextIdx = state.currentPageIndex + delta;
+        if (nextIdx < 0 || nextIdx >= state.pages.length) return;
+        state.currentPageIndex = nextIdx;
+        resetStageZoom();
+        syncControlsFromPage(getCurrentPage());
+        renderPageList();
+        renderStage();
+      }
+
+      function getModeLabel(mode) {
+        if (mode === "magic_color") return "Tài liệu màu";
+        if (mode === "bw_sauvola") return "Đen trắng";
+        if (mode === "faint_boost") return "Rõ chữ mờ";
+        return "Ảnh gốc";
+      }
+
       function renderPageList() {
+        const total = state.pages.length;
+        const curr = state.currentPageIndex + 1;
+        el.pageCountText.textContent = `${total}`;
+        el.headerPageStatus.textContent = `Trang ${curr} / ${total}`;
+        el.stagePageIndicator.textContent = `${curr} / ${total}`;
+
+        el.btnPrevPage.disabled = state.currentPageIndex <= 0;
+        el.btnNextPage.disabled = state.currentPageIndex >= total - 1;
+
+        el.pageListContainer.className = "lib-container " + (state.libViewMode === "grid" ? "grid-mode" : "list-mode");
         el.pageListContainer.innerHTML = "";
-        el.pageCountText.textContent = `${state.pages.length} trang`;
 
         state.pages.forEach((p, idx) => {
-          const item = document.createElement("button");
-          item.type = "button";
-          item.className = "btn btn-sec" + (idx === state.currentPageIndex ? " active" : "");
-          item.style.height = "32px";
-          item.textContent = `Trang ${idx + 1}`;
-          item.addEventListener("click", () => {
-            state.currentPageIndex = idx;
-            resetStageZoom();
-            syncControlsFromPage(getCurrentPage());
-            renderPageList();
-            renderStage();
-          });
-          el.pageListContainer.appendChild(item);
+          const src = p.processedCanvas || p.srcCanvas;
+
+          if (state.libViewMode === "grid") {
+            const card = document.createElement("div");
+            card.className = "lib-item-grid" + (idx === state.currentPageIndex ? " active" : "");
+
+            const thumb = document.createElement("canvas");
+            thumb.className = "lib-thumb-grid";
+            thumb.width = 120;
+            thumb.height = 156;
+            const tctx = thumb.getContext("2d");
+            tctx.fillStyle = "#ffffff";
+            tctx.fillRect(0, 0, thumb.width, thumb.height);
+            const sc = Math.min(thumb.width / src.width, thumb.height / src.height);
+            const dw = src.width * sc;
+            const dh = src.height * sc;
+            tctx.drawImage(src, (thumb.width - dw) / 2, (thumb.height - dh) / 2, dw, dh);
+
+            const title = document.createElement("div");
+            title.className = "lib-meta-title";
+            title.style.fontSize = "0.72rem";
+            title.style.width = "100%";
+            title.style.textAlign = "center";
+            title.textContent = `${idx + 1}. ${p.name}`;
+
+            const delBtn = document.createElement("button");
+            delBtn.type = "button";
+            delBtn.className = "lib-grid-del";
+            delBtn.title = "Xóa ảnh này";
+            delBtn.textContent = "✕";
+            delBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              deletePageAtIndex(idx);
+            });
+
+            card.appendChild(thumb);
+            card.appendChild(title);
+            card.appendChild(delBtn);
+
+            card.addEventListener("click", () => {
+              state.currentPageIndex = idx;
+              resetStageZoom();
+              syncControlsFromPage(getCurrentPage());
+              renderPageList();
+              renderStage();
+            });
+            el.pageListContainer.appendChild(card);
+          } else {
+            const row = document.createElement("div");
+            row.className = "lib-item-list" + (idx === state.currentPageIndex ? " active" : "");
+
+            const thumb = document.createElement("canvas");
+            thumb.className = "lib-thumb-list";
+            thumb.width = 64;
+            thumb.height = 84;
+            const tctx = thumb.getContext("2d");
+            tctx.fillStyle = "#ffffff";
+            tctx.fillRect(0, 0, thumb.width, thumb.height);
+            const sc = Math.min(thumb.width / src.width, thumb.height / src.height);
+            const dw = src.width * sc;
+            const dh = src.height * sc;
+            tctx.drawImage(src, (thumb.width - dw) / 2, (thumb.height - dh) / 2, dw, dh);
+
+            const meta = document.createElement("div");
+            meta.className = "lib-meta-list";
+            const title = document.createElement("div");
+            title.className = "lib-meta-title";
+            title.textContent = `${idx + 1}. ${p.name}`;
+            const sub = document.createElement("div");
+            sub.className = "lib-meta-sub";
+            sub.textContent = `${src.width}×${src.height} px • ${getModeLabel(p.settings.colorMode)}`;
+            meta.appendChild(title);
+            meta.appendChild(sub);
+
+            const delBtn = document.createElement("button");
+            delBtn.type = "button";
+            delBtn.className = "btn btn-sec";
+            delBtn.style.height = "30px";
+            delBtn.style.padding = "0 9px";
+            delBtn.style.fontSize = "0.72rem";
+            delBtn.textContent = "🗑 Xóa";
+            delBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              deletePageAtIndex(idx);
+            });
+
+            row.appendChild(thumb);
+            row.appendChild(meta);
+            row.appendChild(delBtn);
+
+            row.addEventListener("click", () => {
+              state.currentPageIndex = idx;
+              resetStageZoom();
+              syncControlsFromPage(getCurrentPage());
+              renderPageList();
+              renderStage();
+            });
+            el.pageListContainer.appendChild(row);
+          }
         });
       }
 
@@ -3041,14 +3641,16 @@
 
         state.pages.splice(state.currentPageIndex + 1, 0, leftPage, rightPage);
         state.currentPageIndex = state.currentPageIndex + 1;
-        el.exportModal.classList.remove("open");
         setViewMode("result");
         syncControlsFromPage(getCurrentPage());
         renderPageList();
         renderStage();
-        showToast("Đã tách thành 2 trang riêng biệt!");
+        showToast("Đã tách thành 2 trang sách riêng biệt!");
       }
 
+      // =========================================================================
+      // 9. EXPORT ENGINE
+      // =========================================================================
       function getScaledExportCanvas(page) {
         if (!page.processedCanvas) updateGeometryAndProcess(page);
         const src = page.processedCanvas;
@@ -3117,19 +3719,8 @@
           const jpgBytes = new Uint8Array(binStr.length);
           for (let k = 0; k < binStr.length; k++) jpgBytes[k] = binStr.charCodeAt(k);
 
-          const paper = el.exportPaperSize.value;
-          let ptW = 595.28;
-          let ptH = 841.89;
-          if (paper === "a4_landscape") {
-            ptW = 841.89; ptH = 595.28;
-          } else if (paper === "letter") {
-            ptW = 612; ptH = 792;
-          } else if (paper === "a5") {
-            ptW = 419.53; ptH = 595.28;
-          } else {
-            ptW = 595.28;
-            ptH = Math.round((flat.height / flat.width) * 595.28 * 100) / 100;
-          }
+          const ptW = 595.28;
+          const ptH = Math.round((flat.height / flat.width) * 595.28 * 100) / 100;
 
           const pageObjId = 3 + i * 3;
           const contentObjId = 4 + i * 3;
@@ -3263,7 +3854,7 @@
         const expCanvas = getScaledExportCanvas(page);
 
         if (fmt === "pdf") {
-          const blob = generatePdfBlobFromPages(state.pages.length > 1 && overrideFmt === "pdf" ? state.pages : [page], q);
+          const blob = generatePdfBlobFromPages([page], q);
           triggerBlobDownload(blob, `${baseName}.pdf`);
           showToast(`Đã lưu PDF (${formatByteSize(blob.size)})!`);
           return;
@@ -3304,8 +3895,15 @@
         }, mime, q);
       }
 
+      function downloadAllPagesAsPdf() {
+        if (!state.pages.length) return;
+        const blob = generatePdfBlobFromPages(state.pages, 0.94);
+        triggerBlobDownload(blob, `ScanhoahocABC_${state.pages.length}_trang.pdf`);
+        showToast(`Đã xuất PDF (${state.pages.length} trang)!`);
+      }
+
       // =========================================================================
-      // 9. UI SYNC & REAR-ONLY CAMERA CONTROLLER
+      // 10. UI SYNC & CAMERA CONTROLLER
       // =========================================================================
       function syncControlsFromPage(page) {
         if (!page) return;
@@ -3313,13 +3911,14 @@
         el.activeParamSlider.value = s.bgSuppress;
         el.activeSliderVal.textContent = `${s.bgSuppress}%`;
         el.btnToggleAlpha.classList.toggle("active", !!s.transparentBg);
-        el.exportPaperSize.value = s.paperSize || "auto";
+        el.exportFilename.value = page.name;
+        el.libColorSelect.value = s.colorMode;
+        el.selectedImgCustomTitle.textContent = `Tùy chỉnh: ${page.name} (Trang ${state.currentPageIndex + 1}/${state.pages.length})`;
 
         el.colorPresetGrid.querySelectorAll("[data-mode]").forEach((b) => {
           b.classList.toggle("active", b.getAttribute("data-mode") === s.colorMode);
         });
 
-        // Show intensity slider ONLY when a non-original filter is selected!
         el.cleanSliderRow.classList.toggle("visible", s.colorMode !== "original");
       }
 
@@ -3389,7 +3988,6 @@
       async function startCamera() {
         stopCamera();
         try {
-          // Always use Rear Camera ("environment") for document scanning!
           const stream = await navigator.mediaDevices.getUserMedia({
             video: {
               facingMode: { ideal: "environment" },
@@ -3505,6 +4103,13 @@
       }
 
       function initEvents() {
+        // Prev / Next / Delete on Stage
+        el.btnPrevPage.addEventListener("click", () => goToAdjacentPage(-1));
+        el.btnNextPage.addEventListener("click", () => goToAdjacentPage(1));
+        el.stagePageIndicator.addEventListener("click", () => el.libraryModal.classList.add("open"));
+        el.btnDeleteCurrentPage.addEventListener("click", () => deletePageAtIndex(state.currentPageIndex));
+
+        // Crop / Result Mode Switching
         el.btnEnterCrop.addEventListener("click", () => setViewMode("crop"));
         el.btnCancelCrop.addEventListener("click", () => setViewMode("result"));
         el.btnZoomReset.addEventListener("click", resetStageZoom);
@@ -3525,6 +4130,7 @@
         window.addEventListener("mousemove", onStagePointerMove);
         window.addEventListener("mouseup", onStagePointerUp);
 
+        // Upload & Paste
         el.btnTriggerUpload.addEventListener("click", () => el.fileInput.click());
         el.fileInput.addEventListener("change", (e) => {
           handleFilesSelected(e.target.files);
@@ -3537,20 +4143,66 @@
           }
         });
 
-        function loadSample(type, btnEl) {
-          [el.btnSampleTwoTone, el.btnSampleTiltedCurved, el.btnSampleWhiteOnWhite].forEach((b) => b.classList.remove("active"));
-          btnEl.classList.add("active");
+        // "Thư viện" (Library) Modal Controls
+        el.btnOpenLibrary.addEventListener("click", () => {
+          renderPageList();
+          syncControlsFromPage(getCurrentPage());
+          el.libraryModal.classList.add("open");
+        });
+        el.btnCloseLibrary.addEventListener("click", () => el.libraryModal.classList.remove("open"));
+
+        el.btnViewList.addEventListener("click", () => {
+          state.libViewMode = "list";
+          el.btnViewList.classList.add("active");
+          el.btnViewGrid.classList.remove("active");
+          renderPageList();
+        });
+        el.btnViewGrid.addEventListener("click", () => {
+          state.libViewMode = "grid";
+          el.btnViewGrid.classList.add("active");
+          el.btnViewList.classList.remove("active");
+          renderPageList();
+        });
+
+        el.btnDeleteSelectedInLib.addEventListener("click", () => {
+          deletePageAtIndex(state.currentPageIndex);
+        });
+
+        el.exportFilename.addEventListener("input", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          page.name = el.exportFilename.value.trim() || `ScanhoahocABC_${state.currentPageIndex + 1}`;
+          renderPageList();
+        });
+
+        el.libColorSelect.addEventListener("change", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          page.settings.colorMode = el.libColorSelect.value;
+          syncControlsFromPage(page);
+          applyCachedFiltersToPage(page);
+          renderPageList();
+          renderStage();
+        });
+
+        el.btnEditCropFromLib.addEventListener("click", () => {
+          el.libraryModal.classList.remove("open");
+          setViewMode("crop");
+        });
+
+        // Built-in Samples in Library
+        function addSampleToLib(type) {
           const sample = createProceduralSample(type);
           addNewPageFromCanvas(sample.canvas, sample.name, sample.presetCorners, sample.presetMidOffsets);
-          el.exportModal.classList.remove("open");
+          el.libraryModal.classList.remove("open");
           setViewMode("result");
-          showToast(`Đã nạp mẫu: ${sample.name}`);
+          showToast(`Đã nạp & làm phẳng mẫu: ${sample.name}`);
         }
+        el.btnSampleBookWave.addEventListener("click", () => addSampleToLib("book_wave"));
+        el.btnSampleLowLight.addEventListener("click", () => addSampleToLib("low_light"));
+        el.btnSampleTwoTone.addEventListener("click", () => addSampleToLib("two_tone"));
 
-        el.btnSampleTwoTone.addEventListener("click", () => loadSample("two_tone", el.btnSampleTwoTone));
-        el.btnSampleTiltedCurved.addEventListener("click", () => loadSample("tilted_curved", el.btnSampleTiltedCurved));
-        el.btnSampleWhiteOnWhite.addEventListener("click", () => loadSample("white_on_white", el.btnSampleWhiteOnWhite));
-
+        // Crop Toolbar Actions
         el.btnAutoDetectCorners.addEventListener("click", () => {
           const page = getCurrentPage();
           if (!page) return;
@@ -3586,11 +4238,12 @@
           updateGeometryAndProcess(page);
           renderPageList();
           setViewMode("result");
-          showToast("Đã làm phẳng 3D & nắn thẳng chữ!");
+          showToast("Đã làm phẳng mặt giấy & nắn thẳng dòng chữ!");
         });
 
         el.btnSplitTwoPagesOptional.addEventListener("click", splitCurrentPageIntoTwoHalves);
 
+        // Mode Pills & Slider
         el.colorPresetGrid.querySelectorAll("[data-mode]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const page = getCurrentPage();
@@ -3633,22 +4286,10 @@
 
         el.btnQuickPdf.addEventListener("click", () => downloadCurrentPage("pdf"));
         el.btnQuickJpg.addEventListener("click", () => downloadCurrentPage("jpeg"));
-        el.btnOpenExportModal.addEventListener("click", () => el.exportModal.classList.add("open"));
-        el.btnCloseExportModal.addEventListener("click", () => el.exportModal.classList.remove("open"));
+        el.btnDownloadCurrent.addEventListener("click", () => downloadCurrentPage());
+        el.btnDownloadAllPdf.addEventListener("click", downloadAllPagesAsPdf);
 
-        el.exportPaperSize.addEventListener("change", () => {
-          const page = getCurrentPage();
-          if (!page) return;
-          page.settings.paperSize = el.exportPaperSize.value;
-          updateGeometryAndProcess(page);
-          renderStage();
-        });
-
-        el.btnDownloadCurrent.addEventListener("click", () => {
-          el.exportModal.classList.remove("open");
-          downloadCurrentPage();
-        });
-
+        // Camera Modal
         el.btnOpenCamera.addEventListener("click", () => {
           el.cameraModal.classList.add("open");
           startCamera();
@@ -3702,14 +4343,21 @@
           stopCamera();
           addNewPageFromCanvas(c, `Scan_${state.pages.length + 1}`, capturedCorners);
           setViewMode("result");
-          showToast("Đã chụp và hiển thị ảnh gốc đã làm phẳng!");
+          showToast("Đã chụp và lưu vào Thư viện!");
         });
       }
 
+      // =========================================================================
+      // 11. INITIALIZATION (Preloads 3 Demo Pages into Library so Prev/Next & Library work immediately!)
+      // =========================================================================
       function initApp() {
         initEvents();
-        const initialSample = createProceduralSample("two_tone");
-        addNewPageFromCanvas(initialSample.canvas, initialSample.name);
+        const s1 = createProceduralSample("book_wave");
+        const s2 = createProceduralSample("low_light");
+        const s3 = createProceduralSample("two_tone");
+        addNewPageFromCanvas(s3.canvas, s3.name);
+        addNewPageFromCanvas(s2.canvas, s2.name);
+        addNewPageFromCanvas(s1.canvas, s1.name);
         setViewMode("result");
       }
 

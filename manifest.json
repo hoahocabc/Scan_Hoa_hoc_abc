@@ -1,0 +1,9 @@
+{
+  "name": "ScanhoahocABC",
+  "short_name": "ScanhoahocABC",
+  "description": "ScanhoahocABC — Ứng dụng quét tài liệu thông minh: Bắt chuẩn góc thiếu sáng, khử cong lượn sóng 2 trang sách mở, quản lý Thư viện ảnh.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0a467d"
+}
