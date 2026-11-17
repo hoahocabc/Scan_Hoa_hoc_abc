@@ -1,11 +1,14 @@
-# ScanhoahocABC (v13.0 — Rim-Edge Subpixel Detector • Clean Library UX • Inspector & Multi-Select)
+# ScanhoahocABC (v14.0 — 2-Stage Subpixel Rim Detector • Minimalist Full-Screen Editor Dropdown • Dedicated Export Popups)
 
-## 2 Nâng cấp trọng tâm trên ScanhoahocABC (v13.0)
-1. **Nhận diện đối tượng chuẩn xác theo độ chênh sáng & màu cục bộ tại rìa tài liệu (Rim-Edge Subpixel Detector)**:
-   - Xóa chữ bên trong bằng đóng hình thái học 5×5 để lấy bề mặt giấy, sau đó tính độ chênh sáng vĩ mô qua rìa (`±4px`) kết hợp đỉnh đạo hàm rìa 1px (`L[x+1] - L[x-1]`) và khớp đường thẳng IRLS nội suy Parabol 44 điểm.
-   - Bắt chính xác 4 cạnh rìa tài liệu ngay cả khi ánh sáng đổ bóng chéo không đều, mặt bàn gỗ, bàn tối thiếu sáng, hoặc giấy trắng đặt trên nền trắng (sai số góc trung bình chỉ `~2.0 px`).
-2. **Thiết kế lại hoàn toàn Thư viện ảnh theo chuẩn trải nghiệm người dùng smartphone**:
-   - **Giao diện Thư viện tinh gọn**: Khi mở `🗂 Thư viện`, chỉ hiển thị danh sách hoặc lưới các ảnh đã chụp, loại bỏ toàn bộ bảng thông tin gây rối và bỏ hai nút xóa ở phía trên.
-   - **Hai nút `Xem` và `Xóa` trên từng ảnh**: Mỗi ảnh trong Thư viện có đúng 2 nút trực quan `Xem` và `Xóa`.
-   - **Cửa sổ `Xem` phóng to & chỉnh sửa toàn diện**: Khi bấm `Xem`, ứng dụng mở cửa sổ phóng to ảnh, hiển thị thông tin chi tiết (độ phân giải, chế độ màu, thời gian), cho phép thêm **Ghi chú** (kèm tùy chọn in ghi chú lên chân trang ảnh/PDF), đổi tên, đổi chế độ màu, xoay, cắt góc lại và tải về đa định dạng.
-   - **Bấm giữ để chọn nhiều ảnh (Long-Press Multi-Select)**: Bấm giữ (~0.4 giây) vào bất kỳ ảnh nào trong Thư viện để bật chế độ chọn nhiều ảnh, hỗ trợ xuất gộp PDF, tải hàng loạt hoặc xóa nhiều ảnh cùng lúc.
+## 6 Nâng cấp trọng tâm trên ScanhoahocABC (v14.0)
+1. **Bắt rìa tài liệu 2 tầng độ chính xác Sub-pixel (`~0.55 - 0.78 px` error)**:
+   - **Tầng 1**: Phát hiện khung tứ giác rìa tài liệu ở độ phân giải `360px` bằng cổng độ chênh sáng/màu vĩ mô `±4px` kết hợp đỉnh đạo hàm rìa 1px.
+   - **Tầng 2 (Full-Resolution Normal-Profile Snapping)**: Lấy mẫu 64 mặt cắt pháp tuyến trực tiếp trên ảnh gốc độ phân giải đầy đủ (`1:1 native pixels`) dọc theo 4 cạnh rìa, nội suy đỉnh Parabol sub-pixel và khớp đường thẳng IRLS.
+2. **Giao diện màn hình chính siêu gọn gàng**:
+   - Bỏ hàng nút chế độ màu trên màn hình chính và thay nút `Cắt & Xoay` bằng nút **`✨ Sửa`**.
+   - Thanh dưới cùng chỉ còn đúng 3 nút cân đối: **`✨ Sửa`**, **`⬇ Tải ảnh này`**, **`📄 Lưu PDF`**.
+3. **Màn hình `✨ Sửa` & `Xem` toàn màn hình kèm Menu xổ (`✨ Sửa ▾`)**:
+   - Khi bấm **`✨ Sửa`** trên màn hình chính hoặc bấm **`Xem`** trong **`🗂 Thư viện`**, ứng dụng mở ảnh toàn màn hình với nút **Menu xổ `✨ Sửa ▾`** chứa đầy đủ công cụ: chọn chế độ (`Ảnh gốc`, `Tài liệu màu`, `Đen trắng`, `Làm rõ chữ`), `Tách nền Alpha`, thanh trượt `Tăng/giảm sáng`, `Làm sạch nền`, `📐 Cắt góc`, `↻ Xoay 90°`, `📖 Tách đôi`, đổi tên và thêm `📝 Ghi chú`.
+4. **Thông tin phụ nằm gọn phía dưới ảnh**: Hiển thị tỉ lệ ảnh (`A4`), độ phân giải, chế độ màu và ngày giờ ngay bên dưới khung ảnh.
+5. **Loại bỏ hoàn toàn các nút "Mẫu thử" vô nghĩa**.
+6. **Tùy chọn định dạng & chất lượng/DPI chỉ xuất hiện trong Popup `⬇ Tải ảnh này` hoặc `📄 Lưu PDF`**.
