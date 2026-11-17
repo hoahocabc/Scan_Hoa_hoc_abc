@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0a467d" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v14.0) — Ứng dụng quét tài liệu thông minh: Bắt rìa 2 tầng chính xác sub-pixel (~0.6px), giao diện tối giản với trình Sửa toàn màn hình dạng menu xổ và popup xuất file chuyên biệt." />
+  <meta name="description" content="ScanhoahocABC (v15.0) — Ứng dụng quét tài liệu chuyên nghiệp: Bắt rìa 2 tầng chính xác sub-pixel, giao diện tối giản với nút công cụ ba gạch (☰) ở góc khung ảnh toàn màn hình và quản lý Thư viện hiện đại." />
   <style>
     :root {
       --primary: #0a467d;
@@ -53,7 +53,7 @@
       overflow: hidden;
     }
 
-    /* 1. TWO-TIER HEADER: Title Row on Top, 3 Action Buttons ("Chụp ảnh", "Chọn ảnh", "Thư viện") Below */
+    /* 1. TWO-TIER HEADER: Clean Brand Title on Top (No "Trang x/y" on Main Screen), 3 Action Buttons Below */
     .app-header {
       flex-shrink: 0;
       background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
@@ -69,7 +69,7 @@
     .header-top-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       gap: 8px;
       max-width: 600px;
       width: 100%;
@@ -77,7 +77,7 @@
     }
 
     .brand-group {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 8px;
       min-width: 0;
@@ -96,24 +96,13 @@
     }
 
     .brand-title {
-      font-size: 1.02rem;
+      font-size: 1.04rem;
       font-weight: 800;
-      letter-spacing: 0.2px;
+      letter-spacing: 0.25px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       color: #ffffff;
-    }
-
-    .header-status-pill {
-      font-size: 0.72rem;
-      font-weight: 700;
-      background: rgba(255, 255, 255, 0.16);
-      color: #ffffff;
-      padding: 3px 9px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.28);
-      white-space: nowrap;
     }
 
     .header-btn-row {
@@ -250,13 +239,13 @@
     #mainCanvas {
       display: block;
       max-width: 100%;
-      max-height: calc(100dvh - 235px);
+      max-height: calc(100dvh - 232px);
       width: auto;
       height: auto;
       touch-action: none;
     }
 
-    /* Secondary Metadata & Page Nav Bar Directly Below Image */
+    /* Secondary Metadata Bar Directly Below Image (No "Trang x/y" here!) */
     .under-image-bar {
       flex-shrink: 0;
       background: rgba(15, 23, 42, 0.94);
@@ -264,7 +253,7 @@
       padding: 6px 12px;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 4px;
       z-index: 25;
     }
 
@@ -279,7 +268,7 @@
     }
 
     .under-meta-text {
-      font-size: 0.71rem;
+      font-size: 0.72rem;
       font-weight: 600;
       color: #cbd5e1;
       white-space: nowrap;
@@ -287,25 +276,15 @@
       text-overflow: ellipsis;
       min-width: 0;
       flex: 1;
-    }
-
-    .nav-pill-group {
-      display: inline-flex;
-      align-items: center;
-      background: rgba(255, 255, 255, 0.10);
-      border: 1px solid rgba(255, 255, 255, 0.20);
-      border-radius: 999px;
-      padding: 2px;
-      gap: 2px;
-      flex-shrink: 0;
+      text-align: center;
     }
 
     .stage-mini-btn {
       height: 25px;
-      padding: 0 8px;
+      padding: 0 9px;
       border-radius: 999px;
-      border: none;
-      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      background: rgba(255, 255, 255, 0.12);
       color: #ffffff;
       font-size: 0.70rem;
       font-weight: 700;
@@ -315,25 +294,7 @@
       justify-content: center;
       gap: 3px;
       white-space: nowrap;
-    }
-
-    .stage-mini-btn:active {
-      background: var(--primary);
-    }
-
-    .stage-mini-btn:disabled {
-      opacity: 0.35;
-      pointer-events: none;
-    }
-
-    .stage-page-indicator {
-      font-size: 0.70rem;
-      font-weight: 800;
-      color: #ffffff;
-      padding: 0 6px;
-      white-space: nowrap;
-      font-variant-numeric: tabular-nums;
-      cursor: pointer;
+      flex-shrink: 0;
     }
 
     /* 3. ULTRA-CLEAN MAIN BOTTOM DOCK: ONLY 3 BUTTONS ("Sửa", "Tải ảnh này", "Lưu PDF") */
@@ -361,13 +322,6 @@
       width: 100%;
     }
 
-    .grid-4 {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 6px;
-      width: 100%;
-    }
-
     .grid-2-confirm {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
@@ -375,7 +329,9 @@
       width: 100%;
     }
 
-    /* 4. FULL-SCREEN VIEW & EDIT SCREEN WITH DROPDOWN MENU ("SỬA ▾") */
+    /* ========================================================================= */
+    /* 4. PROFESSIONAL FULL-SCREEN VIEW & EDIT SCREEN WITH CORNER HAMBURGER (☰)  */
+    /* ========================================================================= */
     .fs-editor-backdrop {
       position: fixed;
       inset: 0;
@@ -392,84 +348,129 @@
       display: flex;
     }
 
-    .fs-top-bar {
-      flex-shrink: 0;
-      background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
-      color: #ffffff;
-      padding: 8px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      box-shadow: 0 3px 14px rgba(0, 0, 0, 0.35);
-      z-index: 150;
+    /* Full-Screen Image Viewport with Corner Floating Controls */
+    .fs-stage-wrap {
       position: relative;
-    }
-
-    .fs-title-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      min-width: 0;
       flex: 1;
-    }
-
-    .fs-title-text {
-      font-size: 0.85rem;
-      font-weight: 800;
-      color: #ffffff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .fs-top-actions {
+      min-height: 0;
+      width: 100%;
       display: flex;
       align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
+      justify-content: center;
+      overflow: hidden;
+      padding: 12px;
+      touch-action: none;
+      background: #0b1120;
     }
 
-    .btn-dropdown-trigger {
-      background: #ffffff;
-      color: var(--primary);
-      border: 1.5px solid #ffffff;
-      height: 33px;
-      padding: 0 11px;
-      border-radius: 9px;
-      font-size: 0.77rem;
-      font-weight: 800;
-      cursor: pointer;
+    .fs-canvas-holder {
+      position: relative;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      justify-content: center;
+      max-width: 100%;
+      max-height: 100%;
+      transform-origin: center center;
+      will-change: transform;
+      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.65);
+    }
+
+    #fsCanvas {
+      display: block;
+      max-width: 100%;
+      max-height: calc(100dvh - 135px);
+      width: auto;
+      height: auto;
+      touch-action: none;
+    }
+
+    /* Corner Hamburger Button (☰) at Top-Left Corner of the Image Screen */
+    .fs-corner-hamburger {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(10, 70, 125, 0.92);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #ffffff;
+      border: 1.5px solid rgba(255, 255, 255, 0.38);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 165;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+      transition: all 0.15s ease;
+    }
+
+    .fs-corner-hamburger:active {
+      transform: scale(0.94);
+    }
+
+    .fs-corner-hamburger.open {
+      background: #ffffff;
+      color: var(--primary);
+      border-color: #ffffff;
+    }
+
+    /* Corner Close & Nav Group at Top-Right Corner of the Image Screen */
+    .fs-corner-right-group {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 165;
+    }
+
+    .fs-corner-btn {
+      height: 38px;
+      padding: 0 12px;
+      border-radius: 11px;
+      background: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #ffffff;
+      border: 1.5px solid rgba(255, 255, 255, 0.28);
+      font-size: 0.76rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
       white-space: nowrap;
     }
 
-    .btn-dropdown-trigger.open {
-      background: var(--primary-soft);
-      color: var(--primary-dark);
+    .fs-corner-btn:disabled {
+      opacity: 0.35;
+      pointer-events: none;
     }
 
-    /* Dropdown Menu Panel ("Menu xổ Sửa") */
+    /* Collapsible Editing Tools Menu (Pops out from the Corner Hamburger ☰ Button) */
     .edit-dropdown-menu {
       position: absolute;
-      top: calc(100% + 6px);
-      right: 10px;
-      width: min(360px, calc(100vw - 20px));
-      max-height: calc(100dvh - 130px);
+      top: 60px;
+      left: 12px;
+      width: min(350px, calc(100vw - 24px));
+      max-height: calc(100dvh - 175px);
       overflow-y: auto;
-      background: #ffffff;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       color: var(--text);
       border-radius: 14px;
       border: 1.5px solid var(--primary-border);
-      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.55);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.6);
       padding: 11px;
       display: none;
       flex-direction: column;
       gap: 10px;
-      z-index: 160;
+      z-index: 166;
     }
 
     .edit-dropdown-menu.open {
@@ -564,42 +565,6 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* Full-Screen Center Viewport */
-    .fs-stage-wrap {
-      position: relative;
-      flex: 1;
-      min-height: 0;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      padding: 10px;
-      touch-action: none;
-      background: #0b1120;
-    }
-
-    .fs-canvas-holder {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      max-width: 100%;
-      max-height: 100%;
-      transform-origin: center center;
-      will-change: transform;
-      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.65);
-    }
-
-    #fsCanvas {
-      display: block;
-      max-width: 100%;
-      max-height: calc(100dvh - 188px);
-      width: auto;
-      height: auto;
-      touch-action: none;
-    }
-
     /* Floating Crop Toolbar inside Full-Screen Editor when Crop Mode is Active */
     .fs-crop-bar {
       position: absolute;
@@ -615,7 +580,7 @@
       display: none;
       flex-direction: column;
       gap: 6px;
-      z-index: 145;
+      z-index: 160;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
 
@@ -634,7 +599,7 @@
       pointer-events: none;
       overflow: hidden;
       display: none;
-      z-index: 155;
+      z-index: 162;
       background: #000;
     }
 
@@ -760,7 +725,7 @@
       min-height: 0;
     }
 
-    /* Clean Library Toolbar */
+    /* Clean Library Toolbar with Page Count Badge inside Library */
     .lib-toolbar {
       display: flex;
       align-items: center;
@@ -797,14 +762,15 @@
       color: #ffffff;
     }
 
-    .lib-hint-text {
-      font-size: 0.71rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-align: right;
+    .lib-page-badge {
+      font-size: 0.73rem;
+      font-weight: 800;
+      color: var(--primary);
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      padding: 4px 10px;
+      border-radius: 999px;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .lib-multiselect-bar {
@@ -928,12 +894,18 @@
     }
 
     .lib-meta-title {
-      font-size: 0.83rem;
+      font-size: 0.82rem;
       font-weight: 800;
       color: var(--text);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .lib-meta-page-tag {
+      font-size: 0.70rem;
+      font-weight: 700;
+      color: var(--primary);
     }
 
     .lib-item-actions {
@@ -1038,12 +1010,6 @@
     }
 
     /* Form Fields inside Dropdown & Export Popup */
-    .form-grid-2 {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-    }
-
     .form-field label {
       font-size: 0.72rem;
       font-weight: 700;
@@ -1185,7 +1151,7 @@
 </head>
 <body>
   <div class="app-shell">
-    <!-- 1. TWO-TIER HEADER: Title Above, "Chụp ảnh" + "Chọn ảnh" + "Thư viện" Below -->
+    <!-- 1. TWO-TIER HEADER: Clean App Title on Top (NO "Trang x/y"), 3 Main Buttons Below -->
     <header class="app-header">
       <div class="header-top-row">
         <div class="brand-group">
@@ -1197,7 +1163,6 @@
           </div>
           <span class="brand-title">ScanhoahocABC</span>
         </div>
-        <span class="header-status-pill" id="headerPageStatus">Trang 1 / 1</span>
       </div>
 
       <div class="header-btn-row">
@@ -1209,12 +1174,12 @@
           📁 Chọn ảnh
         </button>
         <button type="button" class="btn btn-hdr-outline" id="btnOpenLibrary">
-          🗂 Thư viện (<span id="pageCountText">1</span>)
+          🗂 Thư viện
         </button>
       </div>
     </header>
 
-    <!-- 2. DOCUMENT STAGE VIEWPORT + SECONDARY INFO BAR BELOW IMAGE -->
+    <!-- 2. DOCUMENT STAGE VIEWPORT + SECONDARY INFO BAR BELOW IMAGE (NO "Trang x/y") -->
     <main class="workspace">
       <section class="stage-panel" id="panelStage" aria-label="Khung tài liệu">
         <div class="stage-container" id="stageContainer">
@@ -1223,18 +1188,13 @@
           </div>
         </div>
 
-        <!-- Secondary Info Bar Directly Below Image (Aspect ratio, resolution, date/time & Prev/Next) -->
+        <!-- Secondary Info Bar Directly Below Image (Aspect ratio, resolution, mode & date/time) -->
         <div class="under-image-bar">
           <div class="under-image-inner">
             <div class="under-meta-text" id="mainUnderMetaText">
-              Tỉ lệ 1:1.41 (A4) • 720×1018 px • Hôm nay
+              Tỉ lệ 1:1.41 (A4 Dọc) • 720×1018 px • Ảnh gốc • Hôm nay
             </div>
-            <div class="nav-pill-group">
-              <button type="button" class="stage-mini-btn" id="btnPrevPage" title="Ảnh trước">◀</button>
-              <span class="stage-page-indicator" id="stagePageIndicator" title="Mở Thư viện">1/1</span>
-              <button type="button" class="stage-mini-btn" id="btnNextPage" title="Ảnh sau">▶</button>
-              <button type="button" class="stage-mini-btn" id="btnZoomReset" style="display:none;">100%</button>
-            </div>
+            <button type="button" class="stage-mini-btn" id="btnZoomReset" style="display:none;">100% ✕</button>
           </div>
         </div>
       </section>
@@ -1260,26 +1220,30 @@
 
   <!-- ========================================================================= -->
   <!-- FULL-SCREEN VIEW & EDIT SCREEN (OPENED BY "✨ SỬA" OR "XEM" IN LIBRARY) -->
+  <!-- Uses a sleek 3-line Hamburger button (☰) at the corner of the image screen! -->
   <!-- ========================================================================= -->
-  <div class="fs-editor-backdrop" id="fullScreenEditorModal" role="dialog" aria-modal="true" aria-label="Xem và Sửa ảnh toàn màn hình">
-    <!-- Top Header with Dropdown Menu Button ("✨ Sửa ▾") -->
-    <div class="fs-top-bar">
-      <div class="fs-title-group">
-        <button type="button" class="btn btn-hdr-outline" id="btnFsPrev" style="height:31px; padding:0 8px;">◀</button>
-        <span class="fs-title-text" id="fsTitleText">1. De_Hoa_Hoc_104</span>
-        <button type="button" class="btn btn-hdr-outline" id="btnFsNext" style="height:31px; padding:0 8px;">▶</button>
+  <div class="fs-editor-backdrop" id="fullScreenEditorModal" role="dialog" aria-modal="true" aria-label="Chỉnh sửa ảnh toàn màn hình">
+
+    <!-- Center Full-Screen Image Viewport with Corner Hamburger (☰) -->
+    <div class="fs-stage-wrap" id="fsStageWrap">
+
+      <!-- TOP-LEFT CORNER: 3-LINE HAMBURGER BUTTON (☰) TO TOGGLE EDIT TOOLS -->
+      <button type="button" class="fs-corner-hamburger" id="btnToggleEditDropdown" title="Mở / Đóng công cụ sửa ảnh" aria-label="Công cụ sửa ảnh">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="4" y1="6" x2="20" y2="6" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="18" x2="20" y2="18" />
+        </svg>
+      </button>
+
+      <!-- TOP-RIGHT CORNER: PREV / NEXT & CLOSE FULL-SCREEN -->
+      <div class="fs-corner-right-group">
+        <button type="button" class="fs-corner-btn" id="btnFsPrev" title="Ảnh trước">◀</button>
+        <button type="button" class="fs-corner-btn" id="btnFsNext" title="Ảnh sau">▶</button>
+        <button type="button" class="fs-corner-btn" id="btnCloseFsEditor" title="Đóng màn hình sửa">Đóng ✕</button>
       </div>
 
-      <div class="fs-top-actions">
-        <button type="button" class="btn-dropdown-trigger" id="btnToggleEditDropdown">
-          ✨ Sửa <span id="dropdownArrowIcon">▾</span>
-        </button>
-        <button type="button" class="btn btn-hdr-outline" id="btnCloseFsEditor" style="height:33px; padding:0 10px;">
-          Đóng ✕
-        </button>
-      </div>
-
-      <!-- THE DROPDOWN MENU ("Menu xổ Sửa") -->
+      <!-- COLLAPSIBLE EDITING TOOLS MENU (POPS OUT WHEN CLICKING ☰, CLOSES ON OUTSIDE CLICK OR ☰ CLICK) -->
       <div class="edit-dropdown-menu" id="editDropdownMenu">
         <!-- Section 1: Color Modes (Ảnh gốc, Tài liệu màu, Đen trắng, Làm rõ chữ) -->
         <div class="dd-section">
@@ -1331,19 +1295,14 @@
           <div class="form-field">
             <textarea id="ddNoteInput" placeholder="Thêm ghi chú cho ảnh này..."></textarea>
           </div>
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-            <label class="checkbox-inline">
-              <input type="checkbox" id="chkPrintNoteOnExport" />
-              <span>In ghi chú lên chân trang khi tải</span>
-            </label>
-            <button type="button" class="btn btn-main" id="btnCloseDropdownDone" style="height:28px; padding:0 12px; font-size:0.72rem;">Xong ✓</button>
-          </div>
+          <label class="checkbox-inline">
+            <input type="checkbox" id="chkPrintNoteOnExport" />
+            <span>In ghi chú lên chân trang khi tải</span>
+          </label>
         </div>
       </div>
-    </div>
 
-    <!-- Center Full-Screen Image Viewport -->
-    <div class="fs-stage-wrap" id="fsStageWrap">
+      <!-- Full-Screen Document Canvas -->
       <div class="fs-canvas-holder" id="fsCanvasHolder">
         <canvas id="fsCanvas" width="720" height="1018"></canvas>
       </div>
@@ -1354,7 +1313,7 @@
         <div class="magnifier-label" id="loupeLabel">Góc TL</div>
       </div>
 
-      <!-- Floating Crop Bar (Appears only when user selects "📐 Cắt góc" from Dropdown Menu) -->
+      <!-- Floating Crop Bar (Appears only when user selects "📐 Cắt góc" from the ☰ Menu) -->
       <div class="fs-crop-bar" id="fsCropBar">
         <div class="grid-3">
           <button type="button" class="btn btn-sec" id="btnAutoDetectCorners" style="height:33px; font-size:0.73rem;">Tự bắt rìa</button>
@@ -1373,11 +1332,11 @@
       </div>
     </div>
 
-    <!-- Secondary Info Below Image + Quick Export Actions -->
-    <div class="fs-bottom-area">
+    <!-- Secondary Info Directly Below Image + Quick Export Actions -->
+    <div class="fs-bottom-area" id="fsBottomArea">
       <div class="fs-note-preview" id="fsNotePreview"></div>
       <div class="fs-meta-strip">
-        <span id="fsMetaRatioAndRes">Tỉ lệ 1:1.41 (A4) • 720×1018 px</span>
+        <span id="fsMetaRatioAndRes">Tỉ lệ 1:1.41 (A4 Dọc) • 720×1018 px</span>
         <span id="fsMetaModeAndTime">Ảnh gốc • Hôm nay</span>
       </div>
       <div class="dock-inner">
@@ -1391,7 +1350,7 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- CLEAN "THƯ VIỆN" (LIBRARY) MODAL — NO "MẪU THỬ", ONLY IMAGE LIST/GRID WITH "XEM" & "XÓA" -->
+  <!-- CLEAN "THƯ VIỆN" (LIBRARY) MODAL — SHOWS "TRANG X / Y" & IMAGE LIST/GRID -->
   <!-- ========================================================================= -->
   <div class="modal-backdrop" id="libraryModal" role="dialog" aria-modal="true" aria-labelledby="libraryModalTitle">
     <div class="modal-card">
@@ -1405,7 +1364,7 @@
             <button type="button" class="view-toggle-btn active" id="btnViewList">☰ Danh sách</button>
             <button type="button" class="view-toggle-btn" id="btnViewGrid">⊞ Thu nhỏ</button>
           </div>
-          <span class="lib-hint-text">Bấm giữ ảnh để chọn nhiều</span>
+          <span class="lib-page-badge" id="libPageStatusBadge">Trang 1 / 1</span>
         </div>
 
         <div class="lib-multiselect-bar" id="libMultiSelectBar">
@@ -1442,7 +1401,6 @@
           <input type="text" id="exportFilename" value="ScanhoahocABC_1" />
         </div>
 
-        <!-- Shown when mode is "image" ("Tải ảnh này") -->
         <div class="form-field" id="exportFormatFieldWrap">
           <label for="exportFormat">Định dạng ảnh</label>
           <select id="exportFormat">
@@ -1455,7 +1413,6 @@
           </select>
         </div>
 
-        <!-- Shown when mode is "pdf" ("Lưu PDF") -->
         <div class="form-field" id="exportPdfScopeFieldWrap" style="display:none;">
           <label for="exportPdfScope">Phạm vi trang PDF</label>
           <select id="exportPdfScope">
@@ -1520,14 +1477,14 @@
       "use strict";
 
       // =========================================================================
-      // 1. APPLICATION STATE (v14.0 — 2-STAGE SUBPIXEL RIM DETECTOR & MINIMALIST UI)
+      // 1. APPLICATION STATE (v15.0 — CORNER HAMBURGER MENU & LIBRARY PAGE COUNTER)
       // =========================================================================
       const state = {
         pages: [],
         currentPageIndex: -1,
-        fsCropMode: false, // true when cropping inside Full-Screen Editor
-        exportPopupType: "image", // 'image' | 'pdf'
-        libViewMode: "list", // 'list' | 'grid'
+        fsCropMode: false,
+        exportPopupType: "image",
+        libViewMode: "list",
         libMultiSelect: false,
         selectedPageIds: new Set(),
         draggingHandle: null,
@@ -1550,7 +1507,7 @@
         lastCameraCorners: null,
         defaultSettings: {
           colorMode: "original",
-          brightness: 0, // -50 .. +50
+          brightness: 0,
           bgSuppress: 68,
           contrast: 55,
           transparentBg: false,
@@ -1564,27 +1521,20 @@
         btnTriggerUpload: document.getElementById("btnTriggerUpload"),
         btnOpenCamera: document.getElementById("btnOpenCamera"),
         btnOpenLibrary: document.getElementById("btnOpenLibrary"),
-        headerPageStatus: document.getElementById("headerPageStatus"),
-        pageCountText: document.getElementById("pageCountText"),
         stageContainer: document.getElementById("stageContainer"),
         canvasWrapper: document.getElementById("canvasWrapper"),
         mainCanvas: document.getElementById("mainCanvas"),
         mainUnderMetaText: document.getElementById("mainUnderMetaText"),
-        btnPrevPage: document.getElementById("btnPrevPage"),
-        btnNextPage: document.getElementById("btnNextPage"),
-        stagePageIndicator: document.getElementById("stagePageIndicator"),
         btnZoomReset: document.getElementById("btnZoomReset"),
         btnOpenFullEditor: document.getElementById("btnOpenFullEditor"),
         btnOpenImgExport: document.getElementById("btnOpenImgExport"),
         btnOpenPdfExport: document.getElementById("btnOpenPdfExport"),
 
-        // Full-Screen Editor & Dropdown Menu ("✨ Sửa ▾")
+        // Full-Screen Editor & Corner Hamburger Menu (☰)
         fullScreenEditorModal: document.getElementById("fullScreenEditorModal"),
+        btnToggleEditDropdown: document.getElementById("btnToggleEditDropdown"),
         btnFsPrev: document.getElementById("btnFsPrev"),
         btnFsNext: document.getElementById("btnFsNext"),
-        fsTitleText: document.getElementById("fsTitleText"),
-        btnToggleEditDropdown: document.getElementById("btnToggleEditDropdown"),
-        dropdownArrowIcon: document.getElementById("dropdownArrowIcon"),
         btnCloseFsEditor: document.getElementById("btnCloseFsEditor"),
         editDropdownMenu: document.getElementById("editDropdownMenu"),
         btnDdToggleAlpha: document.getElementById("btnDdToggleAlpha"),
@@ -1599,7 +1549,6 @@
         ddFilenameInput: document.getElementById("ddFilenameInput"),
         ddNoteInput: document.getElementById("ddNoteInput"),
         chkPrintNoteOnExport: document.getElementById("chkPrintNoteOnExport"),
-        btnCloseDropdownDone: document.getElementById("btnCloseDropdownDone"),
         fsStageWrap: document.getElementById("fsStageWrap"),
         fsCanvasHolder: document.getElementById("fsCanvasHolder"),
         fsCanvas: document.getElementById("fsCanvas"),
@@ -1614,6 +1563,7 @@
         bookCurveVal: document.getElementById("bookCurveVal"),
         btnCancelCrop: document.getElementById("btnCancelCrop"),
         btnApplyCropNow: document.getElementById("btnApplyCropNow"),
+        fsBottomArea: document.getElementById("fsBottomArea"),
         fsNotePreview: document.getElementById("fsNotePreview"),
         fsMetaRatioAndRes: document.getElementById("fsMetaRatioAndRes"),
         fsMetaModeAndTime: document.getElementById("fsMetaModeAndTime"),
@@ -1621,11 +1571,12 @@
         btnFsTriggerPdfExport: document.getElementById("btnFsTriggerPdfExport"),
         btnFsDeletePage: document.getElementById("btnFsDeletePage"),
 
-        // Library Modal
+        // Library Modal ("Trang x / y" placed here!)
         libraryModal: document.getElementById("libraryModal"),
         btnCloseLibrary: document.getElementById("btnCloseLibrary"),
         btnViewList: document.getElementById("btnViewList"),
         btnViewGrid: document.getElementById("btnViewGrid"),
+        libPageStatusBadge: document.getElementById("libPageStatusBadge"),
         libMultiSelectBar: document.getElementById("libMultiSelectBar"),
         libSelectedCountText: document.getElementById("libSelectedCountText"),
         btnSelectAllInLib: document.getElementById("btnSelectAllInLib"),
@@ -1749,7 +1700,6 @@
         const shouldOpen = typeof forceState === "boolean" ? forceState : !el.editDropdownMenu.classList.contains("open");
         el.editDropdownMenu.classList.toggle("open", shouldOpen);
         el.btnToggleEditDropdown.classList.toggle("open", shouldOpen);
-        el.dropdownArrowIcon.textContent = shouldOpen ? "▴" : "▾";
       }
 
       function setFsCropMode(enable) {
@@ -1902,10 +1852,7 @@
       }
 
       // =========================================================================
-      // 4. v14.0 TWO-STAGE SUBPIXEL FULL-RESOLUTION NORMAL-PROFILE RIM DETECTOR
-      //    - Stage 1: Coarse Rim Quad Detection at 360px (Macro Rim Gate +-4px + Raw 1px Peak)
-      //    - Stage 2: Full-Resolution (1:1 Native Pixels) 64-Normal-Profile Sub-Pixel Parabolic Snapping + IRLS
-      //    - Verified mean corner error: 0.55 - 0.78 px!
+      // 4. v15.0 TWO-STAGE SUBPIXEL FULL-RESOLUTION NORMAL-PROFILE RIM DETECTOR
       // =========================================================================
       function sepMaxFilter(arr, w, h, rad) {
         const tmp = new Float32Array(w * h);
@@ -2037,7 +1984,6 @@
         const origW = srcCanvas.width;
         const origH = srcCanvas.height;
 
-        // STAGE 1: 360px Coarse Rim Quad Detection
         const maxDim = 360;
         const scale = Math.min(1, maxDim / Math.max(origW, origH));
         const w = Math.max(72, Math.round(origW * scale));
@@ -2329,7 +2275,6 @@
           ];
         }
 
-        // First-pass refinement at detection scale
         const pairsPts = [
           { p1: bestQuad[0], p2: bestQuad[1], rmap: rawTop, isH: true },
           { p1: bestQuad[1], p2: bestQuad[2], rmap: rawRight, isH: false },
@@ -2376,10 +2321,7 @@
           }));
         }
 
-        // =========================================================================
         // STAGE 2: FULL-RESOLUTION (1:1 NATIVE PIXEL) 64-NORMAL-PROFILE RIM SNAPPING
-        // Samples perpendicular normal profiles directly on `srcCanvas` along the 4 edges!
-        // =========================================================================
         const fullData = srcCanvas.getContext("2d").getImageData(0, 0, origW, origH).data;
         const nProf = 64;
         const searchRad = 10;
@@ -2398,7 +2340,6 @@
           const vx = p2.x - p1.x;
           const vy = p2.y - p1.y;
           const segLen = Math.hypot(vx, vy) || 1.0;
-          // Inward unit normal vector pointing into the document interior
           const nx = -vy / segLen;
           const ny = vx / segLen;
 
@@ -3046,12 +2987,12 @@
           ctx.fillStyle = "#ffffff";
           ctx.font = "bold 24px Arial";
           ctx.textAlign = "center";
-          ctx.fillText("Thư viện đang trống (0 ảnh)", 320, 360);
+          ctx.fillText("Chưa có ảnh tài liệu", 320, 365);
 
           ctx.fillStyle = "#cbd5e1";
           ctx.font = "17px Arial";
-          ctx.fillText("Bấm '📸 Chụp ảnh' hoặc '📁 Chọn ảnh' ở trên", 320, 405);
-          ctx.fillText("để bắt đầu quét tài liệu.", 320, 435);
+          ctx.fillText("Bấm '📸 Chụp ảnh' hoặc '📁 Chọn ảnh' ở trên", 320, 410);
+          ctx.fillText("để bắt đầu quét tài liệu.", 320, 440);
           el.mainUnderMetaText.textContent = "Chưa có ảnh nào • Hãy chụp hoặc chọn ảnh";
           return;
         }
@@ -3076,10 +3017,10 @@
         }
 
         const total = state.pages.length;
-        const curr = state.currentPageIndex + 1;
-        el.fsTitleText.textContent = `${curr}/${total}. ${page.name}`;
         el.btnFsPrev.disabled = state.currentPageIndex <= 0;
         el.btnFsNext.disabled = state.currentPageIndex >= total - 1;
+        el.btnFsPrev.style.display = total > 1 ? "inline-flex" : "none";
+        el.btnFsNext.style.display = total > 1 ? "inline-flex" : "none";
 
         const ctx = el.fsCanvas.getContext("2d");
 
@@ -3156,18 +3097,20 @@
         }
       }
 
-      function openFullScreenEditorForIndex(idx, openDropdownImmediately) {
+      // Opens Full-Screen View/Edit with the 3-line Hamburger menu CLOSED by default
+      // (User taps the ☰ button in the corner when they want the editing tools to pop out!)
+      function openFullScreenEditorForIndex(idx) {
         if (idx < 0 || idx >= state.pages.length) return;
         state.currentPageIndex = idx;
         state.fsCropMode = false;
         el.fsCropBar.classList.remove("visible");
+        toggleEditDropdown(false);
         resetFsZoom();
         syncControlsFromPage(getCurrentPage());
         renderPageList();
         renderStage();
         renderFullScreenEditor();
         el.fullScreenEditorModal.classList.add("open");
-        toggleEditDropdown(!!openDropdownImmediately);
       }
 
       function updateMagnifierLoupe(imgX, imgY, clientX, clientY, labelText) {
@@ -3182,7 +3125,7 @@
         const stRect = el.fsStageWrap.getBoundingClientRect();
         const relX = clientX - stRect.left;
         const leftPx = relX < stRect.width * 0.5 ? Math.max(10, stRect.width - 128) : 10;
-        const topPx = 10;
+        const topPx = 62;
 
         el.magnifierLoupe.style.left = `${leftPx}px`;
         el.magnifierLoupe.style.top = `${topPx}px`;
@@ -3274,13 +3217,19 @@
         return null;
       }
 
-      // Touch / Pointer handlers for Full-Screen Editor Stage
       function onFsTouchStart(evt) {
         const page = getCurrentPage();
         if (!page) return;
-        if (evt.target.closest("#fsCropBar")) return;
+        if (
+          evt.target.closest("#editDropdownMenu") ||
+          evt.target.closest("#btnToggleEditDropdown") ||
+          evt.target.closest(".fs-corner-right-group") ||
+          evt.target.closest("#fsCropBar")
+        ) {
+          return;
+        }
 
-        // Close dropdown if tapping on canvas area
+        // Clicking/touching outside the menu closes the 3-line hamburger menu immediately
         if (el.editDropdownMenu.classList.contains("open")) {
           toggleEditDropdown(false);
         }
@@ -3369,7 +3318,15 @@
 
       function onFsMouseDown(evt) {
         const page = getCurrentPage();
-        if (!page || evt.target.closest("#fsCropBar")) return;
+        if (!page) return;
+        if (
+          evt.target.closest("#editDropdownMenu") ||
+          evt.target.closest("#btnToggleEditDropdown") ||
+          evt.target.closest(".fs-corner-right-group") ||
+          evt.target.closest("#fsCropBar")
+        ) {
+          return;
+        }
         if (el.editDropdownMenu.classList.contains("open")) {
           toggleEditDropdown(false);
         }
@@ -3499,7 +3456,7 @@
       }
 
       // =========================================================================
-      // 8. CLEAN "THƯ VIỆN" (LIBRARY): PER-ITEM "XEM" & "XÓA" + LONG-PRESS MULTI-SELECT
+      // 8. CLEAN "THƯ VIỆN" (LIBRARY): "TRANG X / Y" BADGE + "XEM" & "XÓA" + MULTI-SELECT
       // =========================================================================
       function addNewPageFromCanvas(srcCanvas, name, customCorners, customMidOffsets, initialBookCurve, initialNote) {
         const detectedCorners = customCorners ? customCorners.map((p) => ({ ...p })) : detectDocumentCorners(srcCanvas);
@@ -3731,12 +3688,9 @@
         const hasPages = total > 0 && state.currentPageIndex >= 0;
         const curr = hasPages ? state.currentPageIndex + 1 : 0;
 
-        el.pageCountText.textContent = `${total}`;
-        el.headerPageStatus.textContent = hasPages ? `Trang ${curr} / ${total}` : `0 ảnh`;
-        el.stagePageIndicator.textContent = `${curr}/${total}`;
+        // "Trang x / y" is displayed strictly inside the Library!
+        el.libPageStatusBadge.textContent = hasPages ? `Trang ${curr} / ${total}` : `0 ảnh`;
 
-        el.btnPrevPage.disabled = !hasPages || state.currentPageIndex <= 0;
-        el.btnNextPage.disabled = !hasPages || state.currentPageIndex >= total - 1;
         el.btnOpenFullEditor.disabled = !hasPages;
         el.btnOpenImgExport.disabled = !hasPages;
         el.btnOpenPdfExport.disabled = !hasPages;
@@ -3794,10 +3748,10 @@
 
             const title = document.createElement("div");
             title.className = "lib-meta-title";
-            title.style.fontSize = "0.75rem";
+            title.style.fontSize = "0.74rem";
             title.style.width = "100%";
             title.style.textAlign = "center";
-            title.textContent = `${idx + 1}. ${p.name}`;
+            title.textContent = `Trang ${idx + 1}/${total}: ${p.name}`;
 
             const btnRow = document.createElement("div");
             btnRow.className = "lib-grid-btn-row";
@@ -3809,7 +3763,7 @@
             viewBtn.addEventListener("click", (e) => {
               e.stopPropagation();
               el.libraryModal.classList.remove("open");
-              openFullScreenEditorForIndex(idx, false);
+              openFullScreenEditorForIndex(idx);
             });
 
             const delBtn = document.createElement("button");
@@ -3855,9 +3809,13 @@
 
             const meta = document.createElement("div");
             meta.className = "lib-meta-list";
+            const pageTag = document.createElement("div");
+            pageTag.className = "lib-meta-page-tag";
+            pageTag.textContent = `Trang ${idx + 1} / ${total}`;
             const title = document.createElement("div");
             title.className = "lib-meta-title";
-            title.textContent = `${idx + 1}. ${p.name}`;
+            title.textContent = p.name;
+            meta.appendChild(pageTag);
             meta.appendChild(title);
 
             const actions = document.createElement("div");
@@ -3870,7 +3828,7 @@
             viewBtn.addEventListener("click", (e) => {
               e.stopPropagation();
               el.libraryModal.classList.remove("open");
-              openFullScreenEditorForIndex(idx, false);
+              openFullScreenEditorForIndex(idx);
             });
 
             const delBtn = document.createElement("button");
@@ -4494,19 +4452,12 @@
       }
 
       function initEvents() {
-        // Main Screen Navigation
-        el.btnPrevPage.addEventListener("click", () => goToAdjacentPage(-1));
-        el.btnNextPage.addEventListener("click", () => goToAdjacentPage(1));
-        el.stagePageIndicator.addEventListener("click", () => {
-          renderPageList();
-          el.libraryModal.classList.add("open");
-        });
         el.btnZoomReset.addEventListener("click", resetStageZoom);
 
         // Main Screen 3 Bottom Buttons ("✨ Sửa", "⬇ Tải ảnh này", "📄 Lưu PDF")
         el.btnOpenFullEditor.addEventListener("click", () => {
           if (!getCurrentPage()) return;
-          openFullScreenEditorForIndex(state.currentPageIndex, true);
+          openFullScreenEditorForIndex(state.currentPageIndex);
         });
         el.btnOpenImgExport.addEventListener("click", () => openExportPopup("image"));
         el.btnOpenPdfExport.addEventListener("click", () => openExportPopup("pdf"));
@@ -4550,14 +4501,13 @@
           }
         }, { passive: false });
 
-        // Full-Screen Editor & Dropdown Menu ("✨ Sửa ▾") Events
+        // Full-Screen Editor & Corner Hamburger Button (☰) Events
         el.btnFsPrev.addEventListener("click", () => goToAdjacentPage(-1));
         el.btnFsNext.addEventListener("click", () => goToAdjacentPage(1));
         el.btnToggleEditDropdown.addEventListener("click", (e) => {
           e.stopPropagation();
           toggleEditDropdown();
         });
-        el.btnCloseDropdownDone.addEventListener("click", () => toggleEditDropdown(false));
         el.btnCloseFsEditor.addEventListener("click", () => {
           state.fsCropMode = false;
           el.fsCropBar.classList.remove("visible");
@@ -4565,7 +4515,14 @@
           el.fullScreenEditorModal.classList.remove("open");
         });
 
-        // Color Mode Buttons inside Dropdown Menu
+        // Clicking anywhere on the bottom area of the Full-Screen Editor also closes the ☰ menu
+        el.fsBottomArea.addEventListener("pointerdown", () => {
+          if (el.editDropdownMenu.classList.contains("open")) {
+            toggleEditDropdown(false);
+          }
+        });
+
+        // Color Mode Buttons inside ☰ Menu
         el.ddColorModeGrid.querySelectorAll("[data-mode]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const page = getCurrentPage();
@@ -4579,7 +4536,7 @@
           });
         });
 
-        // Alpha Background Toggle inside Dropdown Menu
+        // Alpha Background Toggle inside ☰ Menu
         el.btnDdToggleAlpha.addEventListener("click", () => {
           const page = getCurrentPage();
           if (!page) return;
@@ -4592,7 +4549,7 @@
           showToast(page.settings.transparentBg ? "Đã bật Tách nền Alpha!" : "Đã tắt Tách nền.");
         });
 
-        // Brightness Slider inside Dropdown Menu
+        // Brightness Slider inside ☰ Menu
         el.ddBrightnessSlider.addEventListener("input", () => {
           const page = getCurrentPage();
           if (!page) return;
@@ -4608,7 +4565,7 @@
           });
         });
 
-        // Background Clean Slider inside Dropdown Menu
+        // Background Clean Slider inside ☰ Menu
         el.ddCleanSlider.addEventListener("input", () => {
           const page = getCurrentPage();
           if (!page) return;
@@ -4624,7 +4581,7 @@
           });
         });
 
-        // Crop, Rotate, Split inside Dropdown Menu
+        // Crop, Rotate, Split inside ☰ Menu
         el.btnDdStartCrop.addEventListener("click", () => setFsCropMode(true));
         el.btnDdRotate90.addEventListener("click", () => {
           rotateCurrentPage(1);
@@ -4632,12 +4589,11 @@
         });
         el.btnDdSplit2Pages.addEventListener("click", splitCurrentPageIntoTwoHalves);
 
-        // Filename & Note inside Dropdown Menu
+        // Filename & Note inside ☰ Menu
         el.ddFilenameInput.addEventListener("input", () => {
           const page = getCurrentPage();
           if (!page) return;
           page.name = el.ddFilenameInput.value.trim() || `ScanhoahocABC_${state.currentPageIndex + 1}`;
-          el.fsTitleText.textContent = `${state.currentPageIndex + 1}/${state.pages.length}. ${page.name}`;
           renderPageList();
         });
 

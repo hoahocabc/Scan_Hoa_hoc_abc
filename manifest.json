@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v14.0) — Ứng dụng quét tài liệu thông minh: Bắt rìa 2 tầng chính xác sub-pixel, giao diện gọn gàng với trình Sửa toàn màn hình dạng menu xổ và popup xuất file.",
+  "description": "ScanhoahocABC (v15.0) — Ứng dụng quét tài liệu chuyên nghiệp: Bắt rìa 2 tầng chính xác sub-pixel, nút công cụ ba gạch (☰) ở góc khung ảnh toàn màn hình và quản lý Thư viện hiện đại.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
