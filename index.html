@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0a467d" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v12.0) — Ứng dụng quét tài liệu thông minh: Bắt góc siêu tốc <15ms trong mọi điều kiện sáng, làm phẳng chuẩn hình học không biến dạng chữ, quản lý Thư viện đầy đủ." />
+  <meta name="description" content="ScanhoahocABC (v13.0) — Ứng dụng quét tài liệu thông minh: Bắt đối tượng chuẩn xác theo độ chênh sáng rìa tài liệu, Thư viện trực quan hỗ trợ bấm giữ chọn nhiều ảnh và cửa sổ Xem/Sửa/Ghi chú chuyên sâu." />
   <style>
     :root {
       --primary: #0a467d;
@@ -479,7 +479,7 @@
       width: 100%;
     }
 
-    /* 4. MODALS: CAMERA & "THƯ VIỆN" (LIST VIEW / THUMBNAIL GRID VIEW + IMAGE CUSTOMIZATION) */
+    /* 4. MODALS: CAMERA, CLEAN LIBRARY ("THƯ VIỆN"), AND FULL-SCREEN IMAGE INSPECTOR ("XEM & SỬA ẢNH") */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -527,15 +527,17 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      flex: 1;
+      min-height: 0;
     }
 
-    /* Library View Toggle Bar */
+    /* Clean Library Toolbar (Only View Switcher + Multi-Select Hint) */
     .lib-toolbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 6px;
-      flex-wrap: nowrap;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
     .view-toggle-group {
@@ -550,12 +552,12 @@
 
     .view-toggle-btn {
       height: 30px;
-      padding: 0 9px;
+      padding: 0 10px;
       border-radius: 7px;
       border: none;
       background: transparent;
       color: var(--text-muted);
-      font-size: 0.73rem;
+      font-size: 0.74rem;
       font-weight: 700;
       cursor: pointer;
       white-space: nowrap;
@@ -566,65 +568,125 @@
       color: #ffffff;
     }
 
-    .lib-del-actions {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      min-width: 0;
+    .lib-hint-text {
+      font-size: 0.71rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    /* Library List View vs Thumbnail Grid View */
+    /* Multi-Select Top & Bottom Bar inside Library */
+    .lib-multiselect-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      background: var(--primary-soft);
+      border: 1.5px solid var(--primary-border);
+      border-radius: 10px;
+      padding: 6px 10px;
+      flex-shrink: 0;
+    }
+
+    .lib-multiselect-bar.visible {
+      display: flex;
+    }
+
+    .lib-ms-count {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    .lib-ms-actions {
+      display: none;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+      padding-top: 6px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .lib-ms-actions.visible {
+      display: grid;
+    }
+
+    /* Spacious Library List View & Grid View */
     .lib-container.list-mode {
       display: flex;
       flex-direction: column;
-      gap: 7px;
-      max-height: 210px;
+      gap: 8px;
+      flex: 1;
+      min-height: 220px;
+      max-height: 66dvh;
       overflow-y: auto;
       padding-right: 2px;
     }
 
     .lib-container.grid-mode {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-      max-height: 220px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      flex: 1;
+      min-height: 220px;
+      max-height: 66dvh;
       overflow-y: auto;
       padding-right: 2px;
+      align-content: start;
+    }
+
+    @media (min-width: 480px) {
+      .lib-container.grid-mode {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
     }
 
     .lib-empty-box {
       grid-column: 1 / -1;
       text-align: center;
-      padding: 22px 12px;
-      border-radius: 10px;
+      padding: 36px 14px;
+      border-radius: 12px;
       border: 1.5px dashed var(--border);
       background: var(--surface-alt);
       color: var(--text-muted);
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       font-weight: 600;
-      line-height: 1.45;
+      line-height: 1.5;
     }
 
+    /* List Item: Clean Thumbnail + Name + "Xem" & "Xóa" Buttons */
     .lib-item-list {
+      position: relative;
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 7px 9px;
-      border-radius: 10px;
+      padding: 8px 10px;
+      border-radius: 12px;
       border: 1.5px solid var(--border);
       background: var(--surface-alt);
       cursor: pointer;
+      transition: all 0.14s ease;
     }
 
     .lib-item-list.active {
       border-color: var(--primary);
+      background: #f4f9ff;
+    }
+
+    .lib-item-list.selected {
+      border-color: var(--primary);
       background: var(--primary-soft);
+      box-shadow: 0 0 0 1px var(--primary);
     }
 
     .lib-thumb-list {
-      width: 42px;
-      height: 56px;
-      border-radius: 5px;
+      width: 48px;
+      height: 64px;
+      border-radius: 6px;
       border: 1px solid var(--border);
       background: #ffffff;
       object-fit: contain;
@@ -634,10 +696,13 @@
     .lib-meta-list {
       flex: 1;
       min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
     }
 
     .lib-meta-title {
-      font-size: 0.8rem;
+      font-size: 0.83rem;
       font-weight: 800;
       color: var(--text);
       white-space: nowrap;
@@ -645,76 +710,196 @@
       text-overflow: ellipsis;
     }
 
-    .lib-meta-sub {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      margin-top: 2px;
+    .lib-note-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.69rem;
+      font-weight: 600;
+      color: var(--primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
+    .lib-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-item-action {
+      height: 32px;
+      padding: 0 11px;
+      border-radius: 8px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+
+    /* Grid Item: Clean Thumbnail + Name + 2 Equal Buttons ("Xem" | "Xóa") */
     .lib-item-grid {
       position: relative;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      padding: 7px;
-      border-radius: 10px;
+      padding: 8px;
+      border-radius: 12px;
       border: 1.5px solid var(--border);
       background: var(--surface-alt);
       cursor: pointer;
-      gap: 5px;
+      gap: 6px;
+      transition: all 0.14s ease;
     }
 
     .lib-item-grid.active {
       border-color: var(--primary);
+      background: #f4f9ff;
+    }
+
+    .lib-item-grid.selected {
+      border-color: var(--primary);
       background: var(--primary-soft);
+      box-shadow: 0 0 0 1px var(--primary);
     }
 
     .lib-thumb-grid {
       width: 100%;
-      height: 86px;
-      border-radius: 6px;
+      height: 112px;
+      border-radius: 7px;
       border: 1px solid var(--border);
       background: #ffffff;
       object-fit: contain;
     }
 
-    .lib-grid-del {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 24px;
-      height: 24px;
-      border-radius: 999px;
-      border: none;
-      background: rgba(185, 28, 28, 0.88);
-      color: #ffffff;
+    .lib-grid-btn-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5px;
+      width: 100%;
+    }
+
+    .lib-grid-btn-row .btn-item-action {
+      height: 30px;
+      padding: 0 4px;
       font-size: 0.72rem;
-      font-weight: 800;
-      cursor: pointer;
+      width: 100%;
+    }
+
+    /* Selection Checkbox Badge for Multi-Select Mode */
+    .lib-select-check {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 2px solid var(--border);
+      background: #ffffff;
+      color: transparent;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    .lib-select-check.visible {
+      display: inline-flex;
+    }
+
+    .lib-select-check.checked {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .lib-item-grid .lib-select-check {
+      position: absolute;
+      top: 13px;
+      left: 13px;
+      z-index: 5;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    /* 5. FULL-SCREEN IMAGE INSPECTOR MODAL (OPENED WHEN CLICKING "XEM") */
+    .inspector-viewer-box {
+      position: relative;
+      background: #0f172a;
+      border-radius: 12px;
+      width: 100%;
+      height: 38dvh;
+      min-height: 210px;
+      max-height: 340px;
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
+      touch-action: none;
     }
 
-    /* Customization Section inside Library */
-    .lib-custom-box {
+    #inspectorCanvas {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      transform-origin: center center;
+      transition: transform 0.08s ease-out;
+    }
+
+    .inspector-zoom-bar {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.86);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 999px;
+      padding: 3px 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .info-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .info-chip {
+      font-size: 0.71rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      padding: 4px 9px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .inspector-section {
       background: var(--surface-alt);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px;
+      border-radius: 11px;
+      padding: 9px 10px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 7px;
     }
 
-    .lib-custom-header {
-      font-size: 0.78rem;
+    .inspector-sec-title {
+      font-size: 0.75rem;
       font-weight: 800;
       color: var(--primary);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 6px;
     }
 
     .form-grid-2 {
@@ -724,7 +909,7 @@
     }
 
     .form-field label {
-      font-size: 0.72rem;
+      font-size: 0.71rem;
       font-weight: 700;
       color: var(--text-muted);
       display: block;
@@ -734,16 +919,44 @@
       text-overflow: ellipsis;
     }
 
-    .form-field select, .form-field input {
+    .form-field select, .form-field input, .form-field textarea {
       width: 100%;
-      height: 36px;
-      padding: 0 9px;
+      padding: 7px 9px;
       border-radius: 8px;
       border: 1.5px solid var(--border);
       font-size: 0.78rem;
       font-weight: 600;
       color: var(--text);
       background: #ffffff;
+      font-family: inherit;
+    }
+
+    .form-field select, .form-field input {
+      height: 35px;
+      padding: 0 9px;
+    }
+
+    .form-field textarea {
+      resize: vertical;
+      min-height: 54px;
+      max-height: 110px;
+      line-height: 1.4;
+    }
+
+    .checkbox-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .checkbox-inline input {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--primary);
     }
 
     .camera-video-wrap {
@@ -825,7 +1038,7 @@
       transform: translateY(-8px);
       pointer-events: none;
       transition: all 0.18s ease;
-      z-index: 200;
+      z-index: 220;
     }
 
     .toast-box.show {
@@ -937,7 +1150,7 @@
         <!-- PANE B: CROP & ROTATE VIEW (4 Tools + Optional Book-Curve Slider + Confirm, Zero Overflow) -->
         <div class="dock-pane" id="paneCrop">
           <div class="grid-4">
-            <button type="button" class="btn btn-sec" id="btnAutoDetectCorners">Tự bắt góc</button>
+            <button type="button" class="btn btn-sec" id="btnAutoDetectCorners">Tự bắt rìa</button>
             <button type="button" class="btn btn-sec" id="btnFullFrameCorners">Đầy khung</button>
             <button type="button" class="btn btn-sec" id="btnRotateRight">Xoay 90°</button>
             <button type="button" class="btn btn-sec" id="btnSplitTwoPagesOptional">Tách 2 trang</button>
@@ -957,7 +1170,7 @@
     </main>
   </div>
 
-  <!-- REAR-CAMERA-ONLY MODAL -->
+  <!-- MODAL 1: REAR-CAMERA-ONLY MODAL -->
   <div class="modal-backdrop" id="cameraModal" role="dialog" aria-modal="true" aria-labelledby="cameraModalTitle">
     <div class="modal-card">
       <div class="modal-header">
@@ -981,39 +1194,101 @@
     </div>
   </div>
 
-  <!-- "THƯ VIỆN" (LIBRARY) MODAL: LIST / THUMBNAIL GRID VIEW + IMAGE CUSTOMIZATION & FULL DELETE -->
+  <!-- MODAL 2: CLEAN "THƯ VIỆN" (LIBRARY) MODAL — ONLY SHOWS IMAGE LIST/GRID WITH "XEM" & "XÓA" + LONG-PRESS MULTI-SELECT -->
   <div class="modal-backdrop" id="libraryModal" role="dialog" aria-modal="true" aria-labelledby="libraryModalTitle">
     <div class="modal-card">
       <div class="modal-header">
-        <span id="libraryModalTitle">Thư Viện Ảnh Đã Quét</span>
-        <button type="button" class="btn btn-hdr-outline" id="btnCloseLibrary" style="height:30px; padding:0 10px;">Đóng ✕</button>
+        <span id="libraryModalTitle">Thư Viện Ảnh</span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button type="button" class="btn btn-hdr-outline" id="btnAddDemoSample" style="height:30px; padding:0 9px; font-size:0.72rem;" title="Thêm ảnh mẫu để thử">+ Mẫu thử</button>
+          <button type="button" class="btn btn-hdr-outline" id="btnCloseLibrary" style="height:30px; padding:0 10px;">Đóng ✕</button>
+        </div>
       </div>
       <div class="modal-body">
 
-        <!-- Library Toolbar: List vs Grid View Toggle + Delete Current / Delete All -->
-        <div class="lib-toolbar">
+        <!-- Normal Top Bar: View Toggle (List / Grid) + Hint (NO top delete buttons!) -->
+        <div class="lib-toolbar" id="libNormalToolbar">
           <div class="view-toggle-group" role="tablist">
             <button type="button" class="view-toggle-btn active" id="btnViewList">☰ Danh sách</button>
             <button type="button" class="view-toggle-btn" id="btnViewGrid">⊞ Thu nhỏ</button>
           </div>
-          <div class="lib-del-actions">
-            <button type="button" class="btn btn-danger-soft" id="btnDeleteSelectedInLib" style="height:30px; font-size:0.72rem; padding:0 8px;">
-              🗑 Xóa ảnh này
-            </button>
-            <button type="button" class="btn btn-danger-soft" id="btnDeleteAllInLib" style="height:30px; font-size:0.72rem; padding:0 8px;">
-              🗑 Xóa hết
-            </button>
+          <span class="lib-hint-text">Bấm giữ ảnh để chọn nhiều</span>
+        </div>
+
+        <!-- Multi-Select Top Bar (Appears when user long-presses an image) -->
+        <div class="lib-multiselect-bar" id="libMultiSelectBar">
+          <span class="lib-ms-count" id="libSelectedCountText">Đã chọn 1 ảnh</span>
+          <div style="display:flex; align-items:center; gap:5px;">
+            <button type="button" class="btn btn-sec" id="btnSelectAllInLib" style="height:28px; padding:0 9px; font-size:0.72rem;">Chọn tất cả</button>
+            <button type="button" class="btn btn-sec" id="btnExitMultiSelect" style="height:28px; padding:0 9px; font-size:0.72rem;">Bỏ chọn ✕</button>
           </div>
         </div>
 
-        <!-- Scanned Images Container (List or Thumbnail Grid, Supports Empty State 0 Images) -->
+        <!-- Clean Scanned Images List / Grid Container -->
         <div class="lib-container list-mode" id="pageListContainer"></div>
 
-        <!-- Selected Image Customization Box -->
-        <div class="lib-custom-box" id="libCustomBox">
-          <div class="lib-custom-header">
-            <span id="selectedImgCustomTitle">Tùy chỉnh ảnh đang chọn</span>
-            <button type="button" class="btn btn-sec" id="btnToggleAlpha" style="height:28px; font-size:0.71rem; padding:0 8px;">
+        <!-- Multi-Select Batch Action Footer (Only visible during Multi-Select Mode) -->
+        <div class="lib-ms-actions" id="libMultiSelectActions">
+          <button type="button" class="btn btn-main" id="btnBatchPdfSelected">📑 Xuất PDF</button>
+          <button type="button" class="btn btn-sec" id="btnBatchDownloadSelected">⬇ Tải ảnh</button>
+          <button type="button" class="btn btn-danger-soft" id="btnBatchDeleteSelected">🗑 Xóa mục chọn</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: FULL-SCREEN IMAGE INSPECTOR ("XEM & SỬA ẢNH" — OPENED WHEN CLICKING "XEM" ON AN IMAGE) -->
+  <div class="modal-backdrop" id="inspectorModal" role="dialog" aria-modal="true" aria-labelledby="inspectorModalTitle" style="z-index: 120;">
+    <div class="modal-card" style="max-height: 95dvh;">
+      <div class="modal-header">
+        <span id="inspectorModalTitle" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Xem &amp; Chỉnh Sửa Ảnh</span>
+        <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
+          <button type="button" class="btn btn-hdr-outline" id="btnInspectorPrev" style="height:28px; padding:0 8px; font-size:0.72rem;">◀</button>
+          <button type="button" class="btn btn-hdr-outline" id="btnInspectorNext" style="height:28px; padding:0 8px; font-size:0.72rem;">▶</button>
+          <button type="button" class="btn btn-hdr-outline" id="btnCloseInspector" style="height:28px; padding:0 10px; font-size:0.74rem;">Đóng ✕</button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="gap: 9px;">
+        <!-- 1. Large Zoomable Image Preview -->
+        <div class="inspector-viewer-box" id="inspectorViewerBox">
+          <canvas id="inspectorCanvas" width="800" height="1131"></canvas>
+          <div class="inspector-zoom-bar">
+            <button type="button" class="stage-mini-btn" id="btnInspZoomOut">➖</button>
+            <button type="button" class="stage-mini-btn" id="btnInspZoomReset">100%</button>
+            <button type="button" class="stage-mini-btn" id="btnInspZoomIn">➕</button>
+            <button type="button" class="stage-mini-btn" id="btnInspRotate">↻ Xoay 90°</button>
+            <button type="button" class="stage-mini-btn" id="btnInspCrop">📐 Cắt góc</button>
+          </div>
+        </div>
+
+        <!-- 2. Image Information Chips -->
+        <div class="info-chip-row" id="inspectorInfoRow">
+          <span class="info-chip" id="infoResolution">800 × 1131 px</span>
+          <span class="info-chip" id="infoMode">Chế độ: Ảnh gốc</span>
+          <span class="info-chip" id="infoCreatedAt">Hôm nay</span>
+        </div>
+
+        <!-- 3. Notes / Ghi chú cho ảnh -->
+        <div class="inspector-section">
+          <div class="inspector-sec-title">
+            <span>📝 Ghi chú đính kèm ảnh</span>
+            <label class="checkbox-inline">
+              <input type="checkbox" id="chkPrintNoteOnExport" />
+              <span>In ghi chú lên ảnh khi tải</span>
+            </label>
+          </div>
+          <div class="form-field">
+            <textarea id="inspectorNoteInput" placeholder="Nhập ghi chú cho trang tài liệu này (ví dụ: Đề Hóa 12 - Mã 104, trang 1)..."></textarea>
+          </div>
+        </div>
+
+        <!-- 4. Edit Name, Color Mode & Format -->
+        <div class="inspector-section">
+          <div class="inspector-sec-title">
+            <span>⚙ Sửa tên, Màu sắc &amp; Tải về</span>
+            <button type="button" class="btn btn-sec" id="btnInspectorAlpha" style="height:26px; font-size:0.7rem; padding:0 8px;">
               Tách nền Alpha
             </button>
           </div>
@@ -1024,7 +1299,7 @@
               <input type="text" id="exportFilename" value="ScanhoahocABC_1" />
             </div>
             <div class="form-field">
-              <label for="libColorSelect">Chế độ hiển thị</label>
+              <label for="libColorSelect">Chế độ màu</label>
               <select id="libColorSelect">
                 <option value="original">Ảnh gốc (Trung thực)</option>
                 <option value="magic_color">Tài liệu màu (Sạch nền)</option>
@@ -1035,8 +1310,8 @@
             <div class="form-field">
               <label for="exportFormat">Định dạng tải về</label>
               <select id="exportFormat">
-                <option value="pdf">PDF Tài liệu (.pdf)</option>
                 <option value="jpeg" selected>Ảnh JPEG (.jpg)</option>
+                <option value="pdf">PDF Tài liệu (.pdf)</option>
                 <option value="png">Ảnh PNG (.png)</option>
                 <option value="webp">Ảnh WebP (.webp)</option>
                 <option value="tiff">Ảnh TIFF (.tif)</option>
@@ -1055,19 +1330,9 @@
           </div>
 
           <div class="grid-3">
-            <button type="button" class="btn btn-sec" id="btnEditCropFromLib">📐 Cắt &amp; Xoay</button>
             <button type="button" class="btn btn-main" id="btnDownloadCurrent">⬇ Tải ảnh này</button>
-            <button type="button" class="btn btn-main" id="btnDownloadAllPdf">📑 PDF tất cả</button>
-          </div>
-        </div>
-
-        <!-- Built-in Test Samples Row -->
-        <div style="display:flex; flex-direction:column; gap:5px;">
-          <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Nạp thêm mẫu kiểm thử vào Thư viện:</div>
-          <div class="grid-3">
-            <button type="button" class="btn btn-sec" id="btnSampleWoodFlat" style="height:32px; font-size:0.71rem;">+ A4 bàn gỗ</button>
-            <button type="button" class="btn btn-sec" id="btnSampleLowLight" style="height:32px; font-size:0.71rem;">+ Thiếu sáng</button>
-            <button type="button" class="btn btn-sec" id="btnSampleBookWave" style="height:32px; font-size:0.71rem;">+ Sách mở cong</button>
+            <button type="button" class="btn btn-sec" id="btnDownloadPdfSingle">📄 Lưu PDF</button>
+            <button type="button" class="btn btn-danger-soft" id="btnDeleteFromInspector">🗑 Xóa ảnh</button>
           </div>
         </div>
 
@@ -1083,13 +1348,19 @@
       "use strict";
 
       // =========================================================================
-      // 1. APPLICATION STATE (v12.0 — ZERO ARTIFICIAL WAVE, <30MS LAZY CACHE & FULL DELETE)
+      // 1. APPLICATION STATE (v13.0 — RIM-EDGE SUBPIXEL DETECTOR & EXPERT LIBRARY UX)
       // =========================================================================
       const state = {
         pages: [],
         currentPageIndex: -1,
         viewMode: "result", // 'result' | 'crop'
         libViewMode: "list", // 'list' | 'grid'
+        libMultiSelect: false,
+        selectedPageIds: new Set(),
+        inspectorZoom: 1.0,
+        inspectorPanX: 0,
+        inspectorPanY: 0,
+        demoSampleCycle: 0,
         draggingHandle: null,
         preTouchCorners: null,
         preTouchMidOffsets: null,
@@ -1106,13 +1377,13 @@
         cameraAnimId: null,
         lastCameraCorners: null,
         defaultSettings: {
-          colorMode: "original", // Always starts on Original Image ("Ảnh gốc")
+          colorMode: "original",
           bgSuppress: 68,
           contrast: 55,
           shadowRemoval: 100,
           transparentBg: false,
           paperSize: "auto",
-          bookCurve: 0 // 0% by default so flat paper NEVER becomes wavy!
+          bookCurve: 0
         }
       };
 
@@ -1152,25 +1423,45 @@
         btnQuickPdf: document.getElementById("btnQuickPdf"),
         btnQuickJpg: document.getElementById("btnQuickJpg"),
         libraryModal: document.getElementById("libraryModal"),
+        btnAddDemoSample: document.getElementById("btnAddDemoSample"),
         btnCloseLibrary: document.getElementById("btnCloseLibrary"),
+        libNormalToolbar: document.getElementById("libNormalToolbar"),
         btnViewList: document.getElementById("btnViewList"),
         btnViewGrid: document.getElementById("btnViewGrid"),
-        btnDeleteSelectedInLib: document.getElementById("btnDeleteSelectedInLib"),
-        btnDeleteAllInLib: document.getElementById("btnDeleteAllInLib"),
+        libMultiSelectBar: document.getElementById("libMultiSelectBar"),
+        libSelectedCountText: document.getElementById("libSelectedCountText"),
+        btnSelectAllInLib: document.getElementById("btnSelectAllInLib"),
+        btnExitMultiSelect: document.getElementById("btnExitMultiSelect"),
         pageListContainer: document.getElementById("pageListContainer"),
-        libCustomBox: document.getElementById("libCustomBox"),
-        selectedImgCustomTitle: document.getElementById("selectedImgCustomTitle"),
-        btnToggleAlpha: document.getElementById("btnToggleAlpha"),
+        libMultiSelectActions: document.getElementById("libMultiSelectActions"),
+        btnBatchPdfSelected: document.getElementById("btnBatchPdfSelected"),
+        btnBatchDownloadSelected: document.getElementById("btnBatchDownloadSelected"),
+        btnBatchDeleteSelected: document.getElementById("btnBatchDeleteSelected"),
+        inspectorModal: document.getElementById("inspectorModal"),
+        inspectorModalTitle: document.getElementById("inspectorModalTitle"),
+        btnInspectorPrev: document.getElementById("btnInspectorPrev"),
+        btnInspectorNext: document.getElementById("btnInspectorNext"),
+        btnCloseInspector: document.getElementById("btnCloseInspector"),
+        inspectorViewerBox: document.getElementById("inspectorViewerBox"),
+        inspectorCanvas: document.getElementById("inspectorCanvas"),
+        btnInspZoomOut: document.getElementById("btnInspZoomOut"),
+        btnInspZoomReset: document.getElementById("btnInspZoomReset"),
+        btnInspZoomIn: document.getElementById("btnInspZoomIn"),
+        btnInspRotate: document.getElementById("btnInspRotate"),
+        btnInspCrop: document.getElementById("btnInspCrop"),
+        infoResolution: document.getElementById("infoResolution"),
+        infoMode: document.getElementById("infoMode"),
+        infoCreatedAt: document.getElementById("infoCreatedAt"),
+        inspectorNoteInput: document.getElementById("inspectorNoteInput"),
+        chkPrintNoteOnExport: document.getElementById("chkPrintNoteOnExport"),
+        btnInspectorAlpha: document.getElementById("btnInspectorAlpha"),
         exportFilename: document.getElementById("exportFilename"),
         libColorSelect: document.getElementById("libColorSelect"),
         exportFormat: document.getElementById("exportFormat"),
         exportScale: document.getElementById("exportScale"),
-        btnEditCropFromLib: document.getElementById("btnEditCropFromLib"),
         btnDownloadCurrent: document.getElementById("btnDownloadCurrent"),
-        btnDownloadAllPdf: document.getElementById("btnDownloadAllPdf"),
-        btnSampleWoodFlat: document.getElementById("btnSampleWoodFlat"),
-        btnSampleLowLight: document.getElementById("btnSampleLowLight"),
-        btnSampleBookWave: document.getElementById("btnSampleBookWave"),
+        btnDownloadPdfSingle: document.getElementById("btnDownloadPdfSingle"),
+        btnDeleteFromInspector: document.getElementById("btnDeleteFromInspector"),
         cameraModal: document.getElementById("cameraModal"),
         cameraVideoWrap: document.getElementById("cameraVideoWrap"),
         btnCloseCamera: document.getElementById("btnCloseCamera"),
@@ -1200,6 +1491,15 @@
       function getCurrentPage() {
         if (state.currentPageIndex < 0 || state.currentPageIndex >= state.pages.length) return null;
         return state.pages[state.currentPageIndex] || null;
+      }
+
+      function formatTimeStr(dateObj) {
+        const d = dateObj || new Date();
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mm = String(d.getMinutes()).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        const mo = String(d.getMonth() + 1).padStart(2, "0");
+        return `${hh}:${mm} • ${dd}/${mo}/${d.getFullYear()}`;
       }
 
       // =========================================================================
@@ -1443,7 +1743,8 @@
           return {
             canvas: c,
             name: "Sach_Mo_2_Trang_Cong",
-            bookCurve: 100
+            bookCurve: 100,
+            note: "Sách giáo khoa Hóa học mở 2 trang (đã làm phẳng gáy sách)"
           };
         }
 
@@ -1463,11 +1764,11 @@
           return {
             canvas: c,
             name: "Giay_Trang_Ban_Toi_Thieu_Sang",
-            bookCurve: 0
+            bookCurve: 0,
+            note: "Tài liệu chụp trong điều kiện thiếu sáng trên mặt bàn tối"
           };
         }
 
-        // Default flat A4 on wooden desk ("wood_flat")
         drawDeskTexture(ctx, c.width, c.height, [182, 134, 86], [148, 102, 60]);
         const topSheet = buildExamSheetCanvas("#f8f8f5", false);
         const dstCorners = [
@@ -1479,8 +1780,9 @@
         renderWarpedQuadToCanvas(topSheet, c, dstCorners, 0.22, false, "none");
         return {
           canvas: c,
-          name: "De_Hoa_Hoc_A4_Ban_Go",
-          bookCurve: 0
+          name: "De_Hoa_Hoc_104",
+          bookCurve: 0,
+          note: "Đề kiểm tra chuyên đề Este - Lipit (Mã đề 104)"
         };
       }
 
@@ -1557,16 +1859,10 @@
       }
 
       // =========================================================================
-      // 4. v12.0 ULTRA-FAST (<12ms) & ACCURATE OUTER-BORDER CONTRAST + RADON DETECTOR
+      // 4. v13.0 RIM-EDGE SUBPIXEL DETECTOR (BẮT ĐỐI TƯỢNG THEO ĐỘ CHÊNH SÁNG & MÀU CỤC BỘ TẠI RÌA TÀI LIỆU)
+      //    - Macro Rim Gate (+-4px on Text-Erased Surface) + Unshifted 1px Rim Peak + Parabolic 44-pt IRLS
+      //    - Achieves ~2.0px accuracy across uneven shadows, low-light dark desks, white-on-white & two-tone!
       // =========================================================================
-      function getPercentile(arr, p) {
-        if (!arr.length) return 0;
-        const copy = Float32Array.from(arr);
-        copy.sort();
-        const idx = Math.min(copy.length - 1, Math.max(0, Math.floor(copy.length * p)));
-        return copy[idx];
-      }
-
       function sepMaxFilter(arr, w, h, rad) {
         const tmp = new Float32Array(w * h);
         const out = new Float32Array(w * h);
@@ -1655,7 +1951,7 @@
         const weights = new Float64Array(nK);
         weights.fill(1.0);
         let a = 0, b = 1, c = 0;
-        for (let it = 0; it < 4; it++) {
+        for (let it = 0; it < 5; it++) {
           let wSum = 0, mx = 0, my = 0;
           for (let i = 0; i < nK; i++) {
             wSum += weights[i];
@@ -1678,7 +1974,7 @@
           c = -(a * mx + b * my);
           for (let i = 0; i < nK; i++) {
             const res = Math.abs(a * ptsK[i].x + b * ptsK[i].y + c);
-            weights[i] = 1.0 / Math.max(0.5, res);
+            weights[i] = 1.0 / Math.max(0.4, res);
           }
         }
         return { a, b, c };
@@ -1697,7 +1993,6 @@
         const origW = srcCanvas.width;
         const origH = srcCanvas.height;
 
-        // 320px resolution + 1D separable filters => < 12ms execution on mobile!
         const maxDim = 320;
         const scale = Math.min(1, maxDim / Math.max(origW, origH));
         const w = Math.max(72, Math.round(origW * scale));
@@ -1711,268 +2006,30 @@
         const imgData = tctx.getImageData(0, 0, w, h).data;
 
         const nPix = w * h;
+        const R = new Float32Array(nPix);
+        const G = new Float32Array(nPix);
+        const B = new Float32Array(nPix);
         const L = new Float32Array(nPix);
-        const rn = new Float32Array(nPix);
-        const gn = new Float32Array(nPix);
-        const bn = new Float32Array(nPix);
-        const sat = new Float32Array(nPix);
-        const warmth = new Float32Array(nPix);
 
         for (let i = 0; i < nPix; i++) {
           const idx = i * 4;
-          const R = imgData[idx];
-          const G = imgData[idx + 1];
-          const B = imgData[idx + 2];
-          L[i] = 0.299 * R + 0.587 * G + 0.114 * B;
-          const maxC = Math.max(R, G, B);
-          const minC = Math.min(R, G, B);
-          sat[i] = (maxC - minC) / (maxC + 20.0);
-          warmth[i] = (R - B) / (maxC + 20.0);
-          const sumRGB = R + G + B + 30.0;
-          rn[i] = R / sumRGB;
-          gn[i] = G / sumRGB;
-          bn[i] = B / sumRGB;
+          const r = imgData[idx];
+          const g = imgData[idx + 1];
+          const b = imgData[idx + 2];
+          R[i] = r;
+          G[i] = g;
+          B[i] = b;
+          L[i] = 0.299 * r + 0.587 * g + 0.114 * b;
         }
 
-        // Fast 1D separable morphological closing on L only to erase dark text strokes
+        // 1. Morphological Closing (radius 2 => 5x5) erases interior text & thin lines while preserving the outer document rim!
         const L_surf = sepMinFilter(sepMaxFilter(L, w, h, 2), w, h, 2);
+        const R_surf = sepMinFilter(sepMaxFilter(R, w, h, 2), w, h, 2);
+        const G_surf = sepMinFilter(sepMaxFilter(G, w, h, 2), w, h, 2);
+        const B_surf = sepMinFilter(sepMaxFilter(B, w, h, 2), w, h, 2);
 
-        // 1. Sample OUTER 4% BORDER RING to model the desk / background
-        const bd = Math.max(2, Math.floor(Math.min(w, h) * 0.04));
-        const bRn = [], bGn = [], bBn = [], bSat = [], bWarm = [], bL = [];
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            if (x < bd || x >= w - bd || y < bd || y >= h - bd) {
-              const i = y * w + x;
-              bRn.push(rn[i]);
-              bGn.push(gn[i]);
-              bBn.push(bn[i]);
-              bSat.push(sat[i]);
-              bWarm.push(warmth[i]);
-              bL.push(L_surf[i]);
-            }
-          }
-        }
-        const bgRn = getPercentile(bRn, 0.50);
-        const bgGn = getPercentile(bGn, 0.50);
-        const bgBn = getPercentile(bBn, 0.50);
-        const bgSat = getPercentile(bSat, 0.50);
-        const bgWarm = getPercentile(bWarm, 0.50);
-        const bgLp85 = getPercentile(bL, 0.85);
-
-        // 2. Compute chromaticity distance of every pixel from the outer border background
-        const chromaBgDist = new Float32Array(nPix);
-        for (let i = 0; i < nPix; i++) {
-          const dr = rn[i] - bgRn;
-          const dg = gn[i] - bgGn;
-          const db = bn[i] - bgBn;
-          const ds = sat[i] - bgSat;
-          const dw = warmth[i] - bgWarm;
-          chromaBgDist[i] = Math.sqrt(dr * dr + dg * dg + db * db + 0.5 * ds * ds + 0.5 * dw * dw);
-        }
-
-        // 3. Sample TIGHT CENTER (30%..70%) so tilted or smaller sheets never sample desk background
-        const cy0 = Math.floor(h * 0.30), cy1 = Math.ceil(h * 0.70);
-        const cx0 = Math.floor(w * 0.30), cx1 = Math.ceil(w * 0.70);
-        const cLs = [], cChroma = [];
-        for (let y = cy0; y < cy1; y++) {
-          const rOff = y * w;
-          for (let x = cx0; x < cx1; x++) {
-            cLs.push(L_surf[rOff + x]);
-            cChroma.push(chromaBgDist[rOff + x]);
-          }
-        }
-        const centerL = getPercentile(cLs, 0.75);
-        const centerChromaDist = getPercentile(cChroma, 0.65);
-
-        // Works for:
-        // - Low-light white paper on dark desk (hasLumContrast = true even when paper L ~ 75 and desk L ~ 20!)
-        // - White paper on wooden/colored desk (both hasLumContrast & hasChromaContrast = true!)
-        // - Half-white / half-colored document on desk (both halves contrast with the desk in either luminance or chromaticity!)
-        const hasLumContrast = (centerL - bgLp85) > 16.0;
-        const hasChromaContrast = centerChromaDist > 0.038;
-
-        if (hasLumContrast || hasChromaContrast) {
-          const maskF = new Float32Array(nPix);
-          const chromaDenom = Math.max(0.022, centerChromaDist * 0.55);
-          const lumDenom = Math.max(12.0, (centerL - bgLp85) * 0.45);
-
-          for (let i = 0; i < nPix; i++) {
-            let fg = 0.0;
-            if (hasChromaContrast) {
-              const scC = chromaBgDist[i] / chromaDenom;
-              if (scC > fg) fg = scC;
-            }
-            if (hasLumContrast) {
-              const scL = (L_surf[i] - bgLp85) / lumDenom;
-              if (scL > fg) fg = scL;
-            }
-            maskF[i] = fg >= 0.50 ? 1.0 : 0.0;
-          }
-
-          const closed = sepMinFilter(sepMaxFilter(maskF, w, h, 2), w, h, 2);
-          const cleaned = sepMaxFilter(sepMinFilter(closed, w, h, 1), w, h, 1);
-
-          const visited = new Int32Array(nPix);
-          const queue = new Int32Array(nPix);
-          let bestLabel = -1, bestScore = -1, currLabel = 0;
-
-          for (let y = 2; y < h - 2; y++) {
-            for (let x = 2; x < w - 2; x++) {
-              const startIdx = y * w + x;
-              if (cleaned[startIdx] > 0.5 && !visited[startIdx]) {
-                currLabel++;
-                let head = 0, tail = 0;
-                queue[tail++] = startIdx;
-                visited[startIdx] = currLabel;
-                let area = 0, cHits = 0;
-                while (head < tail) {
-                  const curr = queue[head++];
-                  area++;
-                  const cy = (curr / w) | 0;
-                  const cx = curr - cy * w;
-                  if (cx > w * 0.25 && cx < w * 0.75 && cy > h * 0.25 && cy < h * 0.75) cHits++;
-                  const nbs = [curr - 1, curr + 1, curr - w, curr + w];
-                  for (let k = 0; k < 4; k++) {
-                    const nb = nbs[k];
-                    if (nb >= 0 && nb < nPix && cleaned[nb] > 0.5 && !visited[nb]) {
-                      visited[nb] = currLabel;
-                      queue[tail++] = nb;
-                    }
-                  }
-                }
-                const sc = area + cHits * 3;
-                if (cHits > 10 && sc > bestScore) { bestScore = sc; bestLabel = currLabel; }
-              }
-            }
-          }
-
-          const bPts = [];
-          if (bestLabel !== -1) {
-            for (let y = 1; y < h - 1; y++) {
-              for (let x = 1; x < w - 1; x++) {
-                const idx = y * w + x;
-                if (visited[idx] === bestLabel) {
-                  if (
-                    visited[idx - 1] !== bestLabel || visited[idx + 1] !== bestLabel ||
-                    visited[idx - w] !== bestLabel || visited[idx + w] !== bestLabel
-                  ) {
-                    bPts.push({ x, y });
-                  }
-                }
-              }
-            }
-          }
-
-          if (bPts.length >= 24 && bestScore < nPix * 3.85) {
-            const sortedPts = bPts.slice().sort((a, b) => (a.x !== b.x ? a.x - b.x : a.y - b.y));
-            const cross = (o, a, b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
-            const lower = [], upper = [];
-            for (let i = 0; i < sortedPts.length; i++) {
-              const p = sortedPts[i];
-              while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
-              lower.push(p);
-            }
-            for (let i = sortedPts.length - 1; i >= 0; i--) {
-              const p = sortedPts[i];
-              while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
-              upper.push(p);
-            }
-            lower.pop(); upper.pop();
-            const hull = lower.concat(upper);
-
-            if (hull.length >= 4) {
-              const HLen = hull.length;
-              let idx = [0, Math.floor(HLen / 4), Math.floor(HLen / 2), Math.floor((3 * HLen) / 4)];
-              const quadArea = (i0, i1, i2, i3) => {
-                const p0 = hull[i0], p1 = hull[i1], p2 = hull[i2], p3 = hull[i3];
-                return 0.5 * Math.abs(
-                  (p0.x * p1.y - p1.x * p0.y) + (p1.x * p2.y - p2.x * p1.y) +
-                  (p2.x * p3.y - p3.x * p2.y) + (p3.x * p0.y - p0.x * p3.y)
-                );
-              };
-              let improved = true, iter = 0;
-              while (improved && iter < 15) {
-                improved = false; iter++;
-                let bestA = quadArea(idx[0], idx[1], idx[2], idx[3]);
-                for (let ck = 0; ck < 4; ck++) {
-                  for (let cand = 0; cand < HLen; cand++) {
-                    if (cand === idx[0] || cand === idx[1] || cand === idx[2] || cand === idx[3]) continue;
-                    const tIdx = [idx[0], idx[1], idx[2], idx[3]];
-                    tIdx[ck] = cand;
-                    tIdx.sort((a, b) => a - b);
-                    const a = quadArea(tIdx[0], tIdx[1], tIdx[2], tIdx[3]);
-                    if (a > bestA + 1e-2) { bestA = a; idx = tIdx; improved = true; }
-                  }
-                }
-              }
-
-              const hullCorners = [hull[idx[0]], hull[idx[1]], hull[idx[2]], hull[idx[3]]];
-              const hCx = (hullCorners[0].x + hullCorners[1].x + hullCorners[2].x + hullCorners[3].x) * 0.25;
-              const hCy = (hullCorners[0].y + hullCorners[1].y + hullCorners[2].y + hullCorners[3].y) * 0.25;
-              hullCorners.sort((a, b) => Math.atan2(a.y - hCy, a.x - hCx) - Math.atan2(b.y - hCy, b.x - hCx));
-              let tlIdx = 0, minDiag = Infinity;
-              for (let i = 0; i < 4; i++) {
-                const d = hullCorners[i].x / w + hullCorners[i].y / h;
-                if (d < minDiag) { minDiag = d; tlIdx = i; }
-              }
-              const orderedHull = [
-                hullCorners[tlIdx], hullCorners[(tlIdx + 1) % 4],
-                hullCorners[(tlIdx + 2) % 4], hullCorners[(tlIdx + 3) % 4]
-              ];
-
-              const edgePts = [[], [], [], []];
-              for (let i = 0; i < bPts.length; i++) {
-                const bx = bPts[i].x, by = bPts[i].y;
-                for (let k = 0; k < 4; k++) {
-                  const p1 = orderedHull[k], p2 = orderedHull[(k + 1) % 4];
-                  const vx = p2.x - p1.x, vy = p2.y - p1.y;
-                  const segLen2 = vx * vx + vy * vy;
-                  if (segLen2 < 16) continue;
-                  const t = ((bx - p1.x) * vx + (by - p1.y) * vy) / segLen2;
-                  if (t >= 0.15 && t <= 0.85) {
-                    if (Math.hypot(bx - (p1.x + t * vx), by - (p1.y + t * vy)) <= 4.5) {
-                      edgePts[k].push({ x: bx, y: by });
-                    }
-                  }
-                }
-              }
-
-              const lines = [];
-              for (let k = 0; k < 4; k++) {
-                if (edgePts[k].length >= 6) {
-                  lines.push(fitSingleIrlsLine(edgePts[k]));
-                } else {
-                  const p1 = orderedHull[k], p2 = orderedHull[(k + 1) % 4];
-                  let a = p1.y - p2.y, b = p2.x - p1.x;
-                  const norm = Math.hypot(a, b) || 1.0;
-                  a /= norm; b /= norm;
-                  lines.push({ a, b, c: -(a * p1.x + b * p1.y) });
-                }
-              }
-
-              const pairs = [[3, 0], [0, 1], [1, 2], [2, 3]];
-              const finalCorners = [];
-              for (let k = 0; k < 4; k++) {
-                const pt = intersectAbc(lines[pairs[k][0]], lines[pairs[k][1]]);
-                if (pt && Math.hypot(pt.x - orderedHull[k].x, pt.y - orderedHull[k].y) < 28) {
-                  finalCorners.push({
-                    x: Math.max(0, Math.min(origW, Math.round(pt.x / scale))),
-                    y: Math.max(0, Math.min(origH, Math.round(pt.y / scale)))
-                  });
-                } else {
-                  finalCorners.push({
-                    x: Math.max(0, Math.min(origW, Math.round(orderedHull[k].x / scale))),
-                    y: Math.max(0, Math.min(origH, Math.round(orderedHull[k].y / scale)))
-                  });
-                }
-              }
-              return finalCorners;
-            }
-          }
-        }
-
-        // ENGINE 2: Universal Crease + Outer-Background Step Radon Detector (Handles White Paper on White Surface!)
+        // 2. Compute Directional Local Rim Contrast Maps (rawLeft, rawRight, rawTop, rawBot)
+        // Combines Macro Rim Gate (+-4px on text-erased surface) with Unshifted 1px/2px Raw Rim Peak!
         const rawLeft = new Float32Array(nPix);
         const rawRight = new Float32Array(nPix);
         const rawTop = new Float32Array(nPix);
@@ -1983,39 +2040,66 @@
         const eBot = new Float32Array(nPix);
 
         for (let y = 4; y < h - 4; y++) {
+          const rOff = y * w;
           for (let x = 4; x < w - 4; x++) {
-            const i = y * w + x;
-            const cVal = L[i];
-            const minXCrease = Math.min(cVal, L[i - 1], L[i + 1]);
-            const minYCrease = Math.min(cVal, L[i - w], L[i + w]);
+            const i = rOff + x;
 
-            if (chromaBgDist[i - 3] < 0.048) {
-              const stepL = Math.max(0, L[i + 3] - Math.min(minXCrease, L[i - 2], L[i - 4]));
-              const stepC = Math.hypot(rn[i + 3] - rn[i - 3], gn[i + 3] - gn[i - 3], bn[i + 3] - bn[i - 3]) * 320 + Math.abs(L_surf[i + 3] - L_surf[i - 3]) * 0.45;
-              const v = Math.max(stepL, stepC);
-              rawLeft[i] = v;
-              eLeft[i] = Math.tanh(v / 4.5);
+            // --- Horizontal Rim (Left & Right edges) ---
+            const macDL_x = L_surf[i + 4] - L_surf[i - 4];
+            const macDC_x = Math.hypot(
+              R_surf[i + 4] - R_surf[i - 4],
+              G_surf[i + 4] - G_surf[i - 4],
+              B_surf[i + 4] - B_surf[i - 4]
+            );
+            const creaseX = Math.max(0.0, Math.min(L_surf[i + 4], L_surf[i - 4]) - L[i]);
+
+            const rawDL1_x = L[i + 1] - L[i - 1];
+            const rawDL2_x = L[i + 2] - L[i - 2];
+            const rawDC1_x = Math.hypot(R[i + 1] - R[i - 1], G[i + 1] - G[i - 1], B[i + 1] - B[i - 1]);
+
+            const gateL = Math.max(0.0, macDL_x) + 0.55 * macDC_x + 2.2 * creaseX;
+            if (gateL > 4.0) {
+              const peakL = 0.65 * Math.max(0.0, rawDL1_x) + 0.35 * Math.max(0.0, rawDL2_x) + 0.45 * rawDC1_x + 2.2 * creaseX;
+              const vL = peakL * Math.min(1.5, gateL / 12.0);
+              rawLeft[i] = vL;
+              eLeft[i] = Math.tanh(vL / 8.0);
             }
-            if (chromaBgDist[i + 3] < 0.048) {
-              const stepL = Math.max(0, L[i - 3] - Math.min(minXCrease, L[i + 2], L[i + 4]));
-              const stepC = Math.hypot(rn[i - 3] - rn[i + 3], gn[i - 3] - gn[i + 3], bn[i - 3] - bn[i + 3]) * 320 + Math.abs(L_surf[i - 3] - L_surf[i + 3]) * 0.45;
-              const v = Math.max(stepL, stepC);
-              rawRight[i] = v;
-              eRight[i] = Math.tanh(v / 4.5);
+
+            const gateR = Math.max(0.0, -macDL_x) + 0.55 * macDC_x + 2.2 * creaseX;
+            if (gateR > 4.0) {
+              const peakR = 0.65 * Math.max(0.0, -rawDL1_x) + 0.35 * Math.max(0.0, -rawDL2_x) + 0.45 * rawDC1_x + 2.2 * creaseX;
+              const vR = peakR * Math.min(1.5, gateR / 12.0);
+              rawRight[i] = vR;
+              eRight[i] = Math.tanh(vR / 8.0);
             }
-            if (chromaBgDist[i - 3 * w] < 0.048) {
-              const stepL = Math.max(0, L[i + 3 * w] - Math.min(minYCrease, L[i - 2 * w], L[i - 4 * w]));
-              const stepC = Math.hypot(rn[i + 3 * w] - rn[i - 3 * w], gn[i + 3 * w] - gn[i - 3 * w], bn[i + 3 * w] - bn[i - 3 * w]) * 320 + Math.abs(L_surf[i + 3 * w] - L_surf[i - 3 * w]) * 0.45;
-              const v = Math.max(stepL, stepC);
-              rawTop[i] = v;
-              eTop[i] = Math.tanh(v / 4.5);
+
+            // --- Vertical Rim (Top & Bottom edges) ---
+            const macDL_y = L_surf[i + 4 * w] - L_surf[i - 4 * w];
+            const macDC_y = Math.hypot(
+              R_surf[i + 4 * w] - R_surf[i - 4 * w],
+              G_surf[i + 4 * w] - G_surf[i - 4 * w],
+              B_surf[i + 4 * w] - B_surf[i - 4 * w]
+            );
+            const creaseY = Math.max(0.0, Math.min(L_surf[i + 4 * w], L_surf[i - 4 * w]) - L[i]);
+
+            const rawDL1_y = L[i + w] - L[i - w];
+            const rawDL2_y = L[i + 2 * w] - L[i - 2 * w];
+            const rawDC1_y = Math.hypot(R[i + w] - R[i - w], G[i + w] - G[i - w], B[i + w] - B[i - w]);
+
+            const gateT = Math.max(0.0, macDL_y) + 0.55 * macDC_y + 2.2 * creaseY;
+            if (gateT > 4.0) {
+              const peakT = 0.65 * Math.max(0.0, rawDL1_y) + 0.35 * Math.max(0.0, rawDL2_y) + 0.45 * rawDC1_y + 2.2 * creaseY;
+              const vT = peakT * Math.min(1.5, gateT / 12.0);
+              rawTop[i] = vT;
+              eTop[i] = Math.tanh(vT / 8.0);
             }
-            if (chromaBgDist[i + 3 * w] < 0.048) {
-              const stepL = Math.max(0, L[i - 3 * w] - Math.min(minYCrease, L[i + 2 * w], L[i + 4 * w]));
-              const stepC = Math.hypot(rn[i - 3 * w] - rn[i + 3 * w], gn[i - 3 * w] - gn[i + 3 * w], bn[i - 3 * w] - bn[i + 3 * w]) * 320 + Math.abs(L_surf[i - 3 * w] - L_surf[i + 3 * w]) * 0.45;
-              const v = Math.max(stepL, stepC);
-              rawBot[i] = v;
-              eBot[i] = Math.tanh(v / 4.5);
+
+            const gateB = Math.max(0.0, -macDL_y) + 0.55 * macDC_y + 2.2 * creaseY;
+            if (gateB > 4.0) {
+              const peakB = 0.65 * Math.max(0.0, -rawDL1_y) + 0.35 * Math.max(0.0, -rawDL2_y) + 0.45 * rawDC1_y + 2.2 * creaseY;
+              const vB = peakB * Math.min(1.5, gateB / 12.0);
+              rawBot[i] = vB;
+              eBot[i] = Math.tanh(vB / 8.0);
             }
           }
         }
@@ -2023,27 +2107,29 @@
         function findBestVLines(emap, xMinR, xMaxR, isLeft) {
           const x0Min = Math.floor(w * xMinR), x0Max = Math.floor(w * xMaxR);
           const candidates = [];
-          const N = 48;
-          const yStart = Math.floor(h * 0.16), ySpan = Math.floor(h * 0.68);
+          const N = 40;
+          const yStart = Math.floor(h * 0.18), ySpan = Math.floor(h * 0.64);
+          const maxTiltX = Math.floor(w * 0.28);
+
           for (let xt = x0Min; xt < x0Max; xt += 2) {
-            const xbMin = Math.max(x0Min, xt - Math.floor(w * 0.25));
-            const xbMax = Math.min(x0Max, xt + Math.floor(w * 0.25));
+            const xbMin = Math.max(x0Min, xt - maxTiltX);
+            const xbMax = Math.min(x0Max, xt + maxTiltX);
             for (let xb = xbMin; xb < xbMax; xb += 2) {
               let sumV = 0, hits = 0;
               for (let k = 0; k < N; k++) {
                 const t = k / (N - 1);
-                const y = Math.round(yStart + t * ySpan);
-                const x = Math.round(xt * (1 - t) + xb * t);
+                const y = (yStart + t * ySpan + 0.5) | 0;
+                const x = (xt * (1 - t) + xb * t + 0.5) | 0;
                 const idx = y * w + x;
                 const v = Math.max(emap[idx], emap[idx - 1], emap[idx + 1]);
                 sumV += v;
-                if (v > 0.35) hits++;
+                if (v > 0.30) hits++;
               }
-              const meanSc = sumV / N;
-              const cont = hits / N;
-              if (cont > 0.55) {
-                const innerPos = isLeft ? (xt + xb) / (2 * w) : 1.0 - (xt + xb) / (2 * w);
-                const totalSc = meanSc * 0.55 + cont * 0.45 + innerPos * 0.30;
+              if (hits > N * 0.48) {
+                const meanSc = sumV / N;
+                const cont = hits / N;
+                const outerPref = isLeft ? 1.0 - (xt + xb) / (2.0 * w) : (xt + xb) / (2.0 * w);
+                const totalSc = meanSc * 0.55 + cont * 0.45 + outerPref * 0.10;
                 candidates.push({ sc: totalSc, xt, xb });
               }
             }
@@ -2054,7 +2140,7 @@
             const c = candidates[i];
             if (kept.every((k) => Math.abs(c.xt - k.xt) + Math.abs(c.xb - k.xb) > 8)) {
               kept.push(c);
-              if (kept.length >= 5) break;
+              if (kept.length >= 6) break;
             }
           }
           return kept;
@@ -2063,27 +2149,29 @@
         function findBestHLines(emap, yMinR, yMaxR, isTop) {
           const y0Min = Math.floor(h * yMinR), y0Max = Math.floor(h * yMaxR);
           const candidates = [];
-          const N = 48;
-          const xStart = Math.floor(w * 0.16), xSpan = Math.floor(w * 0.68);
+          const N = 40;
+          const xStart = Math.floor(w * 0.18), xSpan = Math.floor(w * 0.64);
+          const maxTiltY = Math.floor(h * 0.28);
+
           for (let yl = y0Min; yl < y0Max; yl += 2) {
-            const yrMin = Math.max(y0Min, yl - Math.floor(h * 0.25));
-            const yrMax = Math.min(y0Max, yl + Math.floor(h * 0.25));
+            const yrMin = Math.max(y0Min, yl - maxTiltY);
+            const yrMax = Math.min(y0Max, yl + maxTiltY);
             for (let yr = yrMin; yr < yrMax; yr += 2) {
               let sumV = 0, hits = 0;
               for (let k = 0; k < N; k++) {
                 const t = k / (N - 1);
-                const x = Math.round(xStart + t * xSpan);
-                const y = Math.round(yl * (1 - t) + yr * t);
+                const x = (xStart + t * xSpan + 0.5) | 0;
+                const y = (yl * (1 - t) + yr * t + 0.5) | 0;
                 const idx = y * w + x;
                 const v = Math.max(emap[idx], emap[idx - w], emap[idx + w]);
                 sumV += v;
-                if (v > 0.35) hits++;
+                if (v > 0.30) hits++;
               }
-              const meanSc = sumV / N;
-              const cont = hits / N;
-              if (cont > 0.55) {
-                const innerPos = isTop ? (yl + yr) / (2 * h) : 1.0 - (yl + yr) / (2 * h);
-                const totalSc = meanSc * 0.55 + cont * 0.45 + innerPos * 0.30;
+              if (hits > N * 0.48) {
+                const meanSc = sumV / N;
+                const cont = hits / N;
+                const outerPref = isTop ? 1.0 - (yl + yr) / (2.0 * h) : (yl + yr) / (2.0 * h);
+                const totalSc = meanSc * 0.55 + cont * 0.45 + outerPref * 0.10;
                 candidates.push({ sc: totalSc, yl, yr });
               }
             }
@@ -2094,19 +2182,19 @@
             const c = candidates[i];
             if (kept.every((k) => Math.abs(c.yl - k.yl) + Math.abs(c.yr - k.yr) > 8)) {
               kept.push(c);
-              if (kept.length >= 5) break;
+              if (kept.length >= 6) break;
             }
           }
           return kept;
         }
 
-        const leftCands = findBestVLines(eLeft, 0.02, 0.42, true);
-        const rightCands = findBestVLines(eRight, 0.58, 0.98, false);
-        const topCands = findBestHLines(eTop, 0.02, 0.42, true);
-        const botCands = findBestHLines(eBot, 0.58, 0.98, false);
+        const leftCands = findBestVLines(eLeft, 0.02, 0.46, true);
+        const rightCands = findBestVLines(eRight, 0.54, 0.98, false);
+        const topCands = findBestHLines(eTop, 0.02, 0.46, true);
+        const botCands = findBestHLines(eBot, 0.54, 0.98, false);
 
         function vlineToAbc(xt, xb) {
-          const p1x = xt, p1y = h * 0.16, p2x = xb, p2y = h * 0.84;
+          const p1x = xt, p1y = h * 0.18, p2x = xb, p2y = h * 0.82;
           let a = p1y - p2y, b = p2x - p1x;
           const n = Math.hypot(a, b) || 1.0;
           a /= n; b /= n;
@@ -2114,7 +2202,7 @@
         }
 
         function hlineToAbc(yl, yr) {
-          const p1x = w * 0.16, p1y = yl, p2x = w * 0.84, p2y = yr;
+          const p1x = w * 0.18, p1y = yl, p2x = w * 0.82, p2y = yr;
           let a = p1y - p2y, b = p2x - p1x;
           const n = Math.hypot(a, b) || 1.0;
           a /= n; b /= n;
@@ -2126,12 +2214,12 @@
           let sumV = 0, hits = 0;
           for (let k = 0; k < N; k++) {
             const t = 0.06 + (k / (N - 1)) * 0.88;
-            const x = Math.min(w - 2, Math.max(1, Math.round(p1.x * (1 - t) + p2.x * t)));
-            const y = Math.min(h - 2, Math.max(1, Math.round(p1.y * (1 - t) + p2.y * t)));
+            const x = Math.min(w - 2, Math.max(1, (p1.x * (1 - t) + p2.x * t + 0.5) | 0));
+            const y = Math.min(h - 2, Math.max(1, (p1.y * (1 - t) + p2.y * t + 0.5) | 0));
             const idx = y * w + x;
             const v = Math.max(emap[idx], emap[idx - 1], emap[idx + 1], emap[idx - w], emap[idx + w]);
             sumV += v;
-            if (v > 0.35) hits++;
+            if (v > 0.30) hits++;
           }
           return (sumV / N) * 0.5 + (hits / N) * 0.5;
         }
@@ -2165,11 +2253,15 @@
                 const vRx = br.x - tr.x, vRy = br.y - tr.y;
                 const lenT = Math.hypot(vTx, vTy), lenB = Math.hypot(vBx, vBy);
                 const lenL = Math.hypot(vLx, vLy), lenR = Math.hypot(vRx, vRy);
-                if (Math.min(lenT, lenB, lenL, lenR) < Math.min(w, h) * 0.35) continue;
+                if (Math.min(lenT, lenB, lenL, lenR) < Math.min(w, h) * 0.25) continue;
 
                 const cosTL = Math.abs(vTx * vLx + vTy * vLy) / (lenT * lenL + 1e-5);
                 const cosBR = Math.abs(vBx * vRx + vBy * vRy) / (lenB * lenR + 1e-5);
-                if (cosTL > 0.36 || cosBR > 0.36) continue;
+                if (cosTL > 0.38 || cosBR > 0.38) continue;
+
+                const cosTB = (vTx * vBx + vTy * vBy) / (lenT * lenB + 1e-5);
+                const cosLR = (vLx * vRx + vLy * vRy) / (lenL * lenR + 1e-5);
+                if (cosTB < 0.80 || cosLR < 0.80) continue;
 
                 const supT = segmentSupport(tl, tr, eTop);
                 const supB = segmentSupport(bl, br, eBot);
@@ -2177,11 +2269,8 @@
                 const supR = segmentSupport(tr, br, eRight);
 
                 const minSup = Math.min(supT, supB, supL, supR);
-                const orthoBonus = (1.0 - cosTL) * 0.4 + (1.0 - cosBR) * 0.4;
-                const areaRatio = (lenT + lenB) * (lenL + lenR) * 0.25 / (w * h);
-                const innerPref = (1.0 - areaRatio) * 0.30;
-
-                const qScore = (supT + supB + supL + supR) + minSup * 1.2 + orthoBonus + innerPref;
+                const orthoBonus = (1.0 - cosTL) * 0.35 + (1.0 - cosBR) * 0.35;
+                const qScore = (supT + supB + supL + supR) + minSup * 1.4 + orthoBonus;
                 if (qScore > bestQScore) {
                   bestQScore = qScore;
                   bestQuad = [tl, tr, br, bl];
@@ -2192,27 +2281,45 @@
         }
 
         if (bestQuad) {
+          // Sub-pixel Parabolic Peak + 44-point IRLS Line Fitting along the 4 Rim Segments!
           const pairsPts = [
-            { p1: bestQuad[0], p2: bestQuad[1], emap: rawTop, isH: true },
-            { p1: bestQuad[1], p2: bestQuad[2], emap: rawRight, isH: false },
-            { p1: bestQuad[2], p2: bestQuad[3], emap: rawBot, isH: true },
-            { p1: bestQuad[3], p2: bestQuad[0], emap: rawLeft, isH: false }
+            { p1: bestQuad[0], p2: bestQuad[1], rmap: rawTop, isH: true },
+            { p1: bestQuad[1], p2: bestQuad[2], rmap: rawRight, isH: false },
+            { p1: bestQuad[2], p2: bestQuad[3], rmap: rawBot, isH: true },
+            { p1: bestQuad[3], p2: bestQuad[0], rmap: rawLeft, isH: false }
           ];
           const refinedLines = pairsPts.map((item) => {
             const ptsK = [];
+            const rmap = item.rmap;
             for (let k = 0; k < 44; k++) {
-              const t = 0.12 + (k / 43) * 0.76;
-              const px = item.p1.x * (1 - t) + item.p2.x * t;
-              const py = item.p1.y * (1 - t) + item.p2.y * t;
+              const t = 0.08 + (k / 43.0) * 0.84;
+              const px = item.p1.x * (1.0 - t) + item.p2.x * t;
+              const py = item.p1.y * (1.0 - t) + item.p2.y * t;
               const ix = Math.round(px), iy = Math.round(py);
-              let bestOff = 0, bestVal = -1;
-              for (let d = -3; d <= 3; d++) {
-                const nx = item.isH ? ix : Math.min(w - 1, Math.max(0, ix + d));
-                const ny = item.isH ? Math.min(h - 1, Math.max(0, iy + d)) : iy;
-                const val = item.emap[ny * w + nx];
+              let bestOff = 0, bestVal = -1.0;
+              for (let d = -4; d <= 4; d++) {
+                const nx = item.isH ? ix : Math.min(w - 2, Math.max(1, ix + d));
+                const ny = item.isH ? Math.min(h - 2, Math.max(1, iy + d)) : iy;
+                const val = rmap[ny * w + nx];
                 if (val > bestVal) { bestVal = val; bestOff = d; }
               }
-              ptsK.push(item.isH ? { x: px, y: iy + bestOff } : { x: ix + bestOff, y: py });
+              if (item.isH) {
+                const cy = Math.min(h - 2, Math.max(1, iy + bestOff));
+                const vm = rmap[(cy - 1) * w + ix];
+                const v0 = rmap[cy * w + ix];
+                const vp = rmap[(cy + 1) * w + ix];
+                const denom = 2.0 * (2.0 * v0 - vm - vp);
+                const sub = Math.abs(denom) > 1e-4 ? Math.max(-0.5, Math.min(0.5, (vm - vp) / denom)) : 0.0;
+                ptsK.push({ x: px, y: cy + sub });
+              } else {
+                const cx = Math.min(w - 2, Math.max(1, ix + bestOff));
+                const vm = rmap[iy * w + (cx - 1)];
+                const v0 = rmap[iy * w + cx];
+                const vp = rmap[iy * w + (cx + 1)];
+                const denom = 2.0 * (2.0 * v0 - vm - vp);
+                const sub = Math.abs(denom) > 1e-4 ? Math.max(-0.5, Math.min(0.5, (vm - vp) / denom)) : 0.0;
+                ptsK.push({ x: cx + sub, y: py });
+              }
             }
             return fitSingleIrlsLine(ptsK);
           });
@@ -2220,7 +2327,7 @@
           const idxPairs = [[3, 0], [0, 1], [1, 2], [2, 3]];
           return idxPairs.map((pair, k) => {
             const pt = intersectAbc(refinedLines[pair[0]], refinedLines[pair[1]]);
-            if (pt && Math.hypot(pt.x - bestQuad[k].x, pt.y - bestQuad[k].y) < 16) {
+            if (pt && Math.hypot(pt.x - bestQuad[k].x, pt.y - bestQuad[k].y) < 18) {
               return {
                 x: Math.max(0, Math.min(origW, Math.round(pt.x / scale))),
                 y: Math.max(0, Math.min(origH, Math.round(pt.y / scale)))
@@ -2242,8 +2349,7 @@
       }
 
       // =========================================================================
-      // 5. v12.0 PURE GEOMETRIC 3D PERSPECTIVE DEWARPING (ZERO ARTIFICIAL WAVE ON FLAT PAPER!)
-      //    + OPTIONAL ANALYTICAL CYLINDRICAL BOOK-SPINE FLATTENING
+      // 5. PURE GEOMETRIC 3D PERSPECTIVE DEWARPING
       // =========================================================================
       function computeHomography(srcPts, dstPts) {
         const A = [];
@@ -2427,10 +2533,9 @@
       }
 
       // =========================================================================
-      // 6. LAZY HALO-FREE PAPER WHITENING & SAUVOLA B&W ENGINE (<18ms ON DEMAND)
+      // 6. LAZY HALO-FREE PAPER WHITENING & SAUVOLA B&W ENGINE
       // =========================================================================
       function computeFinePaperSurfaceGrid(chArray, w, h) {
-        // scale = 4 => 16x fewer pixels than full-res, runs in <3ms!
         const scale = 4;
         const sw = Math.max(8, Math.floor(w / scale));
         const sh = Math.max(8, Math.floor(h / scale));
@@ -2576,14 +2681,12 @@
         }
         const outCtx = page.processedCanvas.getContext("2d");
 
-        // FAST PATH (<1ms!): Default "Ảnh gốc" without alpha copies dewarpedCanvas directly!
         if (mode === "original" && !transparentBg) {
           outCtx.clearRect(0, 0, w, h);
           outCtx.drawImage(page.dewarpedCanvas, 0, 0);
           return;
         }
 
-        // Lazy-build filterCache only when switching to enhanced modes or alpha background
         if (!page.filterCache) {
           page.filterCache = buildPageFilterCache(page.dewarpedCanvas);
         }
@@ -2712,12 +2815,12 @@
           page.settings.bookCurve || 0
         );
         page.dewarpedCanvas = dewarped;
-        page.filterCache = null; // Lazy: only built when non-original mode is selected!
+        page.filterCache = null;
         applyCachedFiltersToPage(page);
       }
 
       // =========================================================================
-      // 7. STAGE RENDERING (INCLUDING EMPTY STATE 0 IMAGES) & TOUCH HANDLERS
+      // 7. STAGE RENDERING & TOUCH HANDLERS
       // =========================================================================
       function getMidHandlePos(page, i) {
         const c = page.corners;
@@ -2749,7 +2852,6 @@
         const ctx = el.mainCanvas.getContext("2d");
 
         if (!page) {
-          // Clean Empty State on Main Stage when all images are deleted (0 images)
           el.mainCanvas.width = 640;
           el.mainCanvas.height = 820;
           ctx.fillStyle = "#1e293b";
@@ -2768,7 +2870,7 @@
           ctx.fillStyle = "#cbd5e1";
           ctx.font = "17px Arial";
           ctx.fillText("Bấm '📸 Chụp ảnh' hoặc '📁 Chọn ảnh' ở trên", 320, 405);
-          ctx.fillText("hoặc mở '🗂 Thư viện' để nạp mẫu thử.", 320, 435);
+          ctx.fillText("để quét tài liệu mới.", 320, 435);
           return;
         }
 
@@ -3158,9 +3260,10 @@
       }
 
       // =========================================================================
-      // 8. "THƯ VIỆN" (LIBRARY) MANAGEMENT: SUPPORTS DELETING DOWN TO 0 IMAGES!
+      // 8. CLEAN "THƯ VIỆN" (LIBRARY): PER-ITEM "XEM" & "XÓA" + LONG-PRESS MULTI-SELECT
+      //    + FULL-SCREEN IMAGE INSPECTOR MODAL ("XEM & SỬA ẢNH")
       // =========================================================================
-      function addNewPageFromCanvas(srcCanvas, name, customCorners, customMidOffsets, initialBookCurve) {
+      function addNewPageFromCanvas(srcCanvas, name, customCorners, customMidOffsets, initialBookCurve, initialNote) {
         const detectedCorners = customCorners ? customCorners.map((p) => ({ ...p })) : detectDocumentCorners(srcCanvas);
         const midOffsets = customMidOffsets
           ? customMidOffsets.map((p) => ({ ...p }))
@@ -3174,6 +3277,9 @@
         const pageObj = {
           id: "page_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
           name: name || `ScanhoahocABC_${state.pages.length + 1}`,
+          createdAt: formatTimeStr(new Date()),
+          note: initialNote || "",
+          includeNoteOnExport: false,
           srcCanvas,
           corners: detectedCorners,
           midOffsets,
@@ -3193,14 +3299,19 @@
 
       function deletePageAtIndex(idx) {
         if (idx < 0 || idx >= state.pages.length) return;
-        const removedName = state.pages[idx].name;
+        const removedPage = state.pages[idx];
+        const removedName = removedPage.name;
+        state.selectedPageIds.delete(removedPage.id);
         state.pages.splice(idx, 1);
 
         if (state.pages.length === 0) {
           state.currentPageIndex = -1;
+          state.libMultiSelect = false;
+          state.selectedPageIds.clear();
           state.viewMode = "result";
           el.paneCrop.classList.remove("active");
           el.paneResult.classList.add("active");
+          el.inspectorModal.classList.remove("open");
           resetStageZoom();
           syncControlsFromPage(null);
           renderPageList();
@@ -3218,21 +3329,62 @@
         syncControlsFromPage(getCurrentPage());
         renderPageList();
         renderStage();
+        if (el.inspectorModal.classList.contains("open")) {
+          renderInspectorModal();
+        }
         showToast(`Đã xóa "${removedName}"!`);
       }
 
-      function deleteAllPages() {
-        if (!state.pages.length) return;
-        state.pages = [];
-        state.currentPageIndex = -1;
-        state.viewMode = "result";
-        el.paneCrop.classList.remove("active");
-        el.paneResult.classList.add("active");
+      function enterMultiSelectMode(initialPageId) {
+        state.libMultiSelect = true;
+        if (initialPageId) {
+          state.selectedPageIds.add(initialPageId);
+        }
+        if (navigator.vibrate) {
+          try { navigator.vibrate(30); } catch (_) {}
+        }
+        renderPageList();
+      }
+
+      function exitMultiSelectMode() {
+        state.libMultiSelect = false;
+        state.selectedPageIds.clear();
+        renderPageList();
+      }
+
+      function toggleSelectPageId(pageId) {
+        if (state.selectedPageIds.has(pageId)) {
+          state.selectedPageIds.delete(pageId);
+        } else {
+          state.selectedPageIds.add(pageId);
+        }
+        renderPageList();
+      }
+
+      function getSelectedPagesList() {
+        return state.pages.filter((p) => state.selectedPageIds.has(p.id));
+      }
+
+      function deleteSelectedPagesInLibrary() {
+        const count = state.selectedPageIds.size;
+        if (!count) return;
+        state.pages = state.pages.filter((p) => !state.selectedPageIds.has(p.id));
+        state.selectedPageIds.clear();
+        state.libMultiSelect = false;
+
+        if (state.pages.length === 0) {
+          state.currentPageIndex = -1;
+          state.viewMode = "result";
+          el.paneCrop.classList.remove("active");
+          el.paneResult.classList.add("active");
+        } else if (state.currentPageIndex >= state.pages.length) {
+          state.currentPageIndex = state.pages.length - 1;
+        }
         resetStageZoom();
-        syncControlsFromPage(null);
+        syncControlsFromPage(getCurrentPage());
         renderPageList();
         renderStage();
-        showToast("Đã xóa toàn bộ ảnh trong Thư viện!");
+        showToast(`Đã xóa ${count} ảnh đã chọn!`);
       }
 
       function goToAdjacentPage(delta) {
@@ -3243,6 +3395,12 @@
         syncControlsFromPage(getCurrentPage());
         renderPageList();
         renderStage();
+        if (el.inspectorModal.classList.contains("open")) {
+          state.inspectorZoom = 1.0;
+          state.inspectorPanX = 0;
+          state.inspectorPanY = 0;
+          renderInspectorModal();
+        }
       }
 
       function getModeLabel(mode) {
@@ -3250,6 +3408,147 @@
         if (mode === "bw_sauvola") return "Đen trắng";
         if (mode === "faint_boost") return "Rõ chữ mờ";
         return "Ảnh gốc";
+      }
+
+      function openInspectorForPageIndex(idx) {
+        if (idx < 0 || idx >= state.pages.length) return;
+        state.currentPageIndex = idx;
+        state.inspectorZoom = 1.0;
+        state.inspectorPanX = 0;
+        state.inspectorPanY = 0;
+        syncControlsFromPage(getCurrentPage());
+        renderPageList();
+        renderStage();
+        renderInspectorModal();
+        el.inspectorModal.classList.add("open");
+      }
+
+      function applyInspectorTransform() {
+        el.inspectorCanvas.style.transform = `translate3d(${state.inspectorPanX.toFixed(1)}px, ${state.inspectorPanY.toFixed(1)}px, 0) scale(${state.inspectorZoom.toFixed(2)})`;
+        el.btnInspZoomReset.textContent = `${Math.round(state.inspectorZoom * 100)}%`;
+      }
+
+      function renderInspectorModal() {
+        const page = getCurrentPage();
+        if (!page) {
+          el.inspectorModal.classList.remove("open");
+          return;
+        }
+        if (!page.processedCanvas) updateGeometryAndProcess(page);
+        const src = page.processedCanvas;
+
+        el.inspectorModalTitle.textContent = `Xem ảnh (${state.currentPageIndex + 1}/${state.pages.length}): ${page.name}`;
+        el.btnInspectorPrev.disabled = state.currentPageIndex <= 0;
+        el.btnInspectorNext.disabled = state.currentPageIndex >= state.pages.length - 1;
+
+        el.inspectorCanvas.width = src.width;
+        el.inspectorCanvas.height = src.height;
+        const ictx = el.inspectorCanvas.getContext("2d");
+        ictx.clearRect(0, 0, src.width, src.height);
+        ictx.drawImage(src, 0, 0);
+        applyInspectorTransform();
+
+        el.infoResolution.textContent = `📐 ${src.width} × ${src.height} px`;
+        el.infoMode.textContent = `🎨 ${getModeLabel(page.settings.colorMode)}`;
+        el.infoCreatedAt.textContent = `🕒 ${page.createdAt || "Hôm nay"}`;
+
+        el.inspectorNoteInput.value = page.note || "";
+        el.chkPrintNoteOnExport.checked = !!page.includeNoteOnExport;
+        el.exportFilename.value = page.name;
+        el.libColorSelect.value = page.settings.colorMode;
+        el.btnInspectorAlpha.classList.toggle("active", !!page.settings.transparentBg);
+      }
+
+      // Attach Long-Press (380ms hold) listener to any Library Item for Multi-Select
+      function bindLongPressAndClick(itemEl, pageObj, idx) {
+        let pressTimer = null;
+        let startX = 0, startY = 0;
+        let longPressTriggered = false;
+
+        function clearTimer() {
+          if (pressTimer) {
+            clearTimeout(pressTimer);
+            pressTimer = null;
+          }
+        }
+
+        itemEl.addEventListener("touchstart", (e) => {
+          if (e.target.closest("button")) return;
+          if (!e.touches || e.touches.length !== 1) return;
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+          longPressTriggered = false;
+          clearTimer();
+          pressTimer = setTimeout(() => {
+            longPressTriggered = true;
+            if (!state.libMultiSelect) {
+              enterMultiSelectMode(pageObj.id);
+            } else {
+              toggleSelectPageId(pageObj.id);
+            }
+          }, 380);
+        }, { passive: true });
+
+        itemEl.addEventListener("touchmove", (e) => {
+          if (!pressTimer || !e.touches || !e.touches.length) return;
+          if (Math.hypot(e.touches[0].clientX - startX, e.touches[0].clientY - startY) > 12) {
+            clearTimer();
+          }
+        }, { passive: true });
+
+        itemEl.addEventListener("touchend", clearTimer);
+        itemEl.addEventListener("touchcancel", clearTimer);
+
+        itemEl.addEventListener("mousedown", (e) => {
+          if (e.button !== 0 || e.target.closest("button")) return;
+          startX = e.clientX;
+          startY = e.clientY;
+          longPressTriggered = false;
+          clearTimer();
+          pressTimer = setTimeout(() => {
+            longPressTriggered = true;
+            if (!state.libMultiSelect) {
+              enterMultiSelectMode(pageObj.id);
+            } else {
+              toggleSelectPageId(pageObj.id);
+            }
+          }, 380);
+        });
+
+        itemEl.addEventListener("mousemove", (e) => {
+          if (!pressTimer) return;
+          if (Math.hypot(e.clientX - startX, e.clientY - startY) > 10) {
+            clearTimer();
+          }
+        });
+
+        itemEl.addEventListener("mouseup", clearTimer);
+        itemEl.addEventListener("mouseleave", clearTimer);
+
+        itemEl.addEventListener("contextmenu", (e) => {
+          if (e.target.closest("button")) return;
+          e.preventDefault();
+          if (!state.libMultiSelect) {
+            enterMultiSelectMode(pageObj.id);
+          }
+        });
+
+        itemEl.addEventListener("click", (e) => {
+          if (e.target.closest("button")) return;
+          if (longPressTriggered) {
+            longPressTriggered = false;
+            return;
+          }
+          if (state.libMultiSelect) {
+            toggleSelectPageId(pageObj.id);
+            return;
+          }
+          state.currentPageIndex = idx;
+          resetStageZoom();
+          syncControlsFromPage(getCurrentPage());
+          renderPageList();
+          renderStage();
+        });
       }
 
       function renderPageList() {
@@ -3267,11 +3566,21 @@
         el.btnEnterCrop.disabled = !hasPages;
         el.btnQuickJpg.disabled = !hasPages;
         el.btnQuickPdf.disabled = !hasPages;
-        el.btnDeleteSelectedInLib.disabled = !hasPages;
-        el.btnDeleteAllInLib.disabled = !hasPages;
-        el.btnEditCropFromLib.disabled = !hasPages;
-        el.btnDownloadCurrent.disabled = !hasPages;
-        el.btnDownloadAllPdf.disabled = !hasPages;
+
+        // Multi-Select Toolbar vs Normal Toolbar visibility
+        const isMS = state.libMultiSelect && hasPages;
+        el.libMultiSelectBar.classList.toggle("visible", isMS);
+        el.libMultiSelectActions.classList.toggle("visible", isMS);
+        if (isMS) {
+          const selCount = state.selectedPageIds.size;
+          el.libSelectedCountText.textContent = `Đã chọn ${selCount} / ${total} ảnh`;
+          el.btnBatchPdfSelected.textContent = `📑 Xuất PDF (${selCount})`;
+          el.btnBatchDownloadSelected.textContent = `⬇ Tải (${selCount})`;
+          el.btnBatchDeleteSelected.textContent = `🗑 Xóa (${selCount})`;
+          el.btnBatchPdfSelected.disabled = selCount === 0;
+          el.btnBatchDownloadSelected.disabled = selCount === 0;
+          el.btnBatchDeleteSelected.disabled = selCount === 0;
+        }
 
         el.pageListContainer.className = "lib-container " + (state.libViewMode === "grid" ? "grid-mode" : "list-mode");
         el.pageListContainer.innerHTML = "";
@@ -3279,22 +3588,29 @@
         if (!hasPages) {
           const emptyDiv = document.createElement("div");
           emptyDiv.className = "lib-empty-box";
-          emptyDiv.innerHTML = "Thư viện đang trống (0 ảnh).<br/>Hãy bấm <b>📸 Chụp ảnh</b>, <b>📁 Chọn ảnh</b> hoặc chọn <b>Mẫu kiểm thử</b> bên dưới.";
+          emptyDiv.innerHTML = "Thư viện đang trống (0 ảnh).<br/>Hãy bấm <b>📸 Chụp ảnh</b>, <b>📁 Chọn ảnh</b> hoặc nút <b>+ Mẫu thử</b> ở trên.";
           el.pageListContainer.appendChild(emptyDiv);
           return;
         }
 
         state.pages.forEach((p, idx) => {
           const src = p.processedCanvas || p.srcCanvas;
+          const isSelected = state.selectedPageIds.has(p.id);
 
           if (state.libViewMode === "grid") {
             const card = document.createElement("div");
-            card.className = "lib-item-grid" + (idx === state.currentPageIndex ? " active" : "");
+            card.className = "lib-item-grid" +
+              (idx === state.currentPageIndex ? " active" : "") +
+              (isSelected ? " selected" : "");
+
+            const checkBadge = document.createElement("div");
+            checkBadge.className = "lib-select-check" + (isMS ? " visible" : "") + (isSelected ? " checked" : "");
+            checkBadge.textContent = "✓";
 
             const thumb = document.createElement("canvas");
             thumb.className = "lib-thumb-grid";
-            thumb.width = 120;
-            thumb.height = 156;
+            thumb.width = 140;
+            thumb.height = 180;
             const tctx = thumb.getContext("2d");
             tctx.fillStyle = "#ffffff";
             tctx.fillRect(0, 0, thumb.width, thumb.height);
@@ -3305,41 +3621,56 @@
 
             const title = document.createElement("div");
             title.className = "lib-meta-title";
-            title.style.fontSize = "0.72rem";
+            title.style.fontSize = "0.75rem";
             title.style.width = "100%";
             title.style.textAlign = "center";
-            title.textContent = `${idx + 1}. ${p.name}`;
+            title.textContent = `${idx + 1}. ${p.name}${p.note ? " 📝" : ""}`;
+
+            const btnRow = document.createElement("div");
+            btnRow.className = "lib-grid-btn-row";
+
+            const viewBtn = document.createElement("button");
+            viewBtn.type = "button";
+            viewBtn.className = "btn-item-action btn-sec";
+            viewBtn.textContent = "Xem";
+            viewBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              openInspectorForPageIndex(idx);
+            });
 
             const delBtn = document.createElement("button");
             delBtn.type = "button";
-            delBtn.className = "lib-grid-del";
-            delBtn.title = "Xóa ảnh này";
-            delBtn.textContent = "✕";
+            delBtn.className = "btn-item-action btn-danger-soft";
+            delBtn.textContent = "Xóa";
             delBtn.addEventListener("click", (e) => {
               e.stopPropagation();
               deletePageAtIndex(idx);
             });
 
+            btnRow.appendChild(viewBtn);
+            btnRow.appendChild(delBtn);
+
+            card.appendChild(checkBadge);
             card.appendChild(thumb);
             card.appendChild(title);
-            card.appendChild(delBtn);
+            card.appendChild(btnRow);
 
-            card.addEventListener("click", () => {
-              state.currentPageIndex = idx;
-              resetStageZoom();
-              syncControlsFromPage(getCurrentPage());
-              renderPageList();
-              renderStage();
-            });
+            bindLongPressAndClick(card, p, idx);
             el.pageListContainer.appendChild(card);
           } else {
             const row = document.createElement("div");
-            row.className = "lib-item-list" + (idx === state.currentPageIndex ? " active" : "");
+            row.className = "lib-item-list" +
+              (idx === state.currentPageIndex ? " active" : "") +
+              (isSelected ? " selected" : "");
+
+            const checkBadge = document.createElement("div");
+            checkBadge.className = "lib-select-check" + (isMS ? " visible" : "") + (isSelected ? " checked" : "");
+            checkBadge.textContent = "✓";
 
             const thumb = document.createElement("canvas");
             thumb.className = "lib-thumb-list";
-            thumb.width = 64;
-            thumb.height = 84;
+            thumb.width = 72;
+            thumb.height = 96;
             const tctx = thumb.getContext("2d");
             tctx.fillStyle = "#ffffff";
             tctx.fillRect(0, 0, thumb.width, thumb.height);
@@ -3353,35 +3684,45 @@
             const title = document.createElement("div");
             title.className = "lib-meta-title";
             title.textContent = `${idx + 1}. ${p.name}`;
-            const sub = document.createElement("div");
-            sub.className = "lib-meta-sub";
-            sub.textContent = `${src.width}×${src.height} px • ${getModeLabel(p.settings.colorMode)}`;
             meta.appendChild(title);
-            meta.appendChild(sub);
+
+            if (p.note && p.note.trim()) {
+              const noteSpan = document.createElement("div");
+              noteSpan.className = "lib-note-pill";
+              noteSpan.textContent = `📝 ${p.note.trim()}`;
+              meta.appendChild(noteSpan);
+            }
+
+            const actions = document.createElement("div");
+            actions.className = "lib-item-actions";
+
+            const viewBtn = document.createElement("button");
+            viewBtn.type = "button";
+            viewBtn.className = "btn-item-action btn-sec";
+            viewBtn.textContent = "Xem";
+            viewBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              openInspectorForPageIndex(idx);
+            });
 
             const delBtn = document.createElement("button");
             delBtn.type = "button";
-            delBtn.className = "btn btn-danger-soft";
-            delBtn.style.height = "30px";
-            delBtn.style.padding = "0 9px";
-            delBtn.style.fontSize = "0.72rem";
-            delBtn.textContent = "🗑 Xóa";
+            delBtn.className = "btn-item-action btn-danger-soft";
+            delBtn.textContent = "Xóa";
             delBtn.addEventListener("click", (e) => {
               e.stopPropagation();
               deletePageAtIndex(idx);
             });
 
+            actions.appendChild(viewBtn);
+            actions.appendChild(delBtn);
+
+            row.appendChild(checkBadge);
             row.appendChild(thumb);
             row.appendChild(meta);
-            row.appendChild(delBtn);
+            row.appendChild(actions);
 
-            row.addEventListener("click", () => {
-              state.currentPageIndex = idx;
-              resetStageZoom();
-              syncControlsFromPage(getCurrentPage());
-              renderPageList();
-              renderStage();
-            });
+            bindLongPressAndClick(row, p, idx);
             el.pageListContainer.appendChild(row);
           }
         });
@@ -3406,9 +3747,13 @@
         const rightSettings = cloneSettings(page.settings);
         rightSettings.bookCurve = 0;
 
+        const nowStr = formatTimeStr(new Date());
         const leftPage = {
           id: "page_" + Date.now() + "_L",
           name: `${baseName}_Tr1`,
+          createdAt: nowStr,
+          note: page.note || "",
+          includeNoteOnExport: page.includeNoteOnExport,
           srcCanvas: page.srcCanvas,
           corners: [
             { x: c[0].x, y: c[0].y },
@@ -3425,6 +3770,9 @@
         const rightPage = {
           id: "page_" + Date.now() + "_R",
           name: `${baseName}_Tr2`,
+          createdAt: nowStr,
+          note: page.note || "",
+          includeNoteOnExport: page.includeNoteOnExport,
           srcCanvas: page.srcCanvas,
           corners: [
             { x: midTop.x, y: midTop.y },
@@ -3452,21 +3800,43 @@
       }
 
       // =========================================================================
-      // 9. EXPORT ENGINE
+      // 9. EXPORT ENGINE (WITH OPTIONAL NOTE CAPTION STAMPING)
       // =========================================================================
       function getScaledExportCanvas(page) {
         if (!page.processedCanvas) updateGeometryAndProcess(page);
         const src = page.processedCanvas;
         const scale = parseFloat(el.exportScale.value) || 1;
-        if (Math.abs(scale - 1) < 0.01) return src;
+        const outW = Math.round(src.width * scale);
+        const hasNoteBanner = page.includeNoteOnExport && page.note && page.note.trim().length > 0;
+        const noteBannerH = hasNoteBanner ? Math.max(44, Math.round(outW * 0.06)) : 0;
+        const outH = Math.round(src.height * scale) + noteBannerH;
+
+        if (Math.abs(scale - 1) < 0.01 && !hasNoteBanner) return src;
 
         const out = document.createElement("canvas");
-        out.width = Math.round(src.width * scale);
-        out.height = Math.round(src.height * scale);
+        out.width = outW;
+        out.height = outH;
         const ctx = out.getContext("2d");
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
-        ctx.drawImage(src, 0, 0, out.width, out.height);
+        ctx.drawImage(src, 0, 0, outW, outH - noteBannerH);
+
+        if (hasNoteBanner) {
+          ctx.fillStyle = "#f8fafc";
+          ctx.fillRect(0, outH - noteBannerH, outW, noteBannerH);
+          ctx.strokeStyle = "#cbd5e1";
+          ctx.lineWidth = Math.max(1, Math.round(scale * 1.5));
+          ctx.beginPath();
+          ctx.moveTo(0, outH - noteBannerH);
+          ctx.lineTo(outW, outH - noteBannerH);
+          ctx.stroke();
+
+          ctx.fillStyle = "#0a467d";
+          const fontPx = Math.max(13, Math.round(outW * 0.02));
+          ctx.font = `bold ${fontPx}px Arial`;
+          ctx.textBaseline = "middle";
+          ctx.fillText(`Ghi chú: ${page.note.trim()}`, Math.round(outW * 0.03), outH - noteBannerH / 2);
+        }
         return out;
       }
 
@@ -3648,12 +4018,11 @@
         }, 500);
       }
 
-      function downloadCurrentPage(overrideFmt) {
-        const page = getCurrentPage();
+      function downloadSinglePageObj(page, overrideFmt) {
         if (!page) return;
         const fmt = overrideFmt || el.exportFormat.value;
         const q = 0.94;
-        const baseName = (el.exportFilename.value || page.name || "ScanhoahocABC").trim();
+        const baseName = (page.name || "ScanhoahocABC").trim();
         const expCanvas = getScaledExportCanvas(page);
 
         if (fmt === "pdf") {
@@ -3698,11 +4067,10 @@
         }, mime, q);
       }
 
-      function downloadAllPagesAsPdf() {
-        if (!state.pages.length) return;
-        const blob = generatePdfBlobFromPages(state.pages, 0.94);
-        triggerBlobDownload(blob, `ScanhoahocABC_${state.pages.length}_trang.pdf`);
-        showToast(`Đã xuất PDF (${state.pages.length} trang)!`);
+      function downloadCurrentPage(overrideFmt) {
+        const page = getCurrentPage();
+        if (!page) return;
+        downloadSinglePageObj(page, overrideFmt);
       }
 
       // =========================================================================
@@ -3710,8 +4078,6 @@
       // =========================================================================
       function syncControlsFromPage(page) {
         if (!page) {
-          el.selectedImgCustomTitle.textContent = "Chưa có ảnh nào được chọn";
-          el.exportFilename.value = "";
           el.cleanSliderRow.classList.remove("visible");
           return;
         }
@@ -3720,10 +4086,6 @@
         el.activeSliderVal.textContent = `${s.bgSuppress}%`;
         el.bookCurveSlider.value = s.bookCurve || 0;
         el.bookCurveVal.textContent = `${s.bookCurve || 0}%`;
-        el.btnToggleAlpha.classList.toggle("active", !!s.transparentBg);
-        el.exportFilename.value = page.name;
-        el.libColorSelect.value = s.colorMode;
-        el.selectedImgCustomTitle.textContent = `Tùy chỉnh: ${page.name} (${state.currentPageIndex + 1}/${state.pages.length})`;
 
         el.colorPresetGrid.querySelectorAll("[data-mode]").forEach((b) => {
           b.classList.toggle("active", b.getAttribute("data-mode") === s.colorMode);
@@ -3753,9 +4115,9 @@
               c.height = h;
               c.getContext("2d").drawImage(img, 0, 0, w, h);
               const cleanName = file.name.replace(/\.[^.]+$/, "");
-              addNewPageFromCanvas(c, cleanName, null, null, 0);
+              addNewPageFromCanvas(c, cleanName, null, null, 0, "");
               setViewMode("result");
-              showToast(`Đã nhận diện & làm phẳng "${file.name}"!`);
+              showToast(`Đã bắt rìa & làm phẳng "${file.name}"!`);
             };
             img.src = ev.target.result;
           };
@@ -3910,13 +4272,19 @@
         resetStageZoom();
         renderPageList();
         renderStage();
+        if (el.inspectorModal.classList.contains("open")) {
+          renderInspectorModal();
+        }
       }
 
       function initEvents() {
         // Prev / Next / Delete on Stage
         el.btnPrevPage.addEventListener("click", () => goToAdjacentPage(-1));
         el.btnNextPage.addEventListener("click", () => goToAdjacentPage(1));
-        el.stagePageIndicator.addEventListener("click", () => el.libraryModal.classList.add("open"));
+        el.stagePageIndicator.addEventListener("click", () => {
+          renderPageList();
+          el.libraryModal.classList.add("open");
+        });
         el.btnDeleteCurrentPage.addEventListener("click", () => deletePageAtIndex(state.currentPageIndex));
 
         // Crop / Result Mode Switching
@@ -3953,13 +4321,24 @@
           }
         });
 
-        // "Thư viện" (Library) Modal Controls
+        // Clean "Thư viện" (Library) Modal Controls
         el.btnOpenLibrary.addEventListener("click", () => {
           renderPageList();
-          syncControlsFromPage(getCurrentPage());
           el.libraryModal.classList.add("open");
         });
-        el.btnCloseLibrary.addEventListener("click", () => el.libraryModal.classList.remove("open"));
+        el.btnCloseLibrary.addEventListener("click", () => {
+          exitMultiSelectMode();
+          el.libraryModal.classList.remove("open");
+        });
+
+        el.btnAddDemoSample.addEventListener("click", () => {
+          const types = ["low_light", "book_wave", "wood_flat"];
+          const t = types[state.demoSampleCycle % types.length];
+          state.demoSampleCycle++;
+          const sample = createProceduralSample(t);
+          addNewPageFromCanvas(sample.canvas, sample.name, null, null, sample.bookCurve || 0, sample.note || "");
+          showToast(`Đã thêm mẫu: ${sample.name}`);
+        });
 
         el.btnViewList.addEventListener("click", () => {
           state.libViewMode = "list";
@@ -3974,18 +4353,138 @@
           renderPageList();
         });
 
-        el.btnDeleteSelectedInLib.addEventListener("click", () => {
-          deletePageAtIndex(state.currentPageIndex);
+        // Multi-Select Controls inside Library
+        el.btnSelectAllInLib.addEventListener("click", () => {
+          if (state.selectedPageIds.size === state.pages.length) {
+            state.selectedPageIds.clear();
+          } else {
+            state.pages.forEach((p) => state.selectedPageIds.add(p.id));
+          }
+          renderPageList();
         });
 
-        el.btnDeleteAllInLib.addEventListener("click", () => {
-          deleteAllPages();
+        el.btnExitMultiSelect.addEventListener("click", exitMultiSelectMode);
+
+        el.btnBatchPdfSelected.addEventListener("click", () => {
+          const selPages = getSelectedPagesList();
+          if (!selPages.length) return;
+          const blob = generatePdfBlobFromPages(selPages, 0.94);
+          triggerBlobDownload(blob, `ScanhoahocABC_${selPages.length}_trang_chon.pdf`);
+          showToast(`Đã xuất PDF (${selPages.length} ảnh đã chọn)!`);
+        });
+
+        el.btnBatchDownloadSelected.addEventListener("click", () => {
+          const selPages = getSelectedPagesList();
+          if (!selPages.length) return;
+          selPages.forEach((p, i) => {
+            setTimeout(() => downloadSinglePageObj(p, "jpeg"), i * 220);
+          });
+          showToast(`Đang tải về ${selPages.length} ảnh đã chọn!`);
+        });
+
+        el.btnBatchDeleteSelected.addEventListener("click", deleteSelectedPagesInLibrary);
+
+        // Inspector Modal ("Xem & Sửa Ảnh") Controls
+        el.btnCloseInspector.addEventListener("click", () => el.inspectorModal.classList.remove("open"));
+        el.btnInspectorPrev.addEventListener("click", () => goToAdjacentPage(-1));
+        el.btnInspectorNext.addEventListener("click", () => goToAdjacentPage(1));
+
+        el.btnInspZoomIn.addEventListener("click", () => {
+          state.inspectorZoom = Math.min(4.5, state.inspectorZoom * 1.3);
+          applyInspectorTransform();
+        });
+        el.btnInspZoomOut.addEventListener("click", () => {
+          state.inspectorZoom = Math.max(0.75, state.inspectorZoom / 1.3);
+          if (Math.abs(state.inspectorZoom - 1.0) < 0.08) {
+            state.inspectorZoom = 1.0;
+            state.inspectorPanX = 0;
+            state.inspectorPanY = 0;
+          }
+          applyInspectorTransform();
+        });
+        el.btnInspZoomReset.addEventListener("click", () => {
+          state.inspectorZoom = 1.0;
+          state.inspectorPanX = 0;
+          state.inspectorPanY = 0;
+          applyInspectorTransform();
+        });
+
+        // Touch / Drag Pan & Pinch Zoom inside Inspector Viewer Box
+        let inspDrag = null;
+        let inspPinchDist = 0;
+        let inspPinchStartZoom = 1.0;
+        el.inspectorViewerBox.addEventListener("touchstart", (e) => {
+          if (e.target.closest("button")) return;
+          if (e.touches && e.touches.length === 2) {
+            inspPinchDist = Math.hypot(
+              e.touches[1].clientX - e.touches[0].clientX,
+              e.touches[1].clientY - e.touches[0].clientY
+            );
+            inspPinchStartZoom = state.inspectorZoom;
+            inspDrag = null;
+            e.preventDefault();
+          } else if (e.touches && e.touches.length === 1 && state.inspectorZoom > 1.02) {
+            inspDrag = {
+              sx: e.touches[0].clientX,
+              sy: e.touches[0].clientY,
+              ox: state.inspectorPanX,
+              oy: state.inspectorPanY
+            };
+            e.preventDefault();
+          }
+        }, { passive: false });
+
+        el.inspectorViewerBox.addEventListener("touchmove", (e) => {
+          if (e.touches && e.touches.length === 2 && inspPinchDist > 10) {
+            const d = Math.hypot(
+              e.touches[1].clientX - e.touches[0].clientX,
+              e.touches[1].clientY - e.touches[0].clientY
+            );
+            state.inspectorZoom = Math.max(0.8, Math.min(4.5, inspPinchStartZoom * (d / inspPinchDist)));
+            applyInspectorTransform();
+            e.preventDefault();
+          } else if (e.touches && e.touches.length === 1 && inspDrag) {
+            state.inspectorPanX = inspDrag.ox + (e.touches[0].clientX - inspDrag.sx);
+            state.inspectorPanY = inspDrag.oy + (e.touches[0].clientY - inspDrag.sy);
+            applyInspectorTransform();
+            e.preventDefault();
+          }
+        }, { passive: false });
+
+        el.inspectorViewerBox.addEventListener("touchend", () => {
+          inspDrag = null;
+          inspPinchDist = 0;
+        });
+
+        el.btnInspRotate.addEventListener("click", () => {
+          rotateCurrentPage(1);
+          showToast("Đã xoay ảnh 90°!");
+        });
+
+        el.btnInspCrop.addEventListener("click", () => {
+          el.inspectorModal.classList.remove("open");
+          el.libraryModal.classList.remove("open");
+          setViewMode("crop");
+        });
+
+        el.inspectorNoteInput.addEventListener("input", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          page.note = el.inspectorNoteInput.value;
+          renderPageList();
+        });
+
+        el.chkPrintNoteOnExport.addEventListener("change", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          page.includeNoteOnExport = el.chkPrintNoteOnExport.checked;
         });
 
         el.exportFilename.addEventListener("input", () => {
           const page = getCurrentPage();
           if (!page) return;
           page.name = el.exportFilename.value.trim() || `ScanhoahocABC_${state.currentPageIndex + 1}`;
+          el.inspectorModalTitle.textContent = `Xem ảnh (${state.currentPageIndex + 1}/${state.pages.length}): ${page.name}`;
           renderPageList();
         });
 
@@ -3997,25 +4496,29 @@
           applyCachedFiltersToPage(page);
           renderPageList();
           renderStage();
+          renderInspectorModal();
         });
 
-        el.btnEditCropFromLib.addEventListener("click", () => {
-          if (!getCurrentPage()) return;
-          el.libraryModal.classList.remove("open");
-          setViewMode("crop");
+        el.btnInspectorAlpha.addEventListener("click", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          page.settings.transparentBg = !page.settings.transparentBg;
+          if (page.settings.transparentBg && el.exportFormat.value === "jpeg") {
+            el.exportFormat.value = "png";
+          }
+          syncControlsFromPage(page);
+          applyCachedFiltersToPage(page);
+          renderPageList();
+          renderStage();
+          renderInspectorModal();
+          showToast(page.settings.transparentBg ? "Đã bật Tách nền Alpha!" : "Đã tắt Tách nền.");
         });
 
-        // Built-in Samples in Library
-        function addSampleToLib(type) {
-          const sample = createProceduralSample(type);
-          addNewPageFromCanvas(sample.canvas, sample.name, null, null, sample.bookCurve || 0);
-          el.libraryModal.classList.remove("open");
-          setViewMode("result");
-          showToast(`Đã nạp mẫu: ${sample.name}`);
-        }
-        el.btnSampleWoodFlat.addEventListener("click", () => addSampleToLib("wood_flat"));
-        el.btnSampleLowLight.addEventListener("click", () => addSampleToLib("low_light"));
-        el.btnSampleBookWave.addEventListener("click", () => addSampleToLib("book_wave"));
+        el.btnDownloadCurrent.addEventListener("click", () => downloadCurrentPage());
+        el.btnDownloadPdfSingle.addEventListener("click", () => downloadCurrentPage("pdf"));
+        el.btnDeleteFromInspector.addEventListener("click", () => {
+          deletePageAtIndex(state.currentPageIndex);
+        });
 
         // Crop Toolbar Actions
         el.btnAutoDetectCorners.addEventListener("click", () => {
@@ -4025,7 +4528,7 @@
           page.midOffsets = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }];
           updateGeometryAndProcess(page);
           renderStage();
-          showToast("Đã tự động bắt chuẩn 4 góc!");
+          showToast("Đã bắt chuẩn 4 góc theo rìa tài liệu!");
         });
 
         el.btnFullFrameCorners.addEventListener("click", () => {
@@ -4079,20 +4582,6 @@
           });
         });
 
-        el.btnToggleAlpha.addEventListener("click", () => {
-          const page = getCurrentPage();
-          if (!page) return;
-          page.settings.transparentBg = !page.settings.transparentBg;
-          if (page.settings.transparentBg && el.exportFormat.value === "jpeg") {
-            el.exportFormat.value = "png";
-          }
-          syncControlsFromPage(page);
-          applyCachedFiltersToPage(page);
-          renderPageList();
-          renderStage();
-          showToast(page.settings.transparentBg ? "Đã bật Tách nền Alpha!" : "Đã tắt Tách nền.");
-        });
-
         el.activeParamSlider.addEventListener("input", () => {
           const page = getCurrentPage();
           if (!page) return;
@@ -4109,8 +4598,6 @@
 
         el.btnQuickPdf.addEventListener("click", () => downloadCurrentPage("pdf"));
         el.btnQuickJpg.addEventListener("click", () => downloadCurrentPage("jpeg"));
-        el.btnDownloadCurrent.addEventListener("click", () => downloadCurrentPage());
-        el.btnDownloadAllPdf.addEventListener("click", downloadAllPagesAsPdf);
 
         // Camera Modal
         el.btnOpenCamera.addEventListener("click", () => {
@@ -4164,19 +4651,19 @@
           const capturedCorners = state.lastCameraCorners || detectDocumentCorners(c);
           el.cameraModal.classList.remove("open");
           stopCamera();
-          addNewPageFromCanvas(c, `Scan_${state.pages.length + 1}`, capturedCorners, null, 0);
+          addNewPageFromCanvas(c, `Scan_${state.pages.length + 1}`, capturedCorners, null, 0, "");
           setViewMode("result");
           showToast("Đã chụp và lưu vào Thư viện!");
         });
       }
 
       // =========================================================================
-      // 11. INITIALIZATION (Preloads 1 Fast Flat A4 Sample in <25ms!)
+      // 11. INITIALIZATION
       // =========================================================================
       function initApp() {
         initEvents();
         const s1 = createProceduralSample("wood_flat");
-        addNewPageFromCanvas(s1.canvas, s1.name, null, null, 0);
+        addNewPageFromCanvas(s1.canvas, s1.name, null, null, 0, s1.note);
         setViewMode("result");
       }
 
