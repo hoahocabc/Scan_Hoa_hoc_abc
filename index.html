@@ -4480,7 +4480,7 @@
         // STAGE 2: FULL-RESOLUTION 1D-CLOSED NORMAL PROFILE VITERBI + ALL-RIM CONTRAST & 5-SINE CURVED RIM
         const idxPairs = [[3, 0], [0, 1], [1, 2], [2, 3]];
         const nProf = 55;
-        const searchRad = Math.min(32, Math.max(16, Math.round(Math.min(origW, origH) * 0.032)));
+        const searchRad = Math.min(72, Math.max(24, Math.round(Math.min(origW, origH) * 0.068)));
         const M = searchRad + 8;
         const profLen = 2 * M + 1;
         const profL = new Float32Array(profLen);
@@ -4589,7 +4589,7 @@
 
             const dHalf = 2.0 * Math.abs(t - 0.5);
             const endWeight = dHalf * dHalf;
-            const priorWeight = 0.005 + 0.014 * endWeight;
+            const priorWeight = 0.002 + 0.018 * endWeight;
 
             for (let si = 0; si < nStates; si++) {
               const s = si - searchRad;
@@ -4640,8 +4640,8 @@
               const darkObjS2 = (allowDarkObjectPolarity && L_out - L_in > 35.0 && Math.abs(surfL[cIdx + 6] - surfL[cIdx + 2]) < 8.0) ? (L_out - L_in) * 0.85 : 0.0;
               const macDL = Math.max(0.0, (L_in - L_out) * illumEqS2, flatRimStepS2 * 0.90 * illumEqS2, darkObjS2);
               let wJumpGuard = 1.0;
-              if (hasNearPopRim && Math.abs(s) > 7 && macDC > 35.0) {
-                wJumpGuard = 0.05;
+              if (hasNearPopRim && Math.abs(s) > 7 && (macDC > 28.0 || Math.abs(s) > 18)) {
+                wJumpGuard = 0.01;
               }
 
               const gate = (macDL + 0.62 * macDC * illumEqS2 + 2.8 * wwCrease) * (isInkS2 ? 0.0 : wJumpGuard);
@@ -4671,7 +4671,7 @@
 
           for (let si = 0; si < nStates; si++) {
             const s = si - searchRad;
-            dpMat[si] = scoreMat[si] - 0.12 * s * s;
+            dpMat[si] = scoreMat[si] - 0.05 * s * s;
             prevMat[si] = si;
           }
 
@@ -4679,14 +4679,14 @@
             const currOff = i * nStates;
             const prevOff = (i - 1) * nStates;
             for (let si = 0; si < nStates; si++) {
-              const spMin = si - 3 < 0 ? 0 : si - 3;
-              const spMax = si + 3 >= nStates ? nStates - 1 : si + 3;
+              const spMin = si - 5 < 0 ? 0 : si - 5;
+              const spMax = si + 5 >= nStates ? nStates - 1 : si + 5;
               let bestPrev = si;
               let bestVal = -1e12;
               for (let sp = spMin; sp <= spMax; sp++) {
                 const ds = si - sp;
                 const absDs = ds < 0 ? -ds : ds;
-                const cand = dpMat[prevOff + sp] - (absDs + 0.5 * ds * ds);
+                const cand = dpMat[prevOff + sp] - (0.45 * absDs + 0.18 * ds * ds);
                 if (cand > bestVal) {
                   bestVal = cand;
                   bestPrev = sp;
@@ -4702,7 +4702,7 @@
           let bestEndScore = -1e12;
           for (let si = 0; si < nStates; si++) {
             const s = si - searchRad;
-            const v = dpMat[lastOff + si] - 0.12 * s * s;
+            const v = dpMat[lastOff + si] - 0.05 * s * s;
             if (v > bestEndScore) {
               bestEndScore = v;
               bestEndSi = si;
@@ -4747,7 +4747,7 @@
           const pt = intersectAbc(chordLines[pair[0]], chordLines[pair[1]]);
           if (pt) {
             const dx = pt.x - stage1Corners[k].x, dy = pt.y - stage1Corners[k].y;
-            if (dx * dx + dy * dy < 1296.0) {
+            if (dx * dx + dy * dy < 4096.0) {
               return {
                 x: Math.max(0, Math.min(origW, Math.round(pt.x))),
                 y: Math.max(0, Math.min(origH, Math.round(pt.y)))
@@ -4777,7 +4777,7 @@
 
           const A5 = Array.from({ length: 5 }, (_, r) => {
             const row = new Float64Array(5);
-            row[r] = [0.15, 0.25, 0.35, 0.60, 0.90][r];
+            row[r] = [0.06, 0.12, 0.22, 0.40, 0.70][r];
             return row;
           });
           const b5 = new Float64Array(5);
@@ -4825,9 +4825,9 @@
           const maeLin = absLinSum / (wSum || 1.0);
           const maeCurve = absCurveSum / (wSum || 1.0);
 
-          if (maxArch > 2.2 && maeCurve < maeLin * 0.72) {
+          if (maxArch > 1.8 && maeCurve < maeLin * 0.78) {
             anyEdgeCurved = true;
-            const nSub = NUM_EDGE_SUBPOINTS || 15;
+            const nSub = NUM_EDGE_SUBPOINTS || 5;
             for (let m = 0; m < nSub; m++) {
               const t = (m + 1) / (nSub + 1);
               const off =
@@ -4836,7 +4836,10 @@
                 coeffs[2] * Math.sin(3.0 * pi * t) +
                 coeffs[3] * Math.sin(4.0 * pi * t) +
                 coeffs[4] * Math.sin(5.0 * pi * t);
-              detectedEdgeOffsets[k][m] = Math.round(off * 10.0) / 10.0;
+              detectedEdgeOffsets[k][m] = {
+                x: Math.round(off * nx * 10.0) / 10.0,
+                y: Math.round(off * ny * 10.0) / 10.0
+              };
             }
           }
         }
@@ -5703,9 +5706,11 @@
       }
 
       function computeFinePaperSurfaceGridFromSub(sub, sw, sh, tmp1, tmp2, dst, colSum) {
-        const dil = sepMaxFilter(sub, sw, sh, 2);
-        const clo = sepMinFilter(dil, sw, sh, 1);
-        fastBoxBlurInPlace(clo, sw, sh, 2, tmp1, dst, colSum);
+        // Balanced morphological closing (dilate rad=3 + erode rad=3) bridges bold text up to 24px wide
+        // WITHOUT inflating the paper envelope above true mean paper brightness!
+        const dil = sepMaxFilter(sub, sw, sh, 3);
+        const clo = sepMinFilter(dil, sw, sh, 3);
+        fastBoxBlurInPlace(clo, sw, sh, 3, tmp1, dst, colSum);
       }
 
       function buildPageFilterCache(dewarpedCanvas) {
@@ -5723,17 +5728,56 @@
         const subG = new Float32Array(nSub);
         const subB = new Float32Array(nSub);
 
-        // Downsample directly from rawData (eliminates 4 full-res Float32Array allocations!)
+        // 75th-percentile 2x2-subblock pooling inside each 4x4 cell:
+        // Averages out +15 camera sensor noise spikes while rejecting dark text strokes!
         for (let sy = 0; sy < sh; sy++) {
-          const rOff = (sy * scale) * w;
+          const y0 = sy * scale;
+          const y1 = y0 + 1 < h ? y0 + 1 : h - 1;
+          const y2 = y0 + 2 < h ? y0 + 2 : h - 1;
+          const y3 = y0 + 3 < h ? y0 + 3 : h - 1;
+          const r0 = y0 * w, r1 = y1 * w, r2 = y2 * w, r3 = y3 * w;
           const sOff = sy * sw;
           for (let sx = 0; sx < sw; sx++) {
-            const idx4 = (rOff + sx * scale) << 2;
-            const r = rawData[idx4], g = rawData[idx4 + 1], b = rawData[idx4 + 2];
-            subR[sOff + sx] = r;
-            subG[sOff + sx] = g;
-            subB[sOff + sx] = b;
-            subL[sOff + sx] = 0.299 * r + 0.587 * g + 0.114 * b;
+            const x0 = sx * scale;
+            const x1 = x0 + 1 < w ? x0 + 1 : w - 1;
+            const x2 = x0 + 2 < w ? x0 + 2 : w - 1;
+            const x3 = x0 + 3 < w ? x0 + 3 : w - 1;
+
+            // Compute 4 quadrant 2x2 averages
+            const a00 = (r0 + x0) << 2, a01 = (r0 + x1) << 2, a10 = (r1 + x0) << 2, a11 = (r1 + x1) << 2;
+            const q0R = (rawData[a00] + rawData[a01] + rawData[a10] + rawData[a11]) * 0.25;
+            const q0G = (rawData[a00 + 1] + rawData[a01 + 1] + rawData[a10 + 1] + rawData[a11 + 1]) * 0.25;
+            const q0B = (rawData[a00 + 2] + rawData[a01 + 2] + rawData[a10 + 2] + rawData[a11 + 2]) * 0.25;
+            const q0L = 0.299 * q0R + 0.587 * q0G + 0.114 * q0B;
+
+            const b00 = (r0 + x2) << 2, b01 = (r0 + x3) << 2, b10 = (r1 + x2) << 2, b11 = (r1 + x3) << 2;
+            const q1R = (rawData[b00] + rawData[b01] + rawData[b10] + rawData[b11]) * 0.25;
+            const q1G = (rawData[b00 + 1] + rawData[b01 + 1] + rawData[b10 + 1] + rawData[b11 + 1]) * 0.25;
+            const q1B = (rawData[b00 + 2] + rawData[b01 + 2] + rawData[b10 + 2] + rawData[b11 + 2]) * 0.25;
+            const q1L = 0.299 * q1R + 0.587 * q1G + 0.114 * q1B;
+
+            const c00 = (r2 + x0) << 2, c01 = (r2 + x1) << 2, c10 = (r3 + x0) << 2, c11 = (r3 + x1) << 2;
+            const q2R = (rawData[c00] + rawData[c01] + rawData[c10] + rawData[c11]) * 0.25;
+            const q2G = (rawData[c00 + 1] + rawData[c01 + 1] + rawData[c10 + 1] + rawData[c11 + 1]) * 0.25;
+            const q2B = (rawData[c00 + 2] + rawData[c01 + 2] + rawData[c10 + 2] + rawData[c11 + 2]) * 0.25;
+            const q2L = 0.299 * q2R + 0.587 * q2G + 0.114 * q2B;
+
+            const d00 = (r2 + x2) << 2, d01 = (r2 + x3) << 2, d10 = (r3 + x2) << 2, d11 = (r3 + x3) << 2;
+            const q3R = (rawData[d00] + rawData[d01] + rawData[d10] + rawData[d11]) * 0.25;
+            const q3G = (rawData[d00 + 1] + rawData[d01 + 1] + rawData[d10 + 1] + rawData[d11 + 1]) * 0.25;
+            const q3B = (rawData[d00 + 2] + rawData[d01 + 2] + rawData[d10 + 2] + rawData[d11 + 2]) * 0.25;
+            const q3L = 0.299 * q3R + 0.587 * q3G + 0.114 * q3B;
+
+            // Pick 2nd brightest quadrant (75th percentile — immune to both dark strokes & bright noise spikes!)
+            let max1 = q0L, max2 = -1.0, idx1 = 0, idx2 = 0;
+            if (q1L > max1) { max2 = max1; idx2 = idx1; max1 = q1L; idx1 = 1; } else { max2 = q1L; idx2 = 1; }
+            if (q2L > max1) { max2 = max1; idx2 = idx1; max1 = q2L; idx1 = 2; } else if (q2L > max2) { max2 = q2L; idx2 = 2; }
+            if (q3L > max1) { max2 = max1; idx2 = idx1; max1 = q3L; idx1 = 3; } else if (q3L > max2) { max2 = q3L; idx2 = 3; }
+
+            if (idx2 === 0) { subR[sOff + sx] = q0R; subG[sOff + sx] = q0G; subB[sOff + sx] = q0B; subL[sOff + sx] = q0L; }
+            else if (idx2 === 1) { subR[sOff + sx] = q1R; subG[sOff + sx] = q1G; subB[sOff + sx] = q1B; subL[sOff + sx] = q1L; }
+            else if (idx2 === 2) { subR[sOff + sx] = q2R; subG[sOff + sx] = q2G; subB[sOff + sx] = q2B; subL[sOff + sx] = q2L; }
+            else { subR[sOff + sx] = q3R; subG[sOff + sx] = q3G; subB[sOff + sx] = q3B; subL[sOff + sx] = q3L; }
           }
         }
 
@@ -5768,7 +5812,7 @@
           dxArr[x] = cgx - x0;
         }
 
-        // Single-pass shared bilinear envelope evaluation across all 4 channels (eliminates 3.6M function calls!)
+        // Single-pass shared bilinear envelope evaluation across all 4 channels
         for (let y = 0; y < h; y++) {
           const gy = y * invScale;
           const cgy = gy > maxGy ? maxGy : gy;
@@ -5816,8 +5860,11 @@
           }
         }
 
+        // 2-pass rad=3 max filter (effective 13x13 / ±6px halo-guard zone) covers full JPEG & lens halos around text!
         const dMaxLocal = new Uint8Array(nPixels);
         const tmpMax = new Float32Array(nPixels);
+        fastMaxRad3ToU8(dL, w, h, tmpMax, dMaxLocal);
+        for (let i = 0; i < nPixels; i++) dL[i] = dMaxLocal[i];
         fastMaxRad3ToU8(dL, w, h, tmpMax, dMaxLocal);
 
         return {
@@ -5951,13 +5998,13 @@
 
         let baseFloor, haloRatio, gain;
         if (mode === "faint_boost") {
-          baseFloor = 11.0 + cleanAmt * 16.0;
-          haloRatio = 0.22 + cleanAmt * 0.14;
-          gain = 1.65 + contrastAmt * 1.45;
-        } else {
-          baseFloor = 15.0 + cleanAmt * 26.0;
+          baseFloor = 14.0 + cleanAmt * 18.0;
           haloRatio = 0.28 + cleanAmt * 0.16;
-          gain = 1.40 + contrastAmt * 1.25;
+          gain = 1.75 + contrastAmt * 1.50;
+        } else {
+          baseFloor = 18.0 + cleanAmt * 28.0;
+          haloRatio = 0.32 + cleanAmt * 0.18;
+          gain = 1.50 + contrastAmt * 1.30;
         }
 
         for (let i = 0; i < nPixels; i++) {
@@ -5971,20 +6018,30 @@
           const minC = nr < ng ? (nr < nb ? nr : nb) : (ng < nb ? ng : nb);
           const chroma = maxC - minC;
 
+          // Halo-free white-point floor: eliminates gray rings/clouds around dark text strokes
+          // while preserving colorful ink (red/blue pen, stamps, highlighter) via chroma relief
           const adaptiveFloor = Math.max(baseFloor, dMaxLocal[i] * haloRatio);
-          const effFloor = Math.max(3.0, adaptiveFloor - chroma * 0.35);
+          const effFloor = Math.max(4.0, adaptiveFloor - chroma * 0.45);
+          const lowEdge = effFloor * 0.85;
 
-          let smoothGain = 0.0;
-          const lowEdge = effFloor * 0.80;
-          if (dL > lowEdge) {
-            const bandW = Math.max(2.0, effFloor * 0.35);
-            const t = Math.min(1.0, (dL - lowEdge) / bandW);
-            smoothGain = t * t * (3.0 - 2.0 * t) * gain;
+          let r, g, b;
+          if (dL <= lowEdge && chroma < 14) {
+            // Pure white paper background (zero gray halo around text!)
+            const wv = bShift < 0 ? Math.max(0, 255 + bShift) : 255;
+            r = wv; g = wv; b = wv;
+          } else {
+            const bandW = Math.max(6.0, effFloor * 0.55);
+            const effSignal = Math.max(dL, chroma * 0.72);
+            const t = Math.min(1.0, Math.max(0.0, (effSignal - lowEdge) / bandW));
+            const sStep = t * t * (3.0 - 2.0 * t);
+            // Subtract the neutral paper floor from gray depth so pixels near lowEdge ramp smoothly from 255 (pure white)
+            const neutralScale = dL > 0.5 ? Math.max(0.0, (dL - lowEdge * (1.0 - 0.35 * sStep)) / dL) : 0.0;
+            const effGain = sStep * gain * Math.max(neutralScale, chroma > 18 ? 0.85 : 0.0);
+
+            r = Math.min(255, Math.max(0, Math.round(255.0 - (255 - nr) * effGain + bShift)));
+            g = Math.min(255, Math.max(0, Math.round(255.0 - (255 - ng) * effGain + bShift)));
+            b = Math.min(255, Math.max(0, Math.round(255.0 - (255 - nb) * effGain + bShift)));
           }
-
-          const r = Math.min(255, Math.max(0, Math.round(255.0 - (255 - nr) * smoothGain + bShift)));
-          const g = Math.min(255, Math.max(0, Math.round(255.0 - (255 - ng) * smoothGain + bShift)));
-          const b = Math.min(255, Math.max(0, Math.round(255.0 - (255 - nb) * smoothGain + bShift)));
 
           const idx = i * 4;
           data[idx] = r;
