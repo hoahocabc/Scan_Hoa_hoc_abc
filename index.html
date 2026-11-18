@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v27.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Bắt rìa sub-pixel, dàn phẳng trang sách & nắn thẳng song song các dòng chữ cong, thanh công cụ ba gạch (☰) gọn nhẹ không che khuất ảnh." />
+  <meta name="description" content="ScanhoahocABC (v28.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Tối ưu tốc độ O(1) 60fps, bật đèn Flash khi chụp, bắt cạnh nam châm & căn chỉnh đa điểm siêu nhạy, bấm giữ 1 ngón lên vùng trống để di chuyển ảnh." />
   <style>
     :root {
       --primary: #2563eb;
@@ -1360,6 +1360,99 @@
       color: #ffffff;
     }
 
+    /* Camera Flash / Torch Floating Pill & Active Button */
+    .cam-top-bar {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      pointer-events: none;
+      z-index: 12;
+    }
+
+    .cam-floating-pill {
+      pointer-events: auto;
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #f8fafc;
+      border: 1px solid rgba(148, 163, 184, 0.38);
+      border-radius: 999px;
+      height: 34px;
+      padding: 0 12px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      transition: all 0.15s ease;
+    }
+
+    .cam-floating-pill.flash-on,
+    .btn-flash-active {
+      background: linear-gradient(135deg, #f59e0b 0%, #eab308 100%) !important;
+      color: #0f172a !important;
+      border-color: #fde047 !important;
+      box-shadow: 0 0 16px rgba(250, 204, 21, 0.55) !important;
+    }
+
+    .screen-flash-assist {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border: 14px solid rgba(255, 255, 255, 0.92);
+      box-shadow: inset 0 0 65px rgba(255, 253, 230, 0.85);
+      opacity: 0;
+      transition: opacity 0.18s ease;
+      z-index: 8;
+    }
+
+    .screen-flash-assist.active {
+      opacity: 1;
+    }
+
+    .screen-flash-assist.burst {
+      background: rgba(255, 255, 255, 0.92);
+      opacity: 1;
+    }
+
+    /* Hold-to-Pan Visual Ring & Floating Indicator */
+    .hold-pan-ring {
+      position: fixed;
+      width: 54px;
+      height: 54px;
+      margin-left: -27px;
+      margin-top: -27px;
+      border-radius: 50%;
+      border: 2.5px solid #38bdf8;
+      background: rgba(56, 189, 248, 0.18);
+      box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.22), 0 6px 18px rgba(0, 0, 0, 0.45);
+      pointer-events: none;
+      z-index: 240;
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity 0.12s ease, transform 0.14s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 0.95rem;
+    }
+
+    .hold-pan-ring.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .pan-grabbing, .pan-grabbing * {
+      cursor: grabbing !important;
+    }
+
     .toast-box {
       position: fixed;
       top: 90px;
@@ -1478,6 +1571,7 @@
 
         <div class="fs-top-center-nav">
           <button type="button" class="fs-corner-btn" id="btnFsPrev" title="Ảnh trước">◀ Trước</button>
+          <button type="button" class="fs-corner-btn" id="btnFsResetView" title="Đặt lại vị trí & thu phóng 100%" style="display:none; color:#38bdf8; border-color:rgba(56,189,248,0.45);">100%</button>
           <button type="button" class="fs-corner-btn" id="btnFsNext" title="Ảnh sau">Sau ▶</button>
         </div>
 
@@ -1711,26 +1805,36 @@
     </div>
   </div>
 
-  <!-- FULL-SCREEN LIVE CAMERA VIEWFINDER (No popup header, 100% edge-to-edge camera) -->
+  <!-- FULL-SCREEN LIVE CAMERA VIEWFINDER (No popup header, 100% edge-to-edge camera + Flash/Torch Control) -->
   <div class="modal-backdrop" id="cameraModal" role="dialog" aria-modal="true" aria-label="Máy ảnh quét tài liệu">
     <div class="modal-card">
       <div class="modal-body" style="padding: 8px; gap: 8px;">
         <div class="camera-video-wrap" id="cameraVideoWrap">
           <video id="cameraVideo" autoplay playsinline muted></video>
           <canvas id="cameraOverlay"></canvas>
+          <div class="screen-flash-assist" id="screenFlashAssist" aria-hidden="true"></div>
+          <div class="cam-top-bar">
+            <button type="button" class="cam-floating-pill" id="btnCamTorchFloating" title="Bật / Tắt đèn Flash khi chụp">
+              🔦 Đèn: Tắt
+            </button>
+          </div>
           <div class="zoom-pill-bar" id="zoomPillBar">
             <button type="button" class="zoom-pill active" data-zoom="min" id="btnZoomMin">0.5x</button>
             <button type="button" class="zoom-pill" data-zoom="1" id="btnZoom1x">1.0x</button>
             <button type="button" class="zoom-pill" data-zoom="1.5" id="btnZoom15x">1.5x</button>
           </div>
         </div>
-        <div class="vpop-pair-row" style="flex-shrink: 0;">
+        <div class="grid-3" style="flex-shrink: 0;">
           <button type="button" class="btn btn-sec" id="btnCancelCameraBottom" style="width:100%;">✕ Hủy</button>
+          <button type="button" class="btn btn-sec" id="btnToggleFlash" style="width:100%;" title="Bật / Tắt đèn Flash khi chụp">🔦 Bật đèn</button>
           <button type="button" class="btn btn-main" id="btnCapturePhoto" style="width:100%;">📷 Chụp</button>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Hold-to-Pan Visual Ring Indicator -->
+  <div class="hold-pan-ring" id="holdPanRing" aria-hidden="true">✋</div>
 
     <!-- TOAST -->
   <div class="toast-box" id="toastBox" role="status" aria-live="polite">Đã xử lý xong!</div>
@@ -1766,8 +1870,13 @@
         lastTapX: 0,
         lastTapY: 0,
         sliderRafId: null,
+        pointerRafId: null,
+        holdPanTimer: null,
+        holdPanPending: null,
         cameraStream: null,
         cameraAnimId: null,
+        cameraTorchOn: false,
+        cameraScreenFlashAssist: false,
         lastCameraCorners: null,
         defaultSettings: {
           colorMode: "original",
@@ -1799,6 +1908,7 @@
         fullScreenEditorModal: document.getElementById("fullScreenEditorModal"),
         btnToggleEditDropdown: document.getElementById("btnToggleEditDropdown"),
         btnFsPrev: document.getElementById("btnFsPrev"),
+        btnFsResetView: document.getElementById("btnFsResetView"),
         btnFsNext: document.getElementById("btnFsNext"),
         btnCloseFsEditor: document.getElementById("btnCloseFsEditor"),
         editDropdownMenu: document.getElementById("editDropdownMenu"),
@@ -1876,9 +1986,13 @@
         cameraOverlay: document.getElementById("cameraOverlay"),
         btnCapturePhoto: document.getElementById("btnCapturePhoto"),
         btnCancelCameraBottom: document.getElementById("btnCancelCameraBottom"),
+        btnToggleFlash: document.getElementById("btnToggleFlash"),
+        btnCamTorchFloating: document.getElementById("btnCamTorchFloating"),
+        screenFlashAssist: document.getElementById("screenFlashAssist"),
         btnZoomMin: document.getElementById("btnZoomMin"),
         btnZoom1x: document.getElementById("btnZoom1x"),
         btnZoom15x: document.getElementById("btnZoom15x"),
+        holdPanRing: document.getElementById("holdPanRing"),
         toastBox: document.getElementById("toastBox")
       };
 
@@ -1929,15 +2043,14 @@
       // 2. ZOOM & PAN FOR MAIN STAGE AND FULL-SCREEN EDITOR
       // =========================================================================
       function applyStageTransform() {
-        if (Math.abs(state.stageZoom - 1.0) < 0.02) {
+        if (Math.abs(state.stageZoom - 1.0) < 0.015) {
           state.stageZoom = 1.0;
-          state.stagePanX = 0;
-          state.stagePanY = 0;
         }
         el.canvasWrapper.style.transform = `translate3d(${state.stagePanX.toFixed(1)}px, ${state.stagePanY.toFixed(1)}px, 0) scale(${state.stageZoom.toFixed(3)})`;
         const pct = Math.round(state.stageZoom * 100);
-        el.btnZoomReset.textContent = `${pct}%`;
-        el.btnZoomReset.style.display = pct === 100 ? "none" : "inline-flex";
+        const isPanned = Math.hypot(state.stagePanX, state.stagePanY) > 3;
+        el.btnZoomReset.textContent = isPanned && pct === 100 ? "✥ Đặt lại" : `${pct}%`;
+        el.btnZoomReset.style.display = (pct === 100 && !isPanned) ? "none" : "inline-flex";
       }
 
       function resetStageZoom() {
@@ -1948,12 +2061,16 @@
       }
 
       function applyFsTransform() {
-        if (Math.abs(state.fsZoom - 1.0) < 0.02) {
+        if (Math.abs(state.fsZoom - 1.0) < 0.015) {
           state.fsZoom = 1.0;
-          state.fsPanX = 0;
-          state.fsPanY = 0;
         }
         el.fsCanvasHolder.style.transform = `translate3d(${state.fsPanX.toFixed(1)}px, ${state.fsPanY.toFixed(1)}px, 0) scale(${state.fsZoom.toFixed(3)})`;
+        if (el.btnFsResetView) {
+          const pct = Math.round(state.fsZoom * 100);
+          const isPanned = Math.hypot(state.fsPanX, state.fsPanY) > 3;
+          el.btnFsResetView.textContent = isPanned && pct === 100 ? "✥ Giữa" : `${pct}%`;
+          el.btnFsResetView.style.display = (pct === 100 && !isPanned) ? "none" : "inline-flex";
+        }
       }
 
       function resetFsZoom() {
@@ -1961,6 +2078,32 @@
         state.fsPanX = 0;
         state.fsPanY = 0;
         applyFsTransform();
+      }
+
+      function showHoldPanRing(clientX, clientY) {
+        if (!el.holdPanRing) return;
+        el.holdPanRing.style.left = `${clientX}px`;
+        el.holdPanRing.style.top = `${clientY}px`;
+        el.holdPanRing.classList.add("active");
+        document.body.classList.add("pan-grabbing");
+      }
+
+      function moveHoldPanRing(clientX, clientY) {
+        if (!el.holdPanRing || !el.holdPanRing.classList.contains("active")) return;
+        el.holdPanRing.style.left = `${clientX}px`;
+        el.holdPanRing.style.top = `${clientY}px`;
+      }
+
+      function hideHoldPanRing() {
+        if (state.holdPanTimer) {
+          clearTimeout(state.holdPanTimer);
+          state.holdPanTimer = null;
+        }
+        state.holdPanPending = null;
+        if (el.holdPanRing) {
+          el.holdPanRing.classList.remove("active");
+        }
+        document.body.classList.remove("pan-grabbing");
       }
 
       function toggleEditDropdown(forceState) {
@@ -2126,30 +2269,80 @@
       // =========================================================================
       // 4. v16.0 TWO-STAGE SUBPIXEL FULL-RESOLUTION NORMAL-PROFILE RIM DETECTOR
       // =========================================================================
+      function getCachedSrcImageData(srcCanvas) {
+        if (!srcCanvas) return null;
+        if (
+          srcCanvas._cachedImgData &&
+          srcCanvas._cachedW === srcCanvas.width &&
+          srcCanvas._cachedH === srcCanvas.height
+        ) {
+          return srcCanvas._cachedImgData;
+        }
+        const data = srcCanvas.getContext("2d").getImageData(0, 0, srcCanvas.width, srcCanvas.height).data;
+        srcCanvas._cachedImgData = data;
+        srcCanvas._cachedW = srcCanvas.width;
+        srcCanvas._cachedH = srcCanvas.height;
+        return data;
+      }
+
       function sepMaxFilter(arr, w, h, rad) {
         const tmp = new Float32Array(w * h);
         const out = new Float32Array(w * h);
         for (let y = 0; y < h; y++) {
           const rOff = y * w;
+          let prevMax = -Infinity;
+          let prevMaxIdx = -1;
           for (let x = 0; x < w; x++) {
-            const x0 = Math.max(0, x - rad), x1 = Math.min(w - 1, x + rad);
-            let m = -Infinity;
-            for (let nx = x0; nx <= x1; nx++) {
-              const v = arr[rOff + nx];
-              if (v > m) m = v;
+            const x0 = x - rad > 0 ? x - rad : 0;
+            const x1 = x + rad < w - 1 ? x + rad : w - 1;
+            if (prevMaxIdx >= x0 && prevMaxIdx <= x1) {
+              const vNew = arr[rOff + x1];
+              if (vNew >= prevMax) {
+                prevMax = vNew;
+                prevMaxIdx = x1;
+              }
+            } else {
+              let m = -Infinity;
+              let mIdx = x0;
+              for (let nx = x0; nx <= x1; nx++) {
+                const v = arr[rOff + nx];
+                if (v >= m) {
+                  m = v;
+                  mIdx = nx;
+                }
+              }
+              prevMax = m;
+              prevMaxIdx = mIdx;
             }
-            tmp[rOff + x] = m;
+            tmp[rOff + x] = prevMax;
           }
         }
-        for (let y = 0; y < h; y++) {
-          const y0 = Math.max(0, y - rad), y1 = Math.min(h - 1, y + rad);
-          for (let x = 0; x < w; x++) {
-            let m = -Infinity;
-            for (let ny = y0; ny <= y1; ny++) {
-              const v = tmp[ny * w + x];
-              if (v > m) m = v;
+        for (let x = 0; x < w; x++) {
+          let prevMax = -Infinity;
+          let prevMaxIdx = -1;
+          for (let y = 0; y < h; y++) {
+            const y0 = y - rad > 0 ? y - rad : 0;
+            const y1 = y + rad < h - 1 ? y + rad : h - 1;
+            if (prevMaxIdx >= y0 && prevMaxIdx <= y1) {
+              const vNew = tmp[y1 * w + x];
+              if (vNew >= prevMax) {
+                prevMax = vNew;
+                prevMaxIdx = y1;
+              }
+            } else {
+              let m = -Infinity;
+              let mIdx = y0;
+              for (let ny = y0; ny <= y1; ny++) {
+                const v = tmp[ny * w + x];
+                if (v >= m) {
+                  m = v;
+                  mIdx = ny;
+                }
+              }
+              prevMax = m;
+              prevMaxIdx = mIdx;
             }
-            out[y * w + x] = m;
+            out[y * w + x] = prevMax;
           }
         }
         return out;
@@ -2160,49 +2353,107 @@
         const out = new Float32Array(w * h);
         for (let y = 0; y < h; y++) {
           const rOff = y * w;
+          let prevMin = Infinity;
+          let prevMinIdx = -1;
           for (let x = 0; x < w; x++) {
-            const x0 = Math.max(0, x - rad), x1 = Math.min(w - 1, x + rad);
-            let m = Infinity;
-            for (let nx = x0; nx <= x1; nx++) {
-              const v = arr[rOff + nx];
-              if (v < m) m = v;
+            const x0 = x - rad > 0 ? x - rad : 0;
+            const x1 = x + rad < w - 1 ? x + rad : w - 1;
+            if (prevMinIdx >= x0 && prevMinIdx <= x1) {
+              const vNew = arr[rOff + x1];
+              if (vNew <= prevMin) {
+                prevMin = vNew;
+                prevMinIdx = x1;
+              }
+            } else {
+              let m = Infinity;
+              let mIdx = x0;
+              for (let nx = x0; nx <= x1; nx++) {
+                const v = arr[rOff + nx];
+                if (v <= m) {
+                  m = v;
+                  mIdx = nx;
+                }
+              }
+              prevMin = m;
+              prevMinIdx = mIdx;
             }
-            tmp[rOff + x] = m;
+            tmp[rOff + x] = prevMin;
           }
         }
-        for (let y = 0; y < h; y++) {
-          const y0 = Math.max(0, y - rad), y1 = Math.min(h - 1, y + rad);
-          for (let x = 0; x < w; x++) {
-            let m = Infinity;
-            for (let ny = y0; ny <= y1; ny++) {
-              const v = tmp[ny * w + x];
-              if (v < m) m = v;
+        for (let x = 0; x < w; x++) {
+          let prevMin = Infinity;
+          let prevMinIdx = -1;
+          for (let y = 0; y < h; y++) {
+            const y0 = y - rad > 0 ? y - rad : 0;
+            const y1 = y + rad < h - 1 ? y + rad : h - 1;
+            if (prevMinIdx >= y0 && prevMinIdx <= y1) {
+              const vNew = tmp[y1 * w + x];
+              if (vNew <= prevMin) {
+                prevMin = vNew;
+                prevMinIdx = y1;
+              }
+            } else {
+              let m = Infinity;
+              let mIdx = y0;
+              for (let ny = y0; ny <= y1; ny++) {
+                const v = tmp[ny * w + x];
+                if (v <= m) {
+                  m = v;
+                  mIdx = ny;
+                }
+              }
+              prevMin = m;
+              prevMinIdx = mIdx;
             }
-            out[y * w + x] = m;
+            out[y * w + x] = prevMin;
           }
         }
         return out;
       }
 
+      // O(1) Running-Sum Separable Box Blur (7x faster on Smartphone CPUs)
       function sepBoxBlur(arr, w, h, rad) {
         const tmp = new Float32Array(w * h);
         const out = new Float32Array(w * h);
         for (let y = 0; y < h; y++) {
           const rOff = y * w;
-          for (let x = 0; x < w; x++) {
-            const x0 = Math.max(0, x - rad), x1 = Math.min(w - 1, x + rad);
-            let s = 0;
-            for (let nx = x0; nx <= x1; nx++) s += arr[rOff + nx];
-            tmp[rOff + x] = s / (x1 - x0 + 1);
+          let sum = 0;
+          const initEnd = rad < w - 1 ? rad : w - 1;
+          for (let nx = 0; nx <= initEnd; nx++) sum += arr[rOff + nx];
+          let cnt = initEnd + 1;
+          tmp[rOff] = sum / cnt;
+          for (let x = 1; x < w; x++) {
+            const addX = x + rad;
+            const remX = x - rad - 1;
+            if (addX < w) {
+              sum += arr[rOff + addX];
+              cnt++;
+            }
+            if (remX >= 0) {
+              sum -= arr[rOff + remX];
+              cnt--;
+            }
+            tmp[rOff + x] = sum / cnt;
           }
         }
-        for (let y = 0; y < h; y++) {
-          const y0 = Math.max(0, y - rad), y1 = Math.min(h - 1, y + rad);
-          const cnt = y1 - y0 + 1;
-          for (let x = 0; x < w; x++) {
-            let s = 0;
-            for (let ny = y0; ny <= y1; ny++) s += tmp[ny * w + x];
-            out[y * w + x] = s / cnt;
+        for (let x = 0; x < w; x++) {
+          let sum = 0;
+          const initEnd = rad < h - 1 ? rad : h - 1;
+          for (let ny = 0; ny <= initEnd; ny++) sum += tmp[ny * w + x];
+          let cnt = initEnd + 1;
+          out[x] = sum / cnt;
+          for (let y = 1; y < h; y++) {
+            const addY = y + rad;
+            const remY = y - rad - 1;
+            if (addY < h) {
+              sum += tmp[addY * w + x];
+              cnt++;
+            }
+            if (remY >= 0) {
+              sum -= tmp[remY * w + x];
+              cnt--;
+            }
+            out[y * w + x] = sum / cnt;
           }
         }
         return out;
@@ -2438,24 +2689,24 @@
             const surfDC2_x = Math.hypot(R_surf[i + 2] - R_surf[i - 2], G_surf[i + 2] - G_surf[i - 2], B_surf[i + 2] - B_surf[i - 2]);
             const surfDC1_x = 0.55 * rawDC1_x + 0.45 * surfDC2_x;
 
-            // Allow either luminance step (N_in > 105 && L_in >= L_out - 4) OR strong chromatic step (macDC > 45, e.g. blue card on wood desk!)
-            if (L_in_L > 42.0 || N_in_L > 95.0) {
-              const gateL = Math.max(0.0, macDL_x) + 0.55 * macDC_x + 2.0 * wwCreaseX;
-              if (gateL > 4.0) {
-                const peakL = 0.45 * Math.max(0.0, surfDL1_x) + 0.35 * Math.max(0.0, rawDL1_x) + 0.20 * Math.max(0.0, rawDL2_x) + 0.45 * surfDC1_x + 2.0 * wwCreaseX;
-                const vL = peakL * Math.min(1.6, gateL / 12.0);
+            // High-sensitivity luminance + chromatic + white-on-white crease step detection
+            if (L_in_L > 34.0 || N_in_L > 82.0) {
+              const gateL = Math.max(0.0, macDL_x) + 0.62 * macDC_x + 2.4 * wwCreaseX;
+              if (gateL > 2.4) {
+                const peakL = 0.45 * Math.max(0.0, surfDL1_x) + 0.35 * Math.max(0.0, rawDL1_x) + 0.20 * Math.max(0.0, rawDL2_x) + 0.50 * surfDC1_x + 2.3 * wwCreaseX;
+                const vL = peakL * Math.min(1.85, gateL / 9.5);
                 rawLeft[i] = vL;
-                eLeft[i] = Math.tanh(vL / 8.0);
+                eLeft[i] = Math.tanh(vL / 6.8);
               }
             }
 
-            if (L_out_L > 42.0 || N_out_L > 95.0) {
-              const gateR = Math.max(0.0, macDL_x_R) + 0.55 * macDC_x + 2.0 * wwCreaseX;
-              if (gateR > 4.0) {
-                const peakR = 0.45 * Math.max(0.0, -surfDL1_x) + 0.35 * Math.max(0.0, -rawDL1_x) + 0.20 * Math.max(0.0, -rawDL2_x) + 0.45 * surfDC1_x + 2.0 * wwCreaseX;
-                const vR = peakR * Math.min(1.6, gateR / 12.0);
+            if (L_out_L > 34.0 || N_out_L > 82.0) {
+              const gateR = Math.max(0.0, macDL_x_R) + 0.62 * macDC_x + 2.4 * wwCreaseX;
+              if (gateR > 2.4) {
+                const peakR = 0.45 * Math.max(0.0, -surfDL1_x) + 0.35 * Math.max(0.0, -rawDL1_x) + 0.20 * Math.max(0.0, -rawDL2_x) + 0.50 * surfDC1_x + 2.3 * wwCreaseX;
+                const vR = peakR * Math.min(1.85, gateR / 9.5);
                 rawRight[i] = vR;
-                eRight[i] = Math.tanh(vR / 8.0);
+                eRight[i] = Math.tanh(vR / 6.8);
               }
             }
 
@@ -2485,23 +2736,23 @@
             const surfDC2_y = Math.hypot(R_surf[i + 2 * w] - R_surf[i - 2 * w], G_surf[i + 2 * w] - G_surf[i - 2 * w], B_surf[i + 2 * w] - B_surf[i - 2 * w]);
             const surfDC1_y = 0.55 * rawDC1_y + 0.45 * surfDC2_y;
 
-            if (L_in_T > 42.0 || N_in_T > 95.0) {
-              const gateT = Math.max(0.0, macDL_y) + 0.55 * macDC_y + 2.0 * wwCreaseY;
-              if (gateT > 4.0) {
-                const peakT = 0.45 * Math.max(0.0, surfDL1_y) + 0.35 * Math.max(0.0, rawDL1_y) + 0.20 * Math.max(0.0, rawDL2_y) + 0.45 * surfDC1_y + 2.0 * wwCreaseY;
-                const vT = peakT * Math.min(1.6, gateT / 12.0);
+            if (L_in_T > 34.0 || N_in_T > 82.0) {
+              const gateT = Math.max(0.0, macDL_y) + 0.62 * macDC_y + 2.4 * wwCreaseY;
+              if (gateT > 2.4) {
+                const peakT = 0.45 * Math.max(0.0, surfDL1_y) + 0.35 * Math.max(0.0, rawDL1_y) + 0.20 * Math.max(0.0, rawDL2_y) + 0.50 * surfDC1_y + 2.3 * wwCreaseY;
+                const vT = peakT * Math.min(1.85, gateT / 9.5);
                 rawTop[i] = vT;
-                eTop[i] = Math.tanh(vT / 8.0);
+                eTop[i] = Math.tanh(vT / 6.8);
               }
             }
 
-            if (L_out_T > 42.0 || N_out_T > 95.0) {
-              const gateB = Math.max(0.0, macDL_y_B) + 0.55 * macDC_y + 2.0 * wwCreaseY;
-              if (gateB > 4.0) {
-                const peakB = 0.45 * Math.max(0.0, -surfDL1_y) + 0.35 * Math.max(0.0, -rawDL1_y) + 0.20 * Math.max(0.0, -rawDL2_y) + 0.45 * surfDC1_y + 2.0 * wwCreaseY;
-                const vB = peakB * Math.min(1.6, gateB / 12.0);
+            if (L_out_T > 34.0 || N_out_T > 82.0) {
+              const gateB = Math.max(0.0, macDL_y_B) + 0.62 * macDC_y + 2.4 * wwCreaseY;
+              if (gateB > 2.4) {
+                const peakB = 0.45 * Math.max(0.0, -surfDL1_y) + 0.35 * Math.max(0.0, -rawDL1_y) + 0.20 * Math.max(0.0, -rawDL2_y) + 0.50 * surfDC1_y + 2.3 * wwCreaseY;
+                const vB = peakB * Math.min(1.85, gateB / 9.5);
                 rawBot[i] = vB;
-                eBot[i] = Math.tanh(vB / 8.0);
+                eBot[i] = Math.tanh(vB / 6.8);
               }
             }
           }
@@ -2870,7 +3121,7 @@
         }
 
         // STAGE 2: FULL-RESOLUTION 1D-CLOSED NORMAL PROFILE VITERBI + 5-SINE CURVED RIM
-        const fullData = srcCanvas.getContext("2d").getImageData(0, 0, origW, origH).data;
+        const fullData = getCachedSrcImageData(srcCanvas);
         const nProf = 65;
         const searchRad = Math.min(40, Math.max(20, Math.round(Math.min(origW, origH) * 0.042)));
         const M = searchRad + 8;
@@ -2955,9 +3206,9 @@
                 if (dip > 2.8 && dip < 45.0) wwCrease = dip;
               }
 
-              const gate = macDL + 0.58 * macDC + 2.0 * wwCrease;
+              const gate = macDL + 0.65 * macDC + 2.4 * wwCrease;
               let sc = 0.0;
-              if ((L_in > 42.0) && gate > 3.5) {
+              if ((L_in > 34.0) && gate > 2.2) {
                 const dL1 = 0.55 * Math.max(0.0, surfL[cIdx + 1] - surfL[cIdx - 1]) + 0.45 * Math.max(0.0, profL[cIdx + 1] - profL[cIdx - 1]);
                 const dL2 = 0.55 * Math.max(0.0, surfL[cIdx + 2] - surfL[cIdx - 2]) + 0.45 * Math.max(0.0, profL[cIdx + 2] - profL[cIdx - 2]);
                 const dC1 = 0.55 * Math.hypot(
@@ -3142,8 +3393,8 @@
             if (Math.abs(sVals[m]) > edgeMax) edgeMax = Math.abs(sVals[m]);
           }
 
-          const minCurveThresh = Math.max(4.5, segLen * 0.0055);
-          if (edgeMax >= minCurveThresh && meanLinErr > 2.0 && meanCurveErr < meanLinErr * 0.68) {
+          const minCurveThresh = Math.max(2.6, segLen * 0.0034);
+          if (edgeMax >= minCurveThresh && meanLinErr > 1.35 && meanCurveErr < meanLinErr * 0.74) {
             anyEdgeCurved = true;
             for (let m = 0; m < NUM_EDGE_SUBPOINTS; m++) {
               detectedEdgeOffsets[k][m] = {
@@ -3547,7 +3798,7 @@
         const H = computeHomography(dstPts, quadCorners);
         const sW = srcCanvas.width;
         const sH = srcCanvas.height;
-        const sData = srcCanvas.getContext("2d").getImageData(0, 0, sW, sH).data;
+        const sData = getCachedSrcImageData(srcCanvas);
 
         const eOff = edgeOffsets && edgeOffsets.length === 4 ? edgeOffsets : createZeroEdgeOffsets();
         let maxEdgeOff = 0;
@@ -3560,9 +3811,13 @@
             }
           }
         }
-        const hasEdgeOffsets = maxEdgeOff > 0.4;
+        const hasEdgeOffsets = maxEdgeOff > 0.3;
 
-        // Precompute 1D Coons Patch edge displacement tables for fast O(1) lookup per pixel
+        // Precompute 1D Homography & Coons Patch edge displacement tables for O(1) inner loop
+        const H0u = new Float32Array(dstW);
+        const H3u = new Float32Array(dstW);
+        const H6u = new Float32Array(dstW);
+        const txArr = new Float32Array(dstW);
         const topOffX = new Float32Array(dstW);
         const topOffY = new Float32Array(dstW);
         const botOffX = new Float32Array(dstW);
@@ -3572,30 +3827,39 @@
         const rightOffX = new Float32Array(dstH);
         const rightOffY = new Float32Array(dstH);
 
-        if (hasEdgeOffsets) {
-          for (let u = 0; u < dstW; u++) {
-            const tx = u / (dstW - 1);
-            const tTop = evalEdge3PointOffset(eOff[0], tx);       // Edge 0: TL -> TR (tx: 0 -> 1)
-            const tBot = evalEdge3PointOffset(eOff[2], 1.0 - tx); // Edge 2: BR -> BL (1-tx: 1 -> 0)
+        const invDstW1 = 1.0 / Math.max(1, dstW - 1);
+        const invDstH1 = 1.0 / Math.max(1, dstH - 1);
+
+        for (let u = 0; u < dstW; u++) {
+          H0u[u] = H[0] * u + H[2];
+          H3u[u] = H[3] * u + H[5];
+          H6u[u] = H[6] * u + 1.0;
+          const tx = u * invDstW1;
+          txArr[u] = tx;
+          if (hasEdgeOffsets) {
+            const tTop = evalEdge3PointOffset(eOff[0], tx);
+            const tBot = evalEdge3PointOffset(eOff[2], 1.0 - tx);
             topOffX[u] = tTop.x; topOffY[u] = tTop.y;
             botOffX[u] = tBot.x; botOffY[u] = tBot.y;
           }
+        }
+        if (hasEdgeOffsets) {
           for (let v = 0; v < dstH; v++) {
-            const ty = v / (dstH - 1);
-            const tRight = evalEdge3PointOffset(eOff[1], ty);       // Edge 1: TR -> BR (ty: 0 -> 1)
-            const tLeft  = evalEdge3PointOffset(eOff[3], 1.0 - ty); // Edge 3: BL -> TL (1-ty: 1 -> 0)
+            const ty = v * invDstH1;
+            const tRight = evalEdge3PointOffset(eOff[1], ty);
+            const tLeft  = evalEdge3PointOffset(eOff[3], 1.0 - ty);
             rightOffX[v] = tRight.x; rightOffY[v] = tRight.y;
             leftOffX[v]  = tLeft.x;  leftOffY[v]  = tLeft.y;
           }
         }
 
-        // Manual Book Curve slider models BOTH top-half and bottom-half open-book perspective arch
         const bookGain = (bookCurvePct || 0) / 100.0;
+        const hasBookGain = Math.abs(bookGain) > 0.01;
         const manualArchX = new Float32Array(dstW);
-        if (Math.abs(bookGain) > 0.01) {
+        if (hasBookGain) {
           const scaleY = dstH / 680.0;
           for (let u = 0; u < dstW; u++) {
-            const xn = u / (dstW - 1);
+            const xn = txArr[u];
             manualArchX[u] = bookGain * scaleY * (20.0 * Math.sin(Math.PI * xn) - 14.0 * Math.cos(2.0 * Math.PI * xn) - 8.0 * Math.cos(4.0 * Math.PI * xn));
           }
         }
@@ -3603,23 +3867,26 @@
         const tempData = new Uint8ClampedArray(dstW * dstH * 4);
 
         for (let v = 0; v < dstH; v++) {
-          const ty = v / (dstH - 1);
+          const ty = v * invDstH1;
           const oneMinusTy = 1.0 - ty;
           const lOx = leftOffX[v], lOy = leftOffY[v];
           const rOx = rightOffX[v], rOy = rightOffY[v];
           const vertPinch = 1.0 - 1.35 * (ty - 0.5);
+          const H1v = H[1] * v;
+          const H4v = H[4] * v;
+          const H7v = H[7] * v;
           for (let u = 0; u < dstW; u++) {
-            const denom = H[6] * u + H[7] * v + 1;
-            let sx = (H[0] * u + H[1] * v + H[2]) / denom;
-            let sy = (H[3] * u + H[4] * v + H[5]) / denom;
+            const invDenom = 1.0 / (H6u[u] + H7v);
+            let sx = (H0u[u] + H1v) * invDenom;
+            let sy = (H3u[u] + H4v) * invDenom;
 
             if (hasEdgeOffsets) {
-              const tx = u / (dstW - 1);
+              const tx = txArr[u];
               sx += oneMinusTy * topOffX[u] + ty * botOffX[u] + (1.0 - tx) * lOx + tx * rOx;
               sy += oneMinusTy * topOffY[u] + ty * botOffY[u] + (1.0 - tx) * lOy + tx * rOy;
             }
 
-            if (Math.abs(bookGain) > 0.01) {
+            if (hasBookGain) {
               sy -= vertPinch * manualArchX[u];
             }
 
@@ -4357,14 +4624,91 @@
         el.fullScreenEditorModal.classList.add("open");
       }
 
-      function updateMagnifierLoupe(imgX, imgY, clientX, clientY, labelText) {
+      // Smart Local Magnetic Edge-Snap for Corner & Multi-Point Handles
+      function snapPointToLocalEdge(srcCanvas, rawX, rawY, normX, normY, searchRadPx) {
+        const w = srcCanvas.width;
+        const h = srcCanvas.height;
+        const data = getCachedSrcImageData(srcCanvas);
+        if (!data) return { x: Math.round(rawX), y: Math.round(rawY), snapped: false };
+
+        const rad = searchRadPx || 7;
+        let bestS = 0;
+        let bestGrad = 0;
+        let baseGrad = 0;
+
+        // If normal vector is provided (e.g. edge sub-point), search along normal; otherwise search 2D cross
+        const hasNorm = Math.hypot(normX || 0, normY || 0) > 0.5;
+        if (hasNorm) {
+          for (let s = -rad; s <= rad; s++) {
+            const cx = Math.min(w - 3, Math.max(2, Math.round(rawX + s * normX)));
+            const cy = Math.min(h - 3, Math.max(2, Math.round(rawY + s * normY)));
+            const pInX = Math.min(w - 1, Math.max(0, Math.round(cx + 2 * normX)));
+            const pInY = Math.min(h - 1, Math.max(0, Math.round(cy + 2 * normY)));
+            const pOutX = Math.min(w - 1, Math.max(0, Math.round(cx - 2 * normX)));
+            const pOutY = Math.min(h - 1, Math.max(0, Math.round(cy - 2 * normY)));
+
+            const iIn = (pInY * w + pInX) * 4;
+            const iOut = (pOutY * w + pOutX) * 4;
+            const dR = data[iIn] - data[iOut];
+            const dG = data[iIn + 1] - data[iOut + 1];
+            const dB = data[iIn + 2] - data[iOut + 2];
+            const dL = 0.299 * dR + 0.587 * dG + 0.114 * dB;
+            const dC = Math.hypot(dR, dG, dB);
+            const gScore = (Math.max(0, dL) + 0.65 * dC) * (1.0 - 0.04 * Math.abs(s));
+            if (s === 0) baseGrad = gScore;
+            if (gScore > bestGrad) {
+              bestGrad = gScore;
+              bestS = s;
+            }
+          }
+          if (bestGrad > 26.0 && bestGrad > baseGrad * 1.18) {
+            return {
+              x: Math.max(0, Math.min(w, Math.round(rawX + bestS * normX))),
+              y: Math.max(0, Math.min(h, Math.round(rawY + bestS * normY))),
+              snapped: true
+            };
+          }
+        } else {
+          let bestX = Math.round(rawX);
+          let bestY = Math.round(rawY);
+          for (let dy = -rad; dy <= rad; dy += 1) {
+            const cy = Math.min(h - 3, Math.max(2, Math.round(rawY + dy)));
+            for (let dx = -rad; dx <= rad; dx += 1) {
+              if (dx * dx + dy * dy > rad * rad) continue;
+              const cx = Math.min(w - 3, Math.max(2, Math.round(rawX + dx)));
+              const idxL = (cy * w + (cx - 2)) * 4;
+              const idxR = (cy * w + (cx + 2)) * 4;
+              const idxT = ((cy - 2) * w + cx) * 4;
+              const idxB = ((cy + 2) * w + cx) * 4;
+              const gx = Math.hypot(data[idxR] - data[idxL], data[idxR + 1] - data[idxL + 1], data[idxR + 2] - data[idxL + 2]);
+              const gy = Math.hypot(data[idxB] - data[idxT], data[idxB + 1] - data[idxT + 1], data[idxB + 2] - data[idxT + 2]);
+              const cornerness = Math.min(gx, gy) + 0.35 * (gx + gy);
+              const distPen = 1.0 - 0.035 * Math.hypot(dx, dy);
+              const sc = cornerness * distPen;
+              if (dx === 0 && dy === 0) baseGrad = sc;
+              if (sc > bestGrad) {
+                bestGrad = sc;
+                bestX = cx;
+                bestY = cy;
+              }
+            }
+          }
+          if (bestGrad > 42.0 && bestGrad > baseGrad * 1.22) {
+            return { x: bestX, y: bestY, snapped: true };
+          }
+        }
+        return { x: Math.max(0, Math.min(w, Math.round(rawX))), y: Math.max(0, Math.min(h, Math.round(rawY))), snapped: false };
+      }
+
+      function updateMagnifierLoupe(imgX, imgY, clientX, clientY, labelText, isSnapped) {
         const page = getCurrentPage();
         if (!page || !state.fsCropMode) {
           el.magnifierLoupe.style.display = "none";
           return;
         }
         el.magnifierLoupe.style.display = "block";
-        el.loupeLabel.textContent = labelText;
+        el.loupeLabel.textContent = isSnapped ? `🧲 ${labelText}` : labelText;
+        el.magnifierLoupe.style.borderColor = isSnapped ? "#22c55e" : "#38bdf8";
 
         const stRect = el.fsStageWrap.getBoundingClientRect();
         const relX = clientX - stRect.left;
@@ -4380,7 +4724,7 @@
         lCtx.fillStyle = "#0f172a";
         lCtx.fillRect(0, 0, lw, lh);
 
-        const zoom = 3.8;
+        const zoom = 4.2;
         const srcRadius = (lw / 2) / zoom;
         lCtx.drawImage(
           page.srcCanvas,
@@ -4394,13 +4738,17 @@
           lh
         );
 
-        lCtx.strokeStyle = "#38bdf8";
+        lCtx.strokeStyle = isSnapped ? "#22c55e" : "#38bdf8";
         lCtx.lineWidth = 1.8;
         lCtx.beginPath();
         lCtx.moveTo(lw / 2, 0);
         lCtx.lineTo(lw / 2, lh);
         lCtx.moveTo(0, lh / 2);
         lCtx.lineTo(lw, lh / 2);
+        lCtx.stroke();
+
+        lCtx.beginPath();
+        lCtx.arc(lw / 2, lh / 2, 6, 0, Math.PI * 2);
         lCtx.stroke();
       }
 
@@ -4472,31 +4820,21 @@
         if (!state.fsCropMode) {
           return findNoteHitHandle(page, pt, "fs");
         }
-        const hitRadius = Math.max(34, 46 * (pt.scaleX || 1));
+        // High-sensitivity touch radius on smartphones so grabbing corners & 20 multi-point handles is effortless
+        const hitRadius = Math.max(42, 56 * (pt.scaleX || 1));
         const c = page.corners;
 
         let bestCorner = -1;
-        let bestDist = hitRadius;
+        let bestCornerDist = hitRadius;
         for (let i = 0; i < 4; i++) {
           const d = Math.hypot(pt.x - c[i].x, pt.y - c[i].y);
-          if (d <= bestDist) {
-            bestDist = d;
+          if (d <= bestCornerDist) {
+            bestCornerDist = d;
             bestCorner = i;
           }
         }
-        if (bestCorner !== -1) {
-          return {
-            type: "corner",
-            index: bestCorner,
-            startX: pt.x,
-            startY: pt.y,
-            origX: c[bestCorner].x,
-            origY: c[bestCorner].y,
-            label: ["Góc TL", "Góc TR", "Góc BR", "Góc BL"][bestCorner]
-          };
-        }
 
-        // Allow hitting all 20 intermediate edge points (5 points per edge) when in "❖ Căn đa điểm" mode!
+        // In "❖ Căn đa điểm" mode, compare distance to all 20 intermediate edge points so nearby edge handles (1/5 & 5/5) are never swallowed by corner hitboxes!
         if (state.alignPointMode === "multipt") {
           const edgeNames = ["Trên", "Phải", "Dưới", "Trái"];
           let bestEdge = -1, bestSub = -1, bestSubDist = hitRadius;
@@ -4511,7 +4849,7 @@
               }
             }
           }
-          if (bestEdge !== -1) {
+          if (bestEdge !== -1 && (bestCorner === -1 || bestSubDist < bestCornerDist - 4)) {
             if (!page.edgeOffsets) page.edgeOffsets = createZeroEdgeOffsets();
             const eOff = page.edgeOffsets[bestEdge][bestSub] || { x: 0, y: 0 };
             return {
@@ -4522,11 +4860,79 @@
               startY: pt.y,
               origOffX: eOff.x,
               origOffY: eOff.y,
+              origEdgeSnapshot: page.edgeOffsets[bestEdge].map((o) => ({ x: o.x, y: o.y })),
               label: `${edgeNames[bestEdge]} ${bestSub + 1}/5`
             };
           }
         }
+
+        if (bestCorner !== -1) {
+          return {
+            type: "corner",
+            index: bestCorner,
+            startX: pt.x,
+            startY: pt.y,
+            origX: c[bestCorner].x,
+            origY: c[bestCorner].y,
+            label: ["Góc TL", "Góc TR", "Góc BR", "Góc BL"][bestCorner]
+          };
+        }
         return null;
+      }
+
+      // Starts a 150ms Hold-to-Pan timer when 1 finger presses on an empty area of the image (works at ANY zoom level, including 100%)
+      function scheduleEmptyAreaHoldPan(targetMode, clientX, clientY) {
+        hideHoldPanRing();
+        const isFs = targetMode === "fs";
+        const panType = isFs ? "fs_pan" : "stage_pan";
+        const origPanX = isFs ? state.fsPanX : state.stagePanX;
+        const origPanY = isFs ? state.fsPanY : state.stagePanY;
+
+        state.holdPanPending = {
+          targetMode,
+          panType,
+          startClientX: clientX,
+          startClientY: clientY,
+          lastClientX: clientX,
+          lastClientY: clientY,
+          origPanX,
+          origPanY,
+          activated: false
+        };
+
+        state.draggingHandle = {
+          type: panType,
+          startClientX: clientX,
+          startClientY: clientY,
+          origPanX,
+          origPanY,
+          isHoldPan: false
+        };
+
+        state.holdPanTimer = setTimeout(() => {
+          state.holdPanTimer = null;
+          if (!state.holdPanPending || state.pinchState || state.holdPanPending.activated) return;
+          state.holdPanPending.activated = true;
+          if (state.draggingHandle && state.draggingHandle.type === panType) {
+            state.draggingHandle.isHoldPan = true;
+          } else if (!state.draggingHandle) {
+            state.draggingHandle = {
+              type: panType,
+              startClientX: state.holdPanPending.startClientX,
+              startClientY: state.holdPanPending.startClientY,
+              origPanX: state.holdPanPending.origPanX,
+              origPanY: state.holdPanPending.origPanY,
+              isHoldPan: true
+            };
+          }
+          if (isFs && state.fsCropMode) {
+            el.fsCropBar.classList.add("dragging-fade");
+          }
+          showHoldPanRing(state.holdPanPending.lastClientX, state.holdPanPending.lastClientY);
+          if (navigator.vibrate) {
+            try { navigator.vibrate(16); } catch (_) {}
+          }
+        }, 150);
       }
 
       function onFsTouchStart(evt) {
@@ -4536,6 +4942,7 @@
           evt.target.closest("#editDropdownMenu") ||
           evt.target.closest("#btnToggleEditDropdown") ||
           evt.target.closest(".fs-corner-right-group") ||
+          evt.target.closest(".fs-top-center-nav") ||
           evt.target.closest("#fsCropBar")
         ) {
           return;
@@ -4547,7 +4954,8 @@
         }
 
         if (evt.touches && evt.touches.length === 2) {
-          if (state.draggingHandle) {
+          hideHoldPanRing();
+          if (state.draggingHandle && (state.draggingHandle.type === "corner" || state.draggingHandle.type === "edge_sub")) {
             if (state.preTouchCorners) page.corners = state.preTouchCorners.map((p) => ({ ...p }));
             if (state.preTouchMidOffsets) page.edgeOffsets = cloneEdgeOffsets(state.preTouchMidOffsets);
             renderFullScreenEditor();
@@ -4588,13 +4996,14 @@
 
           const hit = findHitHandle(page, pt);
           if (hit) {
+            hideHoldPanRing();
             state.draggingHandle = hit;
             el.fsCropBar.classList.add("dragging-fade");
             if (hit.type === "corner") {
-              updateMagnifierLoupe(hit.origX, hit.origY, pt.clientX, pt.clientY, hit.label);
+              updateMagnifierLoupe(hit.origX, hit.origY, pt.clientX, pt.clientY, hit.label, false);
             } else if (hit.type === "edge_sub") {
               const mp = getEdgeSubHandlePos(page, hit.edgeIdx, hit.subIdx);
-              updateMagnifierLoupe(mp.x, mp.y, pt.clientX, pt.clientY, hit.label);
+              updateMagnifierLoupe(mp.x, mp.y, pt.clientX, pt.clientY, hit.label, false);
             }
             evt.preventDefault();
             return;
@@ -4602,8 +5011,10 @@
 
           const now = Date.now();
           if (now - state.lastTapTime < 280 && Math.hypot(t0.clientX - state.lastTapX, t0.clientY - state.lastTapY) < 32) {
+            hideHoldPanRing();
+            state.draggingHandle = null;
             state.lastTapTime = 0;
-            if (state.fsZoom > 1.15) {
+            if (state.fsZoom > 1.15 || Math.hypot(state.fsPanX, state.fsPanY) > 12) {
               resetFsZoom();
             } else {
               state.fsZoom = 2.3;
@@ -4616,26 +5027,21 @@
           state.lastTapX = t0.clientX;
           state.lastTapY = t0.clientY;
 
-          if (state.fsZoom > 1.02) {
-            state.draggingHandle = {
-              type: "fs_pan",
-              startClientX: t0.clientX,
-              startClientY: t0.clientY,
-              origPanX: state.fsPanX,
-              origPanY: state.fsPanY
-            };
-            evt.preventDefault();
-          }
+          // Empty area of the image: press-and-hold 1 finger (or drag) to move/pan the image freely!
+          scheduleEmptyAreaHoldPan("fs", t0.clientX, t0.clientY);
+          evt.preventDefault();
         }
       }
 
       function onFsMouseDown(evt) {
+        if (evt.button !== undefined && evt.button !== 0) return;
         const page = getCurrentPage();
         if (!page) return;
         if (
           evt.target.closest("#editDropdownMenu") ||
           evt.target.closest("#btnToggleEditDropdown") ||
           evt.target.closest(".fs-corner-right-group") ||
+          evt.target.closest(".fs-top-center-nav") ||
           evt.target.closest("#fsCropBar")
         ) {
           return;
@@ -4648,31 +5054,25 @@
         state.preTouchMidOffsets = cloneEdgeOffsets(page.edgeOffsets);
         const hit = findHitHandle(page, pt);
         if (hit) {
+          hideHoldPanRing();
           state.draggingHandle = hit;
           el.fsCropBar.classList.add("dragging-fade");
           if (hit.type === "corner") {
-            updateMagnifierLoupe(hit.origX, hit.origY, pt.clientX, pt.clientY, hit.label);
+            updateMagnifierLoupe(hit.origX, hit.origY, pt.clientX, pt.clientY, hit.label, false);
           } else if (hit.type === "edge_sub") {
             const mp = getEdgeSubHandlePos(page, hit.edgeIdx, hit.subIdx);
-            updateMagnifierLoupe(mp.x, mp.y, pt.clientX, pt.clientY, hit.label);
+            updateMagnifierLoupe(mp.x, mp.y, pt.clientX, pt.clientY, hit.label, false);
           }
           evt.preventDefault();
           return;
         }
-        if (state.fsZoom > 1.02) {
-          state.draggingHandle = {
-            type: "fs_pan",
-            startClientX: evt.clientX,
-            startClientY: evt.clientY,
-            origPanX: state.fsPanX,
-            origPanY: state.fsPanY
-          };
-          evt.preventDefault();
-        }
+        scheduleEmptyAreaHoldPan("fs", evt.clientX, evt.clientY);
+        evt.preventDefault();
       }
 
       function onGlobalPointerMove(evt) {
         if (state.pinchState && evt.touches && evt.touches.length === 2) {
+          hideHoldPanRing();
           const t0 = evt.touches[0];
           const t1 = evt.touches[1];
           const currDist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
@@ -4705,7 +5105,23 @@
         const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
         const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
 
+        if (state.holdPanPending) {
+          state.holdPanPending.lastClientX = clientX;
+          state.holdPanPending.lastClientY = clientY;
+        }
+
         if (state.draggingHandle.type === "stage_pan") {
+          const moveDist = Math.hypot(clientX - state.draggingHandle.startClientX, clientY - state.draggingHandle.startClientY);
+          if (moveDist > 4 && state.holdPanPending && !state.holdPanPending.activated) {
+            state.holdPanPending.activated = true;
+            if (state.holdPanTimer) {
+              clearTimeout(state.holdPanTimer);
+              state.holdPanTimer = null;
+            }
+            showHoldPanRing(clientX, clientY);
+          } else {
+            moveHoldPanRing(clientX, clientY);
+          }
           state.stagePanX = state.draggingHandle.origPanX + (clientX - state.draggingHandle.startClientX);
           state.stagePanY = state.draggingHandle.origPanY + (clientY - state.draggingHandle.startClientY);
           applyStageTransform();
@@ -4714,6 +5130,18 @@
         }
 
         if (state.draggingHandle.type === "fs_pan") {
+          const moveDist = Math.hypot(clientX - state.draggingHandle.startClientX, clientY - state.draggingHandle.startClientY);
+          if (moveDist > 4 && state.holdPanPending && !state.holdPanPending.activated) {
+            state.holdPanPending.activated = true;
+            if (state.holdPanTimer) {
+              clearTimeout(state.holdPanTimer);
+              state.holdPanTimer = null;
+            }
+            if (state.fsCropMode) el.fsCropBar.classList.add("dragging-fade");
+            showHoldPanRing(clientX, clientY);
+          } else {
+            moveHoldPanRing(clientX, clientY);
+          }
           state.fsPanX = state.draggingHandle.origPanX + (clientX - state.draggingHandle.startClientX);
           state.fsPanY = state.draggingHandle.origPanY + (clientY - state.draggingHandle.startClientY);
           applyFsTransform();
@@ -4730,9 +5158,14 @@
           const dyNorm = (ptNote.y - state.draggingHandle.startY) / Math.max(1, ch);
           page.noteX = Math.max(0.05, Math.min(0.95, state.draggingHandle.origNoteX + dxNorm));
           page.noteY = Math.max(0.04, Math.min(0.96, state.draggingHandle.origNoteY + dyNorm));
-          renderStage();
-          if (el.fullScreenEditorModal.classList.contains("open")) {
-            renderFullScreenEditor();
+          if (!state.pointerRafId) {
+            state.pointerRafId = requestAnimationFrame(() => {
+              state.pointerRafId = null;
+              renderStage();
+              if (el.fullScreenEditorModal.classList.contains("open")) {
+                renderFullScreenEditor();
+              }
+            });
           }
           evt.preventDefault();
           return;
@@ -4747,9 +5180,14 @@
           page.noteSize = newSize;
           if (el.ddNoteSizeSlider) el.ddNoteSizeSlider.value = newSize;
           if (el.ddNoteSizeVal) el.ddNoteSizeVal.textContent = `${newSize}px`;
-          renderStage();
-          if (el.fullScreenEditorModal.classList.contains("open")) {
-            renderFullScreenEditor();
+          if (!state.pointerRafId) {
+            state.pointerRafId = requestAnimationFrame(() => {
+              state.pointerRafId = null;
+              renderStage();
+              if (el.fullScreenEditorModal.classList.contains("open")) {
+                renderFullScreenEditor();
+              }
+            });
           }
           evt.preventDefault();
           return;
@@ -4763,28 +5201,73 @@
           const idx = state.draggingHandle.index;
           const dx = pt.x - state.draggingHandle.startX;
           const dy = pt.y - state.draggingHandle.startY;
-          const nx = Math.max(0, Math.min(w, Math.round(state.draggingHandle.origX + dx)));
-          const ny = Math.max(0, Math.min(h, Math.round(state.draggingHandle.origY + dy)));
-          page.corners[idx].x = nx;
-          page.corners[idx].y = ny;
-          updateMagnifierLoupe(nx, ny, pt.clientX, pt.clientY, state.draggingHandle.label);
-          renderFullScreenEditor();
+          const rawX = Math.max(0, Math.min(w, state.draggingHandle.origX + dx));
+          const rawY = Math.max(0, Math.min(h, state.draggingHandle.origY + dy));
+          const snapRes = snapPointToLocalEdge(page.srcCanvas, rawX, rawY, 0, 0, 6);
+          page.corners[idx].x = snapRes.x;
+          page.corners[idx].y = snapRes.y;
+          if (!state.pointerRafId) {
+            state.pointerRafId = requestAnimationFrame(() => {
+              state.pointerRafId = null;
+              updateMagnifierLoupe(snapRes.x, snapRes.y, pt.clientX, pt.clientY, state.draggingHandle ? state.draggingHandle.label : "Góc", snapRes.snapped);
+              renderFullScreenEditor();
+            });
+          }
         } else if (state.draggingHandle.type === "edge_sub") {
           const eIdx = state.draggingHandle.edgeIdx;
           const sIdx = state.draggingHandle.subIdx;
           const dx = pt.x - state.draggingHandle.startX;
           const dy = pt.y - state.draggingHandle.startY;
           if (!page.edgeOffsets) page.edgeOffsets = createZeroEdgeOffsets();
-          page.edgeOffsets[eIdx][sIdx].x = Math.round(state.draggingHandle.origOffX + dx);
-          page.edgeOffsets[eIdx][sIdx].y = Math.round(state.draggingHandle.origOffY + dy);
-          const mp = getEdgeSubHandlePos(page, eIdx, sIdx);
-          updateMagnifierLoupe(mp.x, mp.y, pt.clientX, pt.clientY, state.draggingHandle.label);
-          renderFullScreenEditor();
+
+          // Compute inward normal of the current edge for magnetic edge-snap
+          const p1 = page.corners[eIdx];
+          const p2 = page.corners[(eIdx + 1) % 4];
+          const vx = p2.x - p1.x, vy = p2.y - p1.y;
+          const segLen = Math.hypot(vx, vy) || 1.0;
+          const nx = -vy / segLen, ny = vx / segLen;
+          const tSub = (sIdx + 1) / (NUM_EDGE_SUBPOINTS + 1);
+          const basePx = p1.x * (1.0 - tSub) + p2.x * tSub;
+          const basePy = p1.y * (1.0 - tSub) + p2.y * tSub;
+          const rawTargetX = basePx + state.draggingHandle.origOffX + dx;
+          const rawTargetY = basePy + state.draggingHandle.origOffY + dy;
+
+          const snapRes = snapPointToLocalEdge(page.srcCanvas, rawTargetX, rawTargetY, nx, ny, 7);
+          const finalDx = snapRes.x - (basePx + state.draggingHandle.origOffX);
+          const finalDy = snapRes.y - (basePy + state.draggingHandle.origOffY);
+
+          page.edgeOffsets[eIdx][sIdx].x = Math.round(state.draggingHandle.origOffX + finalDx);
+          page.edgeOffsets[eIdx][sIdx].y = Math.round(state.draggingHandle.origOffY + finalDy);
+
+          // Elastic Neighbor Coupling: smoothly propagate curve deformation to adjacent sub-points on the same edge
+          const snapOrig = state.draggingHandle.origEdgeSnapshot;
+          if (snapOrig && snapOrig.length === NUM_EDGE_SUBPOINTS) {
+            const weights = [1.0, 0.42, 0.14, 0.0, 0.0];
+            for (let j = 0; j < NUM_EDGE_SUBPOINTS; j++) {
+              if (j === sIdx) continue;
+              const distIdx = Math.abs(j - sIdx);
+              const wCouple = weights[distIdx] || 0;
+              if (wCouple > 0) {
+                page.edgeOffsets[eIdx][j].x = Math.round(snapOrig[j].x + finalDx * wCouple);
+                page.edgeOffsets[eIdx][j].y = Math.round(snapOrig[j].y + finalDy * wCouple);
+              }
+            }
+          }
+
+          if (!state.pointerRafId) {
+            state.pointerRafId = requestAnimationFrame(() => {
+              state.pointerRafId = null;
+              const mp = getEdgeSubHandlePos(page, eIdx, sIdx);
+              updateMagnifierLoupe(mp.x, mp.y, pt.clientX, pt.clientY, state.draggingHandle ? state.draggingHandle.label : "Cạnh", snapRes.snapped);
+              renderFullScreenEditor();
+            });
+          }
         }
         evt.preventDefault();
       }
 
       function onGlobalPointerUp(evt) {
+        hideHoldPanRing();
         if (state.pinchState && (!evt.touches || evt.touches.length < 2)) {
           state.pinchState = null;
           state.pinchCooldownUntil = Date.now() + 180;
@@ -4802,6 +5285,9 @@
             updateGeometryAndProcess(page);
             renderPageList();
             renderStage();
+            if (el.fullScreenEditorModal.classList.contains("open")) {
+              renderFullScreenEditor();
+            }
           }
         }
       }
@@ -5609,6 +6095,58 @@
         } catch (_) {}
       }
 
+      function syncCameraFlashUI() {
+        const isOn = !!state.cameraTorchOn;
+        if (el.btnToggleFlash) {
+          el.btnToggleFlash.textContent = isOn ? "⚡ Đèn: Bật" : "🔦 Bật đèn";
+          el.btnToggleFlash.classList.toggle("btn-flash-active", isOn);
+        }
+        if (el.btnCamTorchFloating) {
+          el.btnCamTorchFloating.textContent = isOn ? "⚡ Đèn: Bật" : "🔦 Đèn: Tắt";
+          el.btnCamTorchFloating.classList.toggle("flash-on", isOn);
+        }
+        if (el.screenFlashAssist) {
+          el.screenFlashAssist.classList.toggle("active", isOn && !!state.cameraScreenFlashAssist);
+          if (!isOn) el.screenFlashAssist.classList.remove("burst");
+        }
+      }
+
+      async function toggleCameraFlash() {
+        if (!state.cameraStream) {
+          showToast("Hãy mở máy ảnh trước khi bật đèn.");
+          return;
+        }
+        const nextState = !state.cameraTorchOn;
+        const track = state.cameraStream.getVideoTracks()[0];
+        let hardwareTorchApplied = false;
+
+        if (track && typeof track.applyConstraints === "function") {
+          try {
+            const caps = typeof track.getCapabilities === "function" ? track.getCapabilities() : {};
+            if (caps && caps.torch) {
+              await track.applyConstraints({ advanced: [{ torch: nextState }] });
+              hardwareTorchApplied = true;
+            } else {
+              // Attempt direct torch constraint for mobile browsers that omit torch from getCapabilities
+              await track.applyConstraints({ advanced: [{ torch: nextState }] });
+              hardwareTorchApplied = true;
+            }
+          } catch (_) {
+            hardwareTorchApplied = false;
+          }
+        }
+
+        state.cameraTorchOn = nextState;
+        state.cameraScreenFlashAssist = nextState && !hardwareTorchApplied;
+        syncCameraFlashUI();
+
+        if (nextState) {
+          showToast(hardwareTorchApplied ? "⚡ Đã bật đèn Flash máy ảnh!" : "⚡ Đã bật đèn trợ sáng màn hình khi chụp!");
+        } else {
+          showToast("🔦 Đã tắt đèn chụp ảnh.");
+        }
+      }
+
       async function startCamera() {
         stopCamera();
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -5633,6 +6171,9 @@
             });
           }
           state.cameraStream = stream;
+          state.cameraTorchOn = false;
+          state.cameraScreenFlashAssist = false;
+          syncCameraFlashUI();
           el.cameraModal.classList.add("open");
           el.cameraVideo.srcObject = stream;
           await el.cameraVideo.play();
@@ -5651,9 +6192,19 @@
           state.cameraAnimId = null;
         }
         if (state.cameraStream) {
-          state.cameraStream.getTracks().forEach((t) => t.stop());
+          state.cameraStream.getTracks().forEach((t) => {
+            try {
+              if (state.cameraTorchOn && typeof t.applyConstraints === "function") {
+                t.applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
+              }
+            } catch (_) {}
+            t.stop();
+          });
           state.cameraStream = null;
         }
+        state.cameraTorchOn = false;
+        state.cameraScreenFlashAssist = false;
+        syncCameraFlashUI();
       }
 
       function runCameraLiveOverlay() {
@@ -5778,6 +6329,8 @@
           const page = getCurrentPage();
           if (!page) return;
           if (evt.touches && evt.touches.length === 2) {
+            hideHoldPanRing();
+            state.draggingHandle = null;
             const t0 = evt.touches[0], t1 = evt.touches[1];
             const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
             const stRect = el.stageContainer.getBoundingClientRect();
@@ -5794,39 +6347,65 @@
             };
             evt.preventDefault();
           } else if (evt.touches && evt.touches.length === 1) {
-            const ptMain = getMainCanvasCoords(evt.touches[0].clientX, evt.touches[0].clientY);
+            if (Date.now() < state.pinchCooldownUntil) {
+              evt.preventDefault();
+              return;
+            }
+            const t0 = evt.touches[0];
+            const ptMain = getMainCanvasCoords(t0.clientX, t0.clientY);
             const noteHit = findNoteHitHandle(page, ptMain, "main");
             if (noteHit) {
+              hideHoldPanRing();
               state.draggingHandle = noteHit;
               evt.preventDefault();
               return;
             }
-            if (state.stageZoom > 1.02) {
-            state.draggingHandle = {
-              type: "stage_pan",
-              startClientX: evt.touches[0].clientX,
-              startClientY: evt.touches[0].clientY,
-              origPanX: state.stagePanX,
-              origPanY: state.stagePanY
-            };
-            evt.preventDefault();
+
+            const now = Date.now();
+            if (now - state.lastTapTime < 280 && Math.hypot(t0.clientX - state.lastTapX, t0.clientY - state.lastTapY) < 32) {
+              hideHoldPanRing();
+              state.draggingHandle = null;
+              state.lastTapTime = 0;
+              if (state.stageZoom > 1.15 || Math.hypot(state.stagePanX, state.stagePanY) > 12) {
+                resetStageZoom();
+              } else {
+                state.stageZoom = 2.2;
+                applyStageTransform();
+              }
+              evt.preventDefault();
+              return;
             }
+            state.lastTapTime = now;
+            state.lastTapX = t0.clientX;
+            state.lastTapY = t0.clientY;
+
+            // Press and hold 1 finger on empty area of the image to move/pan freely
+            scheduleEmptyAreaHoldPan("stage", t0.clientX, t0.clientY);
+            evt.preventDefault();
           }
         }, { passive: false });
 
         el.stageContainer.addEventListener("mousedown", (evt) => {
+          if (evt.button !== undefined && evt.button !== 0) return;
           const page = getCurrentPage();
           if (!page) return;
           const ptMain = getMainCanvasCoords(evt.clientX, evt.clientY);
           const noteHit = findNoteHitHandle(page, ptMain, "main");
           if (noteHit) {
+            hideHoldPanRing();
             state.draggingHandle = noteHit;
             evt.preventDefault();
+            return;
           }
+          scheduleEmptyAreaHoldPan("stage", evt.clientX, evt.clientY);
+          evt.preventDefault();
         });
 
         // Full-Screen Editor & Corner Hamburger Button (☰) Events
         el.btnFsPrev.addEventListener("click", () => goToAdjacentPage(-1));
+        if (el.btnFsResetView) {
+          el.btnFsResetView.addEventListener("click", resetFsZoom);
+        }
         el.btnFsNext.addEventListener("click", () => goToAdjacentPage(1));
         el.btnToggleEditDropdown.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -6188,6 +6767,16 @@
           el.btnCancelCameraBottom.addEventListener("click", () => {
             el.cameraModal.classList.remove("open");
             stopCamera();
+          });
+        }
+        if (el.btnToggleFlash) {
+          el.btnToggleFlash.addEventListener("click", () => {
+            toggleCameraFlash();
+          });
+        }
+        if (el.btnCamTorchFloating) {
+          el.btnCamTorchFloating.addEventListener("click", () => {
+            toggleCameraFlash();
           });
         }
 

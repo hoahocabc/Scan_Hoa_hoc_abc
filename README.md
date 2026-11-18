@@ -1,9 +1,11 @@
-# ScanhoahocABC (v16.0 — Non-Blocking Smartphone Hamburger Drawer • Coupled Page & Parallel Text-Line Dewarping)
+# ScanhoahocABC (v28.0 — Hướng Dẫn Sử Dụng Nhanh)
 
-## 2 Nâng cấp trọng tâm trên ScanhoahocABC (v27.0)
-1. **Thanh công cụ Ba gạch (`☰`) phân tab siêu gọn trên Smartphone — Tuyệt đối không che khuất ảnh**:
-   - Khi bấm vào nút **Ba gạch (`☰`)** ở góc trên bên trái màn hình sửa ảnh, thanh công cụ mở ra dưới dạng **Dải công cụ phân tab 2 dòng siêu gọn (`~86px`)** nằm tách biệt phía trên vùng chứa ảnh (khung ảnh bên dưới tự động co giãn `flex: 1`), giúp **100% bức ảnh luôn hiển thị trọn vẹn** để người dùng quan sát trực tiếp khi đổi màu, chỉnh độ sáng hay dàn phẳng sách trên điện thoại.
-   - Bấm vào vùng ảnh bên dưới hoặc bấm lại nút ba gạch (`☰`) thì thanh công cụ tự động đóng lại ngay.
-2. **Thuật toán Dàn phẳng trang sách & Nắn thẳng song song các dòng chữ uốn cong (2-Stage 1D Vertical Profile NCC + Harmonic Basis & Arc-Length Unrolling)**:
-   - Tự động chia trang thành 32 cột chồng lấp, đo độ lệch dọc giữa các cột bằng Tương quan chéo chuẩn hóa (NCC) 2 tầng và khớp vào hệ hàm điều hòa trực giao 7 thành phần kèm giãn chiều ngang theo độ dài cung (`Arc-Length Unrolling`).
-   - Kéo phẳng cả mép trang sách lẫn toàn bộ các dòng chữ bị uốn cong về **thẳng hàng và song song tuyệt đối với nhau**, đồng thời giữ nguyên 100% độ phẳng cho các tờ giấy phẳng thông thường (`0.00 px` biến dạng).
+## 4 Nâng cấp mới trên ScanhoahocABC (v28.0)
+1. **Tăng độ chính xác, độ mượt 60fps và tốc độ xử lý trên Smartphone**:
+   - Bộ lọc khử bóng và làm phẳng tài liệu được tối ưu hóa giúp thao tác kéo góc, chuyển chế độ màu và làm phẳng trang sách phản hồi tức thì trên điện thoại.
+2. **Nút Bật / Tắt đèn Flash khi chụp ảnh (`🔦 Bật đèn` / `⚡ Đèn: Bật`)**:
+   - Trong màn hình **📷 Chụp ảnh**, bấm nút **🔦 Bật đèn** ở thanh dưới cùng (hoặc nút đèn nổi ở góc trên khung ngắm) để bật đèn Flash chiếu sáng tài liệu khi chụp nơi thiếu sáng.
+3. **Bắt cạnh nam châm & Căn chỉnh đa điểm siêu nhạy**:
+   - Trong mục **🛠 Sửa → 📐 Căn chỉnh → ❖ Căn đa điểm**, vùng chạm của 4 góc và 20 điểm trên 4 cạnh được mở rộng kèm lực hút nam châm tự động bám sát mép giấy (`🧲`) và liên kết uốn cong mượt theo mép trang sách.
+4. **Bấm giữ 1 ngón tay lên khu vực trống của ảnh để di chuyển**:
+   - Ở cả màn hình chính và màn hình **🛠 Sửa** (kể cả khi đang căn chỉnh góc/đa điểm và ở mức phóng đại 100%), chỉ cần **bấm giữ 1 ngón tay lên vùng trống của ảnh** (nơi không có nút góc hay khung ghi chú) rồi kéo để di chuyển bức ảnh tới vị trí mong muốn. Bấm nút **✥ Đặt lại** / **✥ Giữa** để đưa ảnh về lại trung tâm.
