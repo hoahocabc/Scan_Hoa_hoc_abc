@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v29.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Nhận diện siêu tốc & chính xác rìa tài liệu đồng sáng với nền, tùy chỉnh ghi chú (có/không nền, có/không viền, màu nền, màu viền, màu chữ), bật đèn Flash và giữ 1 ngón di chuyển ảnh.",
+  "description": "ScanhoahocABC (v31.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Bắt chuẩn rìa tờ giấy đặt chồng lên tờ giấy khác (Paper-on-Paper), giấy trắng trên mặt bàn gỗ và nền đồng sáng, tùy chỉnh nền/viền ghi chú, bật đèn Flash và giữ 1 ngón di chuyển ảnh.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
