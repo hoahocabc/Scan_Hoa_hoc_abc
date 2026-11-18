@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v28.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Tối ưu tốc độ O(1) 60fps, bật đèn Flash khi chụp, bắt cạnh nam châm & căn chỉnh đa điểm siêu nhạy, bấm giữ 1 ngón lên vùng trống để di chuyển ảnh.",
+  "description": "ScanhoahocABC (v29.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Nhận diện siêu tốc & chính xác rìa tài liệu đồng sáng với nền, tùy chỉnh ghi chú (có/không nền, có/không viền, màu nền, màu viền, màu chữ), bật đèn Flash và giữ 1 ngón di chuyển ảnh.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
