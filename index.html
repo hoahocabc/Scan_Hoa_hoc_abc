@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v31.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Nhận diện siêu tốc & chính xác rìa tài liệu đồng sáng với nền, tùy chỉnh ghi chú (có/không nền, có/không viền, màu nền, màu viền, màu chữ), bật đèn Flash và giữ 1 ngón di chuyển ảnh." />
+  <meta name="description" content="ScanhoahocABC (v32.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Nhận diện siêu tốc & chính xác rìa tài liệu đồng sáng với nền, tùy chỉnh ghi chú (có/không nền, có/không viền, màu nền, màu viền, màu chữ), bật đèn Flash và giữ 1 ngón di chuyển ảnh." />
   <style>
     :root {
       --primary: #2563eb;
@@ -1644,6 +1644,7 @@
         <button type="button" class="dd-mode-btn" data-mode="bw_sauvola">◐ Đen trắng</button>
         <button type="button" class="dd-mode-btn" data-mode="faint_boost">✒ Làm rõ chữ</button>
         <button type="button" class="dd-mode-btn" id="btnDdToggleAlpha">🪄 Tách nền</button>
+        <button type="button" class="dd-mode-btn active" id="btnDdToggleLineAlign" title="Tự động nhận diện dòng chữ & đường kẻ để căn thẳng khớp với trang giấy">📏 Căn thẳng dòng & kẻ</button>
       </div>
 
       <div class="vpop-divider"></div>
@@ -1754,6 +1755,9 @@
       <div class="vpop-divider"></div>
       <button type="button" class="vpop-action-btn" id="btnAutoDetectCorners">
         🎯 Tự động
+      </button>
+      <button type="button" class="vpop-action-btn" id="btnAlignByTextLines" title="Nhận diện dòng chữ & đường kẻ ngang/dọc bên trong để căn thẳng đồng bộ với khung trang">
+        📏 Căn theo dòng
       </button>
       <button type="button" class="vpop-action-btn" id="btnFullFrameCorners">
         ⛶ Toàn ảnh
@@ -2007,6 +2011,7 @@
         btnCloseFsEditor: document.getElementById("btnCloseFsEditor"),
         editDropdownMenu: document.getElementById("editDropdownMenu"),
         btnDdToggleAlpha: document.getElementById("btnDdToggleAlpha"),
+        btnDdToggleLineAlign: document.getElementById("btnDdToggleLineAlign"),
         ddColorModeGrid: document.getElementById("ddColorModeGrid"),
         ddBrightnessSlider: document.getElementById("ddBrightnessSlider"),
         ddBrightnessVal: document.getElementById("ddBrightnessVal"),
@@ -2041,6 +2046,7 @@
         fsCropBar: document.getElementById("fsCropBar"),
         btnAutoDetectCorners: document.getElementById("btnAutoDetectCorners"),
         btnFullFrameCorners: document.getElementById("btnFullFrameCorners"),
+        btnAlignByTextLines: document.getElementById("btnAlignByTextLines"),
         btnAlignMode4Pt: document.getElementById("btnAlignMode4Pt"),
         btnAlignModeMultiPt: document.getElementById("btnAlignModeMultiPt"),
         btnCancelCrop: document.getElementById("btnCancelCrop"),
@@ -4043,33 +4049,28 @@
       // - sin(2*pi*x): asymmetric 2-page book arch
       // - sin(3*pi*x): symmetric 2-page open book M-arch (arches on left/right pages, dips at central spine x=0.5)
       // Eliminates cosine boundary steps & high-frequency 4*pi ripples that caused wavy lines on flat paper!
-      function evalDirichletSineBasis3(xn) {
+      function evalCoupledHorizBasis5(u) {
         const pi = Math.PI;
         return [
-          Math.sin(pi * xn),
-          Math.sin(2.0 * pi * xn),
-          Math.sin(3.0 * pi * xn)
+          u - 0.5,
+          Math.sin(pi * u),
+          Math.sin(2.0 * pi * u),
+          Math.sin(3.0 * pi * u),
+          Math.sin(4.0 * pi * u)
         ];
       }
 
-      function evalVertBasis2(ty) {
-        return [1.0, ty - 0.5];
+      function evalVertBasis3(v) {
+        const u = v - 0.5;
+        return [1.0, u, u * u - (1.0 / 12.0)];
       }
 
-      // =========================================================================
-      // v24.0 FLAT-PAPER-SAFE 2D TOP/BOTTOM BOOK SURFACE & TEXT-LINE DEWARPING
-      // - Uses Dirichlet Sine Basis [sin(pi*x), sin(2*pi*x), sin(3*pi*x)] x [1, ty-0.5]
-      //   so endpoints x=0 and x=1 are strictly pinned (zero edge shear) and
-      //   high-frequency ripples are physically impossible.
-      // - Enforces a strict Flat-Paper Immunity Gate (requires coherent multi-column
-      //   curvature >= 4.8 px and soft deadzone shrinkage) so flat sheets stay
-      //   100% razor-straight (0.00 px wave) while curved open books are flattened!
-      // =========================================================================
       function estimate2DBookSurfaceModes(rgbaData, dstW, dstH) {
         const M = 32;
         const subW = M * 6; // 192
-        const Hs = 320;
+        const Hs = 384;
         const scaleY = dstH / Hs;
+        const scaleX = dstW / subW;
 
         // 1. Downsample luminance to (subW x Hs)
         const L0 = new Float32Array(subW * Hs);
@@ -4084,16 +4085,51 @@
           }
         }
 
-        // 2. Vertical high-pass ink stroke energy E0(sy, sx)
+        // 2. Dual-Channel Horizontal Feature Extraction (Text Baselines + Continuous Ruled Lines)
+        const L_hClose = new Float32Array(subW * Hs);
+        const tmpH = new Float32Array(subW * Hs);
+        for (let sy = 0; sy < Hs; sy++) {
+          const sOff = sy * subW;
+          for (let sx = 0; sx < subW; sx++) {
+            const x0 = sx - 2 > 0 ? sx - 2 : 0;
+            const x1 = sx + 2 < subW - 1 ? sx + 2 : subW - 1;
+            let mv = 1e9;
+            for (let nx = x0; nx <= x1; nx++) {
+              if (L0[sOff + nx] < mv) mv = L0[sOff + nx];
+            }
+            tmpH[sOff + sx] = mv;
+          }
+          for (let sx = 0; sx < subW; sx++) {
+            const x0 = sx - 2 > 0 ? sx - 2 : 0;
+            const x1 = sx + 2 < subW - 1 ? sx + 2 : subW - 1;
+            let mv = -1e9;
+            for (let nx = x0; nx <= x1; nx++) {
+              if (tmpH[sOff + nx] > mv) mv = tmpH[sOff + nx];
+            }
+            L_hClose[sOff + sx] = mv;
+          }
+        }
+
+        const E_raw = new Float32Array(subW * Hs);
         const E0 = new Float32Array(subW * Hs);
         const my = Math.floor(Hs * 0.04);
+        const mx = Math.floor(subW * 0.04);
         for (let sy = Math.max(3, my); sy < Hs - Math.max(3, my); sy++) {
           const sOff = sy * subW;
-          const upOff = (sy - 3) * subW;
-          const dnOff = (sy + 3) * subW;
-          for (let sx = 0; sx < subW; sx++) {
-            const diff = 0.5 * (L0[upOff + sx] + L0[dnOff + sx]) - L0[sOff + sx];
-            if (diff > 0) E0[sOff + sx] = diff;
+          const up2 = (sy - 2) * subW, dn2 = (sy + 2) * subW;
+          const up3 = (sy - 3) * subW, dn3 = (sy + 3) * subW;
+          for (let sx = mx; sx < subW - mx; sx++) {
+            const diffText = Math.max(0.0, 0.5 * (L0[up3 + sx] + L0[dn3 + sx]) - L0[sOff + sx]);
+            const diffRule = Math.max(0.0, 0.5 * (L_hClose[up2 + sx] + L_hClose[dn2 + sx]) - L_hClose[sOff + sx]);
+            E_raw[sOff + sx] = 0.55 * diffText + 0.45 * diffRule;
+          }
+        }
+        for (let sy = Math.max(4, my); sy < Hs - Math.max(4, my); sy++) {
+          const sOff = sy * subW;
+          const dn2 = (sy + 2) * subW;
+          for (let sx = mx; sx < subW - mx; sx++) {
+            const baseDrop = Math.max(0.0, E_raw[sOff + sx] - E_raw[dn2 + sx]);
+            E0[sOff + sx] = E_raw[sOff + sx] + 0.55 * baseDrop;
           }
         }
 
@@ -4101,8 +4137,9 @@
         const P = new Float64Array(M * Hs);
         const rawP = new Float64Array(Hs);
         for (let k = 0; k < M; k++) {
-          const x0 = Math.max(0, k * 6 - 4);
-          const x1 = Math.min(subW - 1, (k + 1) * 6 + 3);
+          const x0 = Math.max(mx, k * 6 - 4);
+          const x1 = Math.min(subW - 1 - mx, (k + 1) * 6 + 3);
+          if (x1 < x0) continue;
           const span = x1 - x0 + 1;
           for (let sy = 0; sy < Hs; sy++) {
             let s = 0;
@@ -4120,23 +4157,24 @@
           }
         }
 
-        const K = 3; // 3 smooth Dirichlet Sine modes: sin(pi*x), sin(2*pi*x), sin(3*pi*x)
+        const K = 5; // 1 Linear Tilt/Fan mode + 4 Dirichlet Sine harmonic modes
+        const V_MODES = 3; // 3 Vertical Legendre modes (v0, v1, v2)
         const B_cols = [];
         for (let k = 0; k < M; k++) {
-          B_cols.push(evalDirichletSineBasis3(k / (M - 1)));
+          B_cols.push(evalCoupledHorizBasis5(k / (M - 1)));
         }
 
-        // 4 vertical zones covering Top-Half and Bottom-Half
         const zones = [
-          [0.05, 0.48, 0.265],
-          [0.15, 0.52, 0.335],
-          [0.48, 0.85, 0.665],
-          [0.52, 0.95, 0.735]
+          [0.05, 0.38, 0.215],
+          [0.16, 0.50, 0.330],
+          [0.33, 0.67, 0.500],
+          [0.50, 0.84, 0.670],
+          [0.62, 0.95, 0.785]
         ];
 
-        const regH = [0.06, 0.12, 0.22];
-        const regV = [1.0, 1.2];
-        const nParams = 2 * K; // 6 ultra-clean parameters!
+        const regH = [0.005, 0.035, 0.075, 0.14, 0.26];
+        const regV = [1.0, 1.15, 1.50];
+        const nParams = V_MODES * K;
         const A_sys = Array.from({ length: nParams }, (_, r) => {
           const row = new Float64Array(nParams);
           const vm = (r / K) | 0;
@@ -4146,20 +4184,22 @@
         });
         const b_sys = new Float64Array(nParams);
 
-        const maxD = 7;
-        const corrs = new Float64Array(2 * maxD + 1);
-        const corrsSorted = new Float64Array(2 * maxD + 1);
+        // Cycle-safe maxD = 5 for step=1 (strictly less than half line spacing ~6.8px in Hs=384!)
+        const maxD1 = 5;
+        const corrs = new Float64Array(2 * maxD1 + 1);
+        const corrsSorted = new Float64Array(2 * maxD1 + 1);
         const norms = new Float64Array(M);
+        const step1Shift = new Float64Array(M);
+        const step1Valid = new Uint8Array(M);
         const dB_full = new Float64Array(nParams);
-        let nonZeroShiftCount = 0;
-        let totalMatchedSteps = 0;
+        let totalMatchedPairs = 0;
 
         for (let z = 0; z < zones.length; z++) {
           const y0_f = zones[z][0], y1_f = zones[z][1], ty_c = zones[z][2];
-          const ya = Math.max(maxD + 4, Math.floor(Hs * y0_f));
-          const yb = Math.min(Hs - maxD - 4, Math.floor(Hs * y1_f));
-          if (yb - ya < 18) continue;
-          const vVec = evalVertBasis2(ty_c);
+          const ya = Math.max(16, Math.floor(Hs * y0_f));
+          const yb = Math.min(Hs - 16, Math.floor(Hs * y1_f));
+          if (yb - ya < 20) continue;
+          const vVec = evalVertBasis3(ty_c);
 
           let maxNorm = 0;
           for (let k = 0; k < M; k++) {
@@ -4171,23 +4211,83 @@
             }
             norms[k] = Math.sqrt(sq);
             if (norms[k] > maxNorm) maxNorm = norms[k];
+            step1Shift[k] = 0;
+            step1Valid[k] = 0;
           }
           if (maxNorm < 1e-3) continue;
 
+          // Pass 1: Step = 1 (adjacent columns, cycle-safe d in [-5..+5])
           for (let k = 1; k < M; k++) {
-            if (norms[k] < 0.25 * maxNorm) continue;
-            for (let step = 1; step <= 2; step++) {
+            const kp = k - 1;
+            if (norms[k] < 0.22 * maxNorm || norms[kp] < 0.22 * maxNorm) continue;
+            const prevOff = kp * Hs, currOff = k * Hs, normPrev = norms[kp];
+            let bestI = maxD1, bestC = -1.0;
+            for (let di = 0; di <= 2 * maxD1; di++) {
+              const d = di - maxD1;
+              let dot = 0, normSegSq = 0;
+              for (let y = ya; y < yb; y++) {
+                const vp = P[prevOff + y];
+                const vc = P[currOff + y + d];
+                dot += vp * vc;
+                normSegSq += vc * vc;
+              }
+              const cVal = dot / (normPrev * (Math.sqrt(normSegSq) + 1e-6));
+              corrs[di] = cVal;
+              corrsSorted[di] = cVal;
+              if (cVal > bestC) { bestC = cVal; bestI = di; }
+            }
+            corrsSorted.sort();
+            const medC = corrsSorted[maxD1];
+            if (bestC > 0.40 && (bestC - medC) > 0.10) {
+              let bestD = bestI - maxD1;
+              if (bestI > 0 && bestI < 2 * maxD1) {
+                const vm = corrs[bestI - 1], v0 = corrs[bestI], vp = corrs[bestI + 1];
+                const denom = 2.0 * (2.0 * v0 - vm - vp);
+                if (Math.abs(denom) > 1e-9) bestD += Math.max(-0.5, Math.min(0.5, (vm - vp) / denom));
+              }
+              step1Shift[k] = bestD;
+              step1Valid[k] = 1;
+
+              const deltaPx = bestD * scaleY;
+              const w = (bestC - medC) * bestC * bestC;
+              totalMatchedPairs++;
+
+              const Bk = B_cols[k], Bkp = B_cols[kp];
+              for (let vm = 0; vm < V_MODES; vm++) {
+                const vv = vVec[vm];
+                const baseIdx = vm * K;
+                for (let hm = 0; hm < K; hm++) dB_full[baseIdx + hm] = vv * (Bk[hm] - Bkp[hm]);
+              }
+              for (let r = 0; r < nParams; r++) {
+                const wdBr = w * dB_full[r];
+                b_sys[r] += wdBr * deltaPx;
+                const rowA = A_sys[r];
+                for (let c = 0; c < nParams; c++) rowA[c] += wdBr * dB_full[c];
+              }
+            }
+          }
+
+          // Pass 2: Phase-Unwrapped Multi-Span Steps (step = 2, 4, 6) guided by accumulated step1Shift!
+          const winR = 4;
+          const winLen = 2 * winR + 1;
+          const winCorrs = new Float64Array(winLen);
+          const winSorted = new Float64Array(winLen);
+          const multiSteps = [2, 4, 6];
+          for (let si = 0; si < multiSteps.length; si++) {
+            const step = multiSteps[si];
+            for (let k = step; k < M; k++) {
               const kp = k - step;
-              if (kp < 0 || norms[kp] < 0.25 * maxNorm) continue;
+              if (norms[k] < 0.22 * maxNorm || norms[kp] < 0.22 * maxNorm) continue;
+              let sumPred = 0, cntPred = 0;
+              for (let j = kp + 1; j <= k; j++) {
+                if (step1Valid[j]) { sumPred += step1Shift[j]; cntPred++; }
+              }
+              const dCenter = cntPred > 0 ? Math.max(-11, Math.min(11, Math.round((sumPred / cntPred) * step))) : 0;
 
-              const prevOff = kp * Hs;
-              const currOff = k * Hs;
-              const normPrev = norms[kp];
-              let bestI = maxD;
-              let bestC = -1.0;
-
-              for (let di = 0; di <= 2 * maxD; di++) {
-                const d = di - maxD;
+              const prevOff = kp * Hs, currOff = k * Hs, normPrev = norms[kp];
+              let bestWi = winR, bestC = -1.0;
+              for (let wi = 0; wi < winLen; wi++) {
+                const d = dCenter + (wi - winR);
                 let dot = 0, normSegSq = 0;
                 for (let y = ya; y < yb; y++) {
                   const vp = P[prevOff + y];
@@ -4196,60 +4296,152 @@
                   normSegSq += vc * vc;
                 }
                 const cVal = dot / (normPrev * (Math.sqrt(normSegSq) + 1e-6));
-                corrs[di] = cVal;
-                corrsSorted[di] = cVal;
-                if (cVal > bestC) {
-                  bestC = cVal;
-                  bestI = di;
-                }
+                winCorrs[wi] = cVal;
+                winSorted[wi] = cVal;
+                if (cVal > bestC) { bestC = cVal; bestWi = wi; }
               }
-
-              corrsSorted.sort();
-              const medC = corrsSorted[maxD];
-              if (bestC > 0.42 && (bestC - medC) > 0.11) {
-                let bestD = bestI - maxD;
-                if (bestI > 0 && bestI < 2 * maxD) {
-                  const vm = corrs[bestI - 1], v0 = corrs[bestI], vp = corrs[bestI + 1];
+              winSorted.sort();
+              const medC = winSorted[winR];
+              if (bestC > 0.42 && (bestC - medC) > 0.08) {
+                let bestD = dCenter + (bestWi - winR);
+                if (bestWi > 0 && bestWi < winLen - 1) {
+                  const vm = winCorrs[bestWi - 1], v0 = winCorrs[bestWi], vp = winCorrs[bestWi + 1];
                   const denom = 2.0 * (2.0 * v0 - vm - vp);
-                  if (Math.abs(denom) > 1e-9) {
-                    bestD += Math.max(-0.5, Math.min(0.5, (vm - vp) / denom));
-                  }
+                  if (Math.abs(denom) > 1e-9) bestD += Math.max(-0.5, Math.min(0.5, (vm - vp) / denom));
                 }
-                // Deadband on tiny sub-pixel jitter from character ascenders/descenders on flat sheets!
-                if (Math.abs(bestD) < 0.55) {
-                  bestD = 0.0;
-                } else if (step === 1) {
-                  nonZeroShiftCount++;
-                }
-                if (step === 1) totalMatchedSteps++;
-
                 const deltaPx = bestD * scaleY;
-                const w = ((bestC - medC) * bestC * bestC) / step;
+                const w = ((bestC - medC) * bestC * bestC) / Math.pow(step, 0.55);
+                totalMatchedPairs++;
 
                 const Bk = B_cols[k], Bkp = B_cols[kp];
-                for (let vm = 0; vm < 2; vm++) {
+                for (let vm = 0; vm < V_MODES; vm++) {
                   const vv = vVec[vm];
                   const baseIdx = vm * K;
-                  for (let hm = 0; hm < K; hm++) {
-                    dB_full[baseIdx + hm] = vv * (Bk[hm] - Bkp[hm]);
-                  }
+                  for (let hm = 0; hm < K; hm++) dB_full[baseIdx + hm] = vv * (Bk[hm] - Bkp[hm]);
                 }
-
                 for (let r = 0; r < nParams; r++) {
                   const wdBr = w * dB_full[r];
                   b_sys[r] += wdBr * deltaPx;
                   const rowA = A_sys[r];
-                  for (let c = 0; c < nParams; c++) {
-                    rowA[c] += wdBr * dB_full[c];
-                  }
+                  for (let c = 0; c < nParams; c++) rowA[c] += wdBr * dB_full[c];
                 }
               }
             }
           }
         }
 
-        // Flat-Paper Immunity Gate 1: If fewer than 22% of column steps have a real shift >= 0.55 sub-pixels, paper is flat!
-        if (totalMatchedSteps < 16 || nonZeroShiftCount < Math.max(8, totalMatchedSteps * 0.22)) {
+        // 4. Vertical Ruled-Line / Table Column / Left-Right Margin Shear & Bow Estimation (horizShiftY[y])
+        const horizShiftY = new Float32Array(dstH);
+        {
+          const Mv = 24;
+          const E_vert = new Float32Array(subW * Hs);
+          for (let sy = my; sy < Hs - my; sy++) {
+            const sOff = sy * subW;
+            for (let sx = Math.max(3, mx); sx < subW - Math.max(3, mx); sx++) {
+              const diffV = Math.max(0.0, 0.5 * (L0[sOff + sx - 2] + L0[sOff + sx + 2]) - L0[sOff + sx]);
+              if (diffV > 4.0) E_vert[sOff + sx] = diffV;
+            }
+          }
+          const Pv = new Float64Array(Mv * subW);
+          const rawPv = new Float64Array(subW);
+          for (let kv = 0; kv < Mv; kv++) {
+            const y0 = Math.max(my, Math.floor((kv / Mv) * Hs) - 4);
+            const y1 = Math.min(Hs - 1 - my, Math.floor(((kv + 1) / Mv) * Hs) + 4);
+            if (y1 < y0) continue;
+            const span = y1 - y0 + 1;
+            for (let sx = 0; sx < subW; sx++) {
+              let s = 0;
+              for (let sy = y0; sy <= y1; sy++) s += E_vert[sy * subW + sx];
+              rawPv[sx] = s / span;
+            }
+            const kvOff = kv * subW;
+            for (let sx = 0; sx < subW; sx++) {
+              const x0 = Math.max(0, sx - 6), x1 = Math.min(subW - 1, sx + 6);
+              let m = 0;
+              for (let nx = x0; nx <= x1; nx++) m += rawPv[nx];
+              m /= (x1 - x0 + 1);
+              Pv[kvOff + sx] = Math.max(0.0, rawPv[sx] - m);
+            }
+          }
+
+          const Av = [
+            new Float64Array([0.06, 0, 0]),
+            new Float64Array([0, 0.12, 0]),
+            new Float64Array([0, 0, 0.22])
+          ];
+          const bv = new Float64Array(3);
+          const vNorms = new Float64Array(Mv);
+          let maxVNorm = 0;
+          for (let kv = 0; kv < Mv; kv++) {
+            let sq = 0;
+            const kvOff = kv * subW;
+            for (let sx = mx + 6; sx < subW - mx - 6; sx++) {
+              const v = Pv[kvOff + sx];
+              sq += v * v;
+            }
+            vNorms[kv] = Math.sqrt(sq);
+            if (vNorms[kv] > maxVNorm) maxVNorm = vNorms[kv];
+          }
+          let vMatched = 0;
+          if (maxVNorm > 1e-3) {
+            const dLim = 4;
+            const cArr = new Float64Array(2 * dLim + 1);
+            for (let kv = 1; kv < Mv; kv++) {
+              const kvp = kv - 1;
+              if (vNorms[kv] < 0.30 * maxVNorm || vNorms[kvp] < 0.30 * maxVNorm) continue;
+              const prevOff = kvp * subW, currOff = kv * subW;
+              let bestD = 0, bestC = -1;
+              for (let d = -dLim; d <= dLim; d++) {
+                let dot = 0, sq = 0;
+                for (let sx = mx + 8; sx < subW - mx - 8; sx++) {
+                  const vp = Pv[prevOff + sx];
+                  const vc = Pv[currOff + sx + d];
+                  dot += vp * vc;
+                  sq += vc * vc;
+                }
+                const cVal = dot / (vNorms[kvp] * (Math.sqrt(sq) + 1e-6));
+                cArr[d + dLim] = cVal;
+                if (cVal > bestC) { bestC = cVal; bestD = d; }
+              }
+              const sorted = Float64Array.from(cArr).sort();
+              const med = sorted[dLim];
+              if (bestC > 0.50 && (bestC - med) > 0.12) {
+                const bi = bestD + dLim;
+                let subD = bestD;
+                if (bi > 0 && bi < 2 * dLim) {
+                  const vm = cArr[bi - 1], v0 = cArr[bi], vp = cArr[bi + 1];
+                  const den = 2.0 * (2.0 * v0 - vm - vp);
+                  if (Math.abs(den) > 1e-9) subD += Math.max(-0.5, Math.min(0.5, (vm - vp) / den));
+                }
+                const dxPx = subD * scaleX;
+                const w = (bestC - med) * bestC * bestC;
+                const v1 = kv / (Mv - 1), v0 = kvp / (Mv - 1);
+                const dB = [
+                  v1 - v0,
+                  Math.sin(Math.PI * v1) - Math.sin(Math.PI * v0),
+                  Math.sin(2.0 * Math.PI * v1) - Math.sin(2.0 * Math.PI * v0)
+                ];
+                for (let r = 0; r < 3; r++) {
+                  bv[r] += w * dB[r] * dxPx;
+                  for (let c = 0; c < 3; c++) Av[r][c] += w * dB[r] * dB[c];
+                }
+                vMatched++;
+              }
+            }
+          }
+          if (vMatched >= 5) {
+            const cV = solveLinearSystem(Av, bv);
+            for (let y = 0; y < dstH; y++) {
+              const ty = y / (dstH - 1);
+              const rawShift = cV[0] * (ty - 0.5) + cV[1] * Math.sin(Math.PI * ty) + cV[2] * Math.sin(2.0 * Math.PI * ty);
+              if (Math.abs(rawShift) > 0.35) {
+                horizShiftY[y] = Math.max(-24.0, Math.min(24.0, rawShift));
+              }
+            }
+          }
+        }
+
+        if (totalMatchedPairs < 10) {
           return null;
         }
 
@@ -4257,34 +4449,37 @@
 
         const mode0 = new Float32Array(dstW);
         const mode1 = new Float32Array(dstW);
-        const mode2 = new Float32Array(dstW); // Kept zero for API compatibility
+        const mode2 = new Float32Array(dstW);
 
         let maxSurfaceDisp = 0;
         for (let x = 0; x < dstW; x++) {
-          const B = evalDirichletSineBasis3(x / (dstW - 1));
-          let s0 = 0, s1 = 0;
+          const u = x / (dstW - 1);
+          const B = evalCoupledHorizBasis5(u);
+          let s0 = 0, s1 = 0, s2 = 0;
           for (let j = 0; j < K; j++) {
             s0 += B[j] * coeffs[j];
             s1 += B[j] * coeffs[K + j];
+            s2 += B[j] * coeffs[2 * K + j];
           }
           mode0[x] = s0;
           mode1[x] = s1;
-          const topDisp = Math.abs(s0 - 0.35 * s1);
-          const botDisp = Math.abs(s0 + 0.35 * s1);
+          mode2[x] = s2;
+          const topDisp = Math.abs(s0 - 0.35 * s1 + 0.04 * s2);
+          const botDisp = Math.abs(s0 + 0.35 * s1 + 0.04 * s2);
           const localMax = Math.max(topDisp, Math.abs(s0), botDisp);
           if (localMax > maxSurfaceDisp) maxSurfaceDisp = localMax;
         }
 
-        // Flat-Paper Immunity Gate 2: Require max arch >= 5.0 px, with smooth deadzone ramp [5.0px .. 9.0px]
-        if (maxSurfaceDisp < 5.0) return null;
+        if (maxSurfaceDisp < 0.60) return null;
 
-        const shrinkGain = Math.min(1.0, (maxSurfaceDisp - 4.5) / 4.5);
+        const shrinkGain = Math.min(1.0, (maxSurfaceDisp - 0.45) / 0.90);
         for (let x = 0; x < dstW; x++) {
           mode0[x] *= shrinkGain;
           mode1[x] *= shrinkGain;
+          mode2[x] *= shrinkGain;
         }
 
-        return { mode0, mode1, mode2 };
+        return { mode0, mode1, mode2, horizShiftY, maxSurfaceDisp, coeffs };
       }
 
       function createZeroEdgeOffsets() {
@@ -4521,14 +4716,15 @@
             }
           }
           if (surfModes) {
-            const { mode0, mode1, mode2 } = surfModes;
-            // Compute horizontal arc-length unrolling map xMap[u] from RMS slope across top & bottom halves
+            const { mode0, mode1, mode2, horizShiftY } = surfModes;
+            // Compute horizontal arc-length unrolling map xMap[u] from harmonic curve slopes (excluding rigid linear tilt)
             const arcCum = new Float32Array(dstW);
+            const avgSlope0 = (mode0[dstW - 1] - mode0[0]) / Math.max(1, dstW - 1);
             for (let u = 1; u < dstW; u++) {
-              const dw0 = mode0[u] - mode0[u - 1];
+              const dw0 = (mode0[u] - mode0[u - 1]) - avgSlope0;
               const dw1 = mode1[u] - mode1[u - 1];
               const slopeSq = dw0 * dw0 + 0.0833 * dw1 * dw1;
-              arcCum[u] = arcCum[u - 1] + Math.sqrt(1.0 + 0.60 * slopeSq);
+              arcCum[u] = arcCum[u - 1] + Math.sqrt(1.0 + 0.55 * slopeSq);
             }
             const totalArc = arcCum[dstW - 1] || 1.0;
             const xMap = new Float32Array(dstW);
@@ -4545,16 +4741,20 @@
               const uVert = ty - 0.5;
               const v1 = uVert;
               const v2 = uVert * uVert - (1.0 / 12.0);
+              const vTaper = Math.min(1.0, ty / 0.035, (1.0 - ty) / 0.035);
+              const hShift = horizShiftY ? horizShiftY[y] : 0.0;
 
               for (let x = 0; x < dstW; x++) {
-                const sx = Math.min(dstW - 1.001, Math.max(0.0, xMap[x]));
+                const tx = x / (dstW - 1);
+                const uTaper = Math.min(1.0, tx / 0.035, (1.0 - tx) / 0.035);
+                const sx = Math.min(dstW - 1.001, Math.max(0.0, xMap[x] + uTaper * hShift));
                 const x0 = sx | 0;
                 const dx = sx - x0;
 
                 const w0 = mode0[x0] * (1.0 - dx) + mode0[x0 + 1] * dx;
                 const w1 = mode1[x0] * (1.0 - dx) + mode1[x0 + 1] * dx;
                 const w2 = mode2[x0] * (1.0 - dx) + mode2[x0 + 1] * dx;
-                const wVal = w0 + v1 * w1 + v2 * w2;
+                const wVal = (w0 + v1 * w1 + v2 * w2) * vTaper;
 
                 const sy = Math.min(dstH - 1.001, Math.max(0.0, y + wVal));
                 const y0 = sy | 0;
@@ -5126,6 +5326,84 @@
         if (el.btnAlignModeMultiPt) el.btnAlignModeMultiPt.classList.toggle("active", isMulti);
       }
 
+      function alignQuadWithInternalLines(page) {
+        if (!page || !page.srcCanvas) return { aligned: false, maxDisp: 0 };
+        const baseCanvas = dewarpQuad(
+          page.srcCanvas,
+          page.corners,
+          page.settings.paperSize,
+          createZeroEdgeOffsets(),
+          0,
+          false,
+          null
+        );
+        const dstW = baseCanvas.width;
+        const dstH = baseCanvas.height;
+        const bCtx = baseCanvas.getContext("2d");
+        const rgba = bCtx.getImageData(0, 0, dstW, dstH).data;
+        const modes = estimate2DBookSurfaceModes(rgba, dstW, dstH);
+        page.settings.autoLineDewarp = true;
+        page.cachedAutoModes = undefined;
+
+        if (!modes || !modes.coeffs) {
+          return { aligned: false, maxDisp: 0 };
+        }
+
+        const c = page.corners;
+        const topVec = { x: c[1].x - c[0].x, y: c[1].y - c[0].y };
+        const botVec = { x: c[2].x - c[3].x, y: c[2].y - c[3].y };
+        const leftVec = { x: c[3].x - c[0].x, y: c[3].y - c[0].y };
+        const rightVec = { x: c[2].x - c[1].x, y: c[2].y - c[1].y };
+        const avgH = 0.5 * (Math.hypot(leftVec.x, leftVec.y) + Math.hypot(rightVec.x, rightVec.y)) || 1.0;
+        const scaleFromDstY = avgH / dstH;
+
+        const coeffs = modes.coeffs;
+        const K = 5;
+        const newOffsets = cloneEdgeOffsets(page.edgeOffsets || page.srcCanvas._detectedEdgeOffsets);
+        let maxHarmonicPx = 0;
+
+        const downUnitX = 0.5 * (leftVec.x / (Math.hypot(leftVec.x, leftVec.y) || 1) + rightVec.x / (Math.hypot(rightVec.x, rightVec.y) || 1));
+        const downUnitY = 0.5 * (leftVec.y / (Math.hypot(leftVec.x, leftVec.y) || 1) + rightVec.y / (Math.hypot(rightVec.x, rightVec.y) || 1));
+
+        for (let m = 0; m < NUM_EDGE_SUBPOINTS; m++) {
+          const uTop = (m + 1) / 6.0;
+          const BTop = evalCoupledHorizBasis5(uTop);
+          let harm0 = 0, harm1 = 0, harm2 = 0;
+          for (let j = 1; j < K; j++) {
+            harm0 += BTop[j] * coeffs[j];
+            harm1 += BTop[j] * coeffs[K + j];
+            harm2 += BTop[j] * coeffs[2 * K + j];
+          }
+          const dyTopDst = harm0 - 0.38 * harm1 + 0.05 * harm2;
+          const dyBotDst = harm0 + 0.38 * harm1 + 0.05 * harm2;
+
+          const topShiftSrc = Math.max(-28.0, Math.min(28.0, dyTopDst * scaleFromDstY));
+          const botShiftSrc = Math.max(-28.0, Math.min(28.0, dyBotDst * scaleFromDstY));
+          if (Math.abs(topShiftSrc) > maxHarmonicPx) maxHarmonicPx = Math.abs(topShiftSrc);
+          if (Math.abs(botShiftSrc) > maxHarmonicPx) maxHarmonicPx = Math.abs(botShiftSrc);
+
+          if (Math.abs(topShiftSrc) >= 1.2) {
+            newOffsets[0][m] = {
+              x: Math.round(downUnitX * topShiftSrc),
+              y: Math.round(downUnitY * topShiftSrc)
+            };
+          }
+          const mBot = NUM_EDGE_SUBPOINTS - 1 - m;
+          if (Math.abs(botShiftSrc) >= 1.2) {
+            newOffsets[2][mBot] = {
+              x: Math.round(downUnitX * botShiftSrc),
+              y: Math.round(downUnitY * botShiftSrc)
+            };
+          }
+        }
+
+        if (maxHarmonicPx >= 1.8) {
+          page.edgeOffsets = newOffsets;
+          state.alignPointMode = "multipt";
+        }
+        return { aligned: true, maxDisp: modes.maxSurfaceDisp || 0, maxHarmonicPx };
+      }
+
       function renderFullScreenEditor() {
         const page = getCurrentPage();
         if (!page) {
@@ -5171,6 +5449,49 @@
           ctx.strokeStyle = "#2563eb";
           ctx.lineWidth = strokeW;
           ctx.stroke();
+
+          // Draw synchronized internal text/ruled-line alignment grid inside the document quad
+          ctx.strokeStyle = "rgba(56, 189, 248, 0.52)";
+          ctx.lineWidth = Math.max(1.5, sW / 420);
+          ctx.setLineDash([Math.max(6, Math.round(sW / 95)), Math.max(5, Math.round(sW / 110))]);
+          const eOff = page.edgeOffsets || createZeroEdgeOffsets();
+          for (let gi = 1; gi <= 5; gi++) {
+            const v = gi / 6.0;
+            ctx.beginPath();
+            for (let s = 0; s <= 24; s++) {
+              const u = s / 24.0;
+              const bx = (c[0].x * (1 - u) + c[1].x * u) * (1 - v) + (c[3].x * (1 - u) + c[2].x * u) * v;
+              const by = (c[0].y * (1 - u) + c[1].y * u) * (1 - v) + (c[3].y * (1 - u) + c[2].y * u) * v;
+              const tTop = evalEdge3PointOffset(eOff[0], u);
+              const tBot = evalEdge3PointOffset(eOff[2], 1.0 - u);
+              const tRight = evalEdge3PointOffset(eOff[1], v);
+              const tLeft = evalEdge3PointOffset(eOff[3], 1.0 - v);
+              const gx = bx + (1 - v) * tTop.x + v * tBot.x + (1 - u) * tLeft.x + u * tRight.x;
+              const gy = by + (1 - v) * tTop.y + v * tBot.y + (1 - u) * tLeft.y + u * tRight.y;
+              if (s === 0) ctx.moveTo(gx, gy);
+              else ctx.lineTo(gx, gy);
+            }
+            ctx.stroke();
+          }
+          for (let gj = 1; gj <= 3; gj++) {
+            const u = gj / 4.0;
+            ctx.beginPath();
+            for (let s = 0; s <= 24; s++) {
+              const v = s / 24.0;
+              const bx = (c[0].x * (1 - u) + c[1].x * u) * (1 - v) + (c[3].x * (1 - u) + c[2].x * u) * v;
+              const by = (c[0].y * (1 - u) + c[1].y * u) * (1 - v) + (c[3].y * (1 - u) + c[2].y * u) * v;
+              const tTop = evalEdge3PointOffset(eOff[0], u);
+              const tBot = evalEdge3PointOffset(eOff[2], 1.0 - u);
+              const tRight = evalEdge3PointOffset(eOff[1], v);
+              const tLeft = evalEdge3PointOffset(eOff[3], 1.0 - v);
+              const gx = bx + (1 - v) * tTop.x + v * tBot.x + (1 - u) * tLeft.x + u * tRight.x;
+              const gy = by + (1 - v) * tTop.y + v * tBot.y + (1 - u) * tLeft.y + u * tRight.y;
+              if (s === 0) ctx.moveTo(gx, gy);
+              else ctx.lineTo(gx, gy);
+            }
+            ctx.stroke();
+          }
+          ctx.setLineDash([]);
           ctx.restore();
 
           // In "❖ Căn đa điểm" mode, draw 5 intermediate points (t = 1/6, 2/6, 3/6, 4/6, 5/6) on each of the 4 edges!
@@ -6631,6 +6952,9 @@
         el.ddBookCurveSlider.value = s.bookCurve || 0;
         el.ddBookCurveVal.textContent = `${s.bookCurve || 0}%`;
         el.btnDdToggleAlpha.classList.toggle("active", !!s.transparentBg);
+        if (el.btnDdToggleLineAlign) {
+          el.btnDdToggleLineAlign.classList.toggle("active", s.autoLineDewarp !== false);
+        }
 
         el.ddFilenameInput.value = page.name || "";
         el.ddNoteInput.value = page.note || "";
@@ -7111,6 +7435,23 @@
         });
 
         // Alpha Background Toggle inside ☰ Drawer
+        if (el.btnDdToggleLineAlign) {
+          el.btnDdToggleLineAlign.addEventListener("click", () => {
+            const page = getCurrentPage();
+            if (!page) return;
+            page.settings.autoLineDewarp = !(page.settings.autoLineDewarp !== false);
+            syncControlsFromPage(page);
+            updateGeometryAndProcess(page, true);
+            renderStage();
+            renderFullScreenEditor();
+            showToast(
+              page.settings.autoLineDewarp
+                ? "📏 Đã bật tự động nhận diện & căn thẳng dòng chữ/đường kẻ khớp trang giấy!"
+                : "Đã tắt tự động căn thẳng dòng chữ/đường kẻ."
+            );
+          });
+        }
+
         el.btnDdToggleAlpha.addEventListener("click", () => {
           const page = getCurrentPage();
           if (!page) return;
@@ -7363,6 +7704,23 @@
           renderFullScreenEditor();
           showToast(page.srcCanvas._hasCurvedRim ? "Đã tự động bắt chuẩn đường lượn rìa tài liệu!" : "Đã tự động bắt chuẩn rìa tài liệu!");
         });
+
+        if (el.btnAlignByTextLines) {
+          el.btnAlignByTextLines.addEventListener("click", () => {
+            const page = getCurrentPage();
+            if (!page) return;
+            const res = alignQuadWithInternalLines(page);
+            syncAlignModeButtons();
+            syncControlsFromPage(page);
+            updateGeometryAndProcess(page, true);
+            renderFullScreenEditor();
+            if (res.aligned && res.maxDisp >= 0.65) {
+              showToast(`📏 Đã nhận diện dòng chữ/đường kẻ & căn thẳng đồng bộ (${res.maxDisp.toFixed(1)} px)!`);
+            } else {
+              showToast("📏 Các dòng chữ & đường kẻ đã thẳng khớp với khung trang giấy!");
+            }
+          });
+        }
 
         el.btnFullFrameCorners.addEventListener("click", () => {
           const page = getCurrentPage();

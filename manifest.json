@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v31.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Bắt chuẩn rìa tờ giấy đặt chồng lên tờ giấy khác (Paper-on-Paper), giấy trắng trên mặt bàn gỗ và nền đồng sáng, tùy chỉnh nền/viền ghi chú, bật đèn Flash và giữ 1 ngón di chuyển ảnh.",
+  "description": "ScanhoahocABC (v32.0) — Ứng dụng quét tài liệu chuyên nghiệp: Nhận diện dòng chữ & đường kẻ ngang/dọc để căn thẳng đồng bộ với toàn trang giấy, bắt chuẩn rìa giấy chồng lên giấy (Paper-on-Paper) và mặt bàn gỗ.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
