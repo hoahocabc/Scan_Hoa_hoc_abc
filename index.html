@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v32.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Nhận diện siêu tốc & chính xác rìa tài liệu đồng sáng với nền, tùy chỉnh ghi chú (có/không nền, có/không viền, màu nền, màu viền, màu chữ), bật đèn Flash và giữ 1 ngón di chuyển ảnh." />
+  <meta name="description" content="ScanhoahocABC (v33.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Nhận diện siêu tốc & chính xác rìa tài liệu đồng sáng với nền, tùy chỉnh ghi chú (có/không nền, có/không viền, màu nền, màu viền, màu chữ), bật đèn Flash và giữ 1 ngón di chuyển ảnh." />
   <style>
     :root {
       --primary: #2563eb;
@@ -2716,10 +2716,11 @@
   const origW = srcCanvas.width;
   const origH = srcCanvas.height;
 
-  const maxDim = 264;
+  // 360px working resolution for crisp rim localization on all object sizes
+  const maxDim = 360;
   const scale = Math.min(1, maxDim / Math.max(origW, origH));
-  const w = Math.max(64, Math.round(origW * scale));
-  const h = Math.max(64, Math.round(origH * scale));
+  const w = Math.max(72, Math.round(origW * scale));
+  const h = Math.max(72, Math.round(origH * scale));
 
   const tmp = document.createElement("canvas");
   tmp.width = w;
@@ -2779,13 +2780,13 @@
     }
   }
 
-  // 1. 2D Morphological closing (rad=3) to erase internal text strokes & table borders on surfaces
+  // 1. Morphological 7x7 closing (rad=3) to erase internal text strokes & table borders on surfaces
   const L_surf = sepMinFilter(sepMaxFilter(L, w, h, 3), w, h, 3);
-  const R_surf = sepMinFilter(sepMaxFilter(R, w, h, 2), w, h, 2);
-  const G_surf = sepMinFilter(sepMaxFilter(G, w, h, 2), w, h, 2);
-  const B_surf = sepMinFilter(sepMaxFilter(B, w, h, 2), w, h, 2);
+  const R_surf = sepMinFilter(sepMaxFilter(R, w, h, 3), w, h, 3);
+  const G_surf = sepMinFilter(sepMaxFilter(G, w, h, 3), w, h, 3);
+  const B_surf = sepMinFilter(sepMaxFilter(B, w, h, 3), w, h, 3);
 
-  // 1b. Tilt-Tolerant Directional Crease Maps:
+  // 1b. Tilt-Tolerant 3-Point Directional Crease Maps
   const L_creaseX = new Float32Array(nPix);
   const L_creaseY = new Float32Array(nPix);
   for (let y = 2; y < h - 2; y++) {
@@ -2802,142 +2803,28 @@
     }
   }
 
-  // 2. Illumination envelope (rad=16) for shadow-invariant normalized reflectance N_surf (0..255)
-  const L_env = sepBoxBlur(sepMaxFilter(L_surf, w, h, 16), w, h, 12);
+  // 2. Illumination envelope (rad=20) for shadow-invariant normalized reflectance N_surf (0..255) & opponent chroma
+  const L_env = sepBoxBlur(sepMaxFilter(L_surf, w, h, 20), w, h, 16);
   const N_surf = new Float32Array(nPix);
   const Cr_surf = new Float32Array(nPix);
   const Cb_surf = new Float32Array(nPix);
-
   for (let i = 0; i < nPix; i++) {
     N_surf[i] = Math.min(255.0, (L_surf[i] * 245.0) / Math.max(42.0, L_env[i]));
-    const normScale = 190.0 / Math.max(55.0, L_surf[i]);
+    const normScale = 190.0 / Math.max(50.0, L_surf[i]);
     Cr_surf[i] = (R_surf[i] - G_surf[i]) * normScale;
     Cb_surf[i] = (B_surf[i] - 0.5 * (R_surf[i] + G_surf[i])) * normScale;
-  }
-
-  // 3. Estimate Document Interior Surface Prototype from central region [0.18..0.82]
-  const coreSamples = [];
-  const cx0 = Math.floor(w * 0.18), cx1 = Math.ceil(w * 0.82);
-  const cy0 = Math.floor(h * 0.18), cy1 = Math.ceil(h * 0.82);
-  for (let y = cy0; y < cy1; y += 2) {
-    const rOff = y * w;
-    for (let x = cx0; x < cx1; x += 2) {
-      const i = rOff + x;
-      const chroma = Math.hypot(Cr_surf[i], Cb_surf[i]);
-      const whiteness = 0.55 * N_surf[i] + 0.45 * L_surf[i] - 0.85 * chroma;
-      coreSamples.push({ i, whiteness, L: L_surf[i], N: N_surf[i], Cr: Cr_surf[i], Cb: Cb_surf[i] });
-    }
-  }
-  coreSamples.sort((a, b) => b.whiteness - a.whiteness);
-  const iStart = Math.max(0, Math.floor(coreSamples.length * 0.02));
-  const iEnd = Math.max(iStart + 10, Math.floor(coreSamples.length * 0.18));
-  let docL = 0, docN = 0, docCr = 0, docCb = 0;
-  for (let k = iStart; k < iEnd; k++) {
-    docL += coreSamples[k].L;
-    docN += coreSamples[k].N;
-    docCr += coreSamples[k].Cr;
-    docCb += coreSamples[k].Cb;
-  }
-  const protoCnt = (iEnd - iStart) || 1;
-  docL /= protoCnt;
-  docN /= protoCnt;
-  docCr /= protoCnt;
-  docCb /= protoCnt;
-
-  const D_doc = new Float32Array(nPix);
-  let borderMeanD = 0, borderChromaMean = 0;
-  const bMarginX = Math.max(4, Math.floor(w * 0.05));
-  const bMarginY = Math.max(4, Math.floor(h * 0.05));
-
-  const borderChromaArr = [];
-  for (let y = 0; y < h; y += 2) {
-    const rOff = y * w;
-    const isBorderY = y < bMarginY || y >= h - bMarginY;
-    if (isBorderY) {
-      for (let x = 0; x < w; x += 2) {
-        const i = rOff + x;
-        borderChromaArr.push(Math.hypot(Cr_surf[i] - docCr, Cb_surf[i] - docCb));
-      }
-    } else {
-      for (let x = 0; x < bMarginX; x += 2) {
-        const i1 = rOff + x, i2 = rOff + (w - 1 - x);
-        borderChromaArr.push(Math.hypot(Cr_surf[i1] - docCr, Cb_surf[i1] - docCb));
-        borderChromaArr.push(Math.hypot(Cr_surf[i2] - docCr, Cb_surf[i2] - docCb));
-      }
-    }
-  }
-  borderChromaArr.sort((a, b) => b - a);
-  const topBorderCnt = Math.max(10, Math.floor(borderChromaArr.length * 0.60));
-  for (let k = 0; k < topBorderCnt; k++) borderChromaMean += borderChromaArr[k];
-  borderChromaMean /= topBorderCnt;
-  const bgIsChromatic = borderChromaMean > 18.0;
-
-  let bSumD = 0;
-  for (let y = 0; y < h; y++) {
-    const rOff = y * w;
-    const isBorderY = y < bMarginY || y >= h - bMarginY;
-    for (let x = 0; x < w; x++) {
-      const i = rOff + x;
-      const dCr = Cr_surf[i] - docCr;
-      const dCb = Cb_surf[i] - docCb;
-      const chromaDiff = Math.sqrt(dCr * dCr + dCb * dCb);
-      const reflDef = Math.max(0.0, docN - N_surf[i] - 14.0);
-      const rawLumDef = Math.max(0.0, docL - L_surf[i] - 24.0);
-      const shadowSafeLumDef = Math.min(rawLumDef, reflDef * 1.35 + 8.0);
-      const lumWeight = bgIsChromatic && L_surf[i] > 55.0 ? Math.min(1.0, chromaDiff / 16.0) : 1.0;
-      const dVal = 1.30 * chromaDiff + lumWeight * (0.85 * reflDef + 0.45 * shadowSafeLumDef);
-      D_doc[i] = dVal;
-      if (isBorderY || x < bMarginX || x >= w - bMarginX) {
-        bSumD += dVal;
-      }
-    }
-  }
-  borderMeanD = bgIsChromatic ? Math.max(borderChromaMean * 1.15, bSumD / Math.max(1, borderChromaArr.length * 4)) : (bSumD / Math.max(1, borderChromaArr.length * 4));
-
-  const hasStrongBgSeparation = borderMeanD > 20.0;
-  const dGateScale = Math.max(18.0, Math.min(38.0, borderMeanD * 0.45));
-
-  // Estimate active document bounding span [xDocMin, xDocMax, yDocMin, yDocMax]
-  let xDocMin = Math.floor(w * 0.04), xDocMax = Math.ceil(w * 0.96);
-  let yDocMin = Math.floor(h * 0.04), yDocMax = Math.ceil(h * 0.96);
-  if (hasStrongBgSeparation) {
-    const dThr = Math.max(16.0, borderMeanD * 0.44);
-    const colHits = new Int32Array(w);
-    const rowHits = new Int32Array(h);
-    for (let y = bMarginY; y < h - bMarginY; y++) {
-      const rOff = y * w;
-      for (let x = bMarginX; x < w - bMarginX; x++) {
-        if (D_doc[rOff + x] < dThr) {
-          colHits[x]++;
-          rowHits[y]++;
-        }
-      }
-    }
-    const minColH = Math.max(6, Math.floor(h * 0.10));
-    const minRowW = Math.max(6, Math.floor(w * 0.10));
-    let x0 = bMarginX, x1 = w - 1 - bMarginX;
-    while (x0 < w * 0.70 && colHits[x0] < minColH) x0++;
-    while (x1 > w * 0.30 && colHits[x1] < minColH) x1--;
-    let y0 = bMarginY, y1 = h - 1 - bMarginY;
-    while (y0 < h * 0.70 && rowHits[y0] < minRowW) y0++;
-    while (y1 > h * 0.30 && rowHits[y1] < minRowW) y1--;
-    if (x1 - x0 > w * 0.18 && y1 - y0 > h * 0.18) {
-      xDocMin = Math.max(4, x0 - Math.round(w * 0.06));
-      xDocMax = Math.min(w - 5, x1 + Math.round(w * 0.06));
-      yDocMin = Math.max(4, y0 - Math.round(h * 0.06));
-      yDocMax = Math.min(h - 5, y1 + Math.round(h * 0.06));
-    }
   }
 
   const rawLeft = new Float32Array(nPix);
   const rawRight = new Float32Array(nPix);
   const rawTop = new Float32Array(nPix);
   const rawBot = new Float32Array(nPix);
+  const eLeft = new Float32Array(nPix);
+  const eRight = new Float32Array(nPix);
+  const eTop = new Float32Array(nPix);
+  const eBot = new Float32Array(nPix);
   const popMapX = new Float32Array(nPix);
   const popMapY = new Float32Array(nPix);
-
-  const xDocMid = 0.5 * (xDocMin + xDocMax);
-  const yDocMid = 0.5 * (yDocMin + yDocMax);
 
   for (let y = 6; y < h - 6; y++) {
     const rOff = y * w;
@@ -2945,231 +2832,223 @@
       const i = rOff + x;
 
       // ==========================================================
-      // 1. HORIZONTAL TRANSITIONS (Left & Right Vertical Edges)
+      // HORIZONTAL RIM TRANSITIONS (Left & Right Rims)
       // ==========================================================
       const L_in_L = 0.5 * (L_surf[i + 3] + L_surf[i + 6]);
       const L_out_L = 0.5 * (L_surf[i - 3] + L_surf[i - 6]);
       const N_in_L = 0.5 * (N_surf[i + 3] + N_surf[i + 6]);
       const N_out_L = 0.5 * (N_surf[i - 3] + N_surf[i - 6]);
-      const D_in_L = 0.5 * (D_doc[i + 3] + D_doc[i + 6]);
-      const D_out_L = 0.5 * (D_doc[i - 3] + D_doc[i - 6]);
+      const Cr_in_L = 0.5 * (Cr_surf[i + 3] + Cr_surf[i + 6]);
+      const Cr_out_L = 0.5 * (Cr_surf[i - 3] + Cr_surf[i - 6]);
+      const Cb_in_L = 0.5 * (Cb_surf[i + 3] + Cb_surf[i + 6]);
+      const Cb_out_L = 0.5 * (Cb_surf[i - 3] + Cb_surf[i - 6]);
 
-      const flatVarX = Math.abs(L_surf[i + 6] - L_surf[i + 3]) + Math.abs(L_surf[i - 3] - L_surf[i - 6]);
+      const flatVarInX = Math.abs(L_surf[i + 6] - L_surf[i + 3]) + 0.5 * Math.hypot(Cr_surf[i + 6] - Cr_surf[i + 3], Cb_surf[i + 6] - Cb_surf[i + 3]);
+      const flatVarOutX = Math.abs(L_surf[i - 6] - L_surf[i - 3]) + 0.5 * Math.hypot(Cr_surf[i - 6] - Cr_surf[i - 3], Cb_surf[i - 6] - Cb_surf[i - 3]);
+      const flatVarX = flatVarInX + flatVarOutX;
       const absStepX = Math.abs(L_in_L - L_out_L);
       const minLX = L_in_L < L_out_L ? L_in_L : L_out_L;
       const minNX = N_in_L < N_out_L ? N_in_L : N_out_L;
-      const bothSidesPaperX = minLX > 85.0 && minNX > 164.0 && D_in_L < 25.0 && D_out_L < 25.0;
 
+      const macDC_x = Math.hypot(
+        R_surf[i + 4] - R_surf[i - 4],
+        G_surf[i + 4] - G_surf[i - 4],
+        B_surf[i + 4] - B_surf[i - 4]
+      );
+      const macDOpp_x = Math.hypot(Cr_in_L - Cr_out_L, Cb_in_L - Cb_out_L);
+
+      const sameSurfaceX = absStepX < 9.0 && macDC_x < 9.0 && macDOpp_x < 7.5 && flatVarX < 6.0;
       const minCY = Math.min(L_creaseX[i - 1], L_creaseX[i], L_creaseX[i + 1]);
       const rawMinCX = Math.min(L_minX[i - 1], L_minX[i], L_minX[i + 1]);
       const dipY = Math.min(L_surf[i + 3], L_surf[i - 3]) - minCY;
       const rawDipX = minLX - rawMinCX;
-
-      const dr4x = R_surf[i + 4] - R_surf[i - 4];
-      const dg4x = G_surf[i + 4] - G_surf[i - 4];
-      const db4x = B_surf[i + 4] - B_surf[i - 4];
-      const macDC_x = Math.sqrt(dr4x * dr4x + dg4x * dg4x + db4x * db4x);
-
       const cInkX = Math.hypot(R[i] - 0.5 * (R_surf[i + 3] + R_surf[i - 3]), G[i] - 0.5 * (G_surf[i + 3] + G_surf[i - 3]), B[i] - 0.5 * (B_surf[i + 3] + B_surf[i - 3]));
-      const isInkStrokeX = bothSidesPaperX && (rawDipX > 32.0 || dipY > 30.0 || (cInkX > 26.0 && absStepX < 10.0 && macDC_x < 8.0));
+
+      const isInternalInkX = sameSurfaceX && minLX > 100.0 && (rawDipX > 32.0 || dipY > 30.0 || cInkX > 24.0);
 
       let wwCreaseX = 0.0;
-      if (!isInkStrokeX && minLX > 80.0 && minNX > 164.0 && absStepX < 32.0 && flatVarX < 4.8) {
-        if (dipY > 1.15 && dipY < 28.0) wwCreaseX = dipY;
+      if (!isInternalInkX && minLX > 80.0 && minNX > 155.0 && absStepX < 30.0 && flatVarX < 5.5) {
+        if (dipY > 0.90 && dipY < 30.0) wwCreaseX = dipY;
       }
 
-      let isoStepX = 0.0;
-      const effStepX = Math.max(absStepX, bothSidesPaperX ? macDC_x * 0.70 : 0.0);
-      if (!isInkStrokeX && (!hasStrongBgSeparation || bothSidesPaperX) && minLX > 90.0 && minNX > 164.0 && effStepX >= 2.0 && effStepX < 42.0 && flatVarX < effStepX * 0.42 + 1.2) {
-        isoStepX = effStepX - flatVarX * 0.85;
+      let flatRimStepX = 0.0;
+      const rawRimContrastX = Math.max(absStepX, macDC_x * 0.78, macDOpp_x * 0.85);
+      if (!isInternalInkX && rawRimContrastX >= 1.25 && flatVarX < rawRimContrastX * 0.48 + 1.5) {
+        flatRimStepX = rawRimContrastX - flatVarX * 0.75;
       }
 
-      const isPopRimX = bothSidesPaperX && !isInkStrokeX && (wwCreaseX >= 1.20 || isoStepX >= 2.1);
-      if (isPopRimX) {
-        popMapX[i] = Math.min(1.0, (wwCreaseX * 0.28 + isoStepX * 0.18));
+      if (!isInternalInkX && minLX > 85.0 && minNX > 155.0 && Math.max(Cr_in_L, Cr_out_L) < 22.0 && (wwCreaseX >= 0.95 || (flatRimStepX >= 1.25 && rawRimContrastX < 36.0))) {
+        popMapX[i] = Math.min(1.0, wwCreaseX * 0.34 + flatRimStepX * 0.22);
       }
 
-      const docStepL = Math.max(0.0, D_out_L - D_in_L);
-      const docStepR = Math.max(0.0, D_in_L - D_out_L);
+      const bothSidesChromaticWoodX = Math.hypot(Cr_in_L, Cb_in_L) > 18.0 && Math.hypot(Cr_out_L, Cb_out_L) > 18.0 && macDOpp_x < 14.0;
+      const woodGrainDampX = bothSidesChromaticWoodX ? 0.15 : 1.0;
 
-      let wDocInL = 1.0, wDocInR = 1.0;
-      if (isInkStrokeX) {
-        wDocInL = 0.0;
-        wDocInR = 0.0;
-      } else if (hasStrongBgSeparation) {
-        const exL = Math.max(0.0, D_in_L - 18.0) / dGateScale;
-        const exR = Math.max(0.0, D_out_L - 18.0) / dGateScale;
-        wDocInL = Math.exp(-exL * exL);
-        wDocInR = Math.exp(-exR * exR);
-        if (!isPopRimX) {
-          if (D_out_L < 14.0 && docStepL < 12.0) wDocInL *= 0.02;
-          if (D_in_L < 14.0 && docStepR < 12.0) wDocInR *= 0.02;
-        }
-      }
+      const darkInStepL = (L_out_L - L_in_L > 35.0 && Math.abs(L_surf[i + 6] - L_surf[i + 3]) < 8.0) ? (L_out_L - L_in_L) * 0.85 : 0.0;
+      const darkInStepR = (L_in_L - L_out_L > 35.0 && Math.abs(L_surf[i - 6] - L_surf[i - 3]) < 8.0) ? (L_in_L - L_out_L) * 0.85 : 0.0;
 
-      const popBoostX = (hasStrongBgSeparation && isPopRimX) ? 3.4 : 1.0;
-      const effCreaseX = wwCreaseX * popBoostX;
-      const effIsoX = isoStepX * popBoostX;
-
-      const macDL_x = Math.max(L_in_L - L_out_L, (N_in_L - N_out_L) * 0.85, docStepL * 0.80, (x < xDocMid || isPopRimX) ? effIsoX * 0.85 : 0.0);
-      const macDL_x_R = Math.max(L_out_L - L_in_L, (N_out_L - N_in_L) * 0.85, docStepR * 0.80, (x > xDocMid || isPopRimX) ? effIsoX * 0.85 : 0.0);
+      const macDL_x = Math.max(
+        L_in_L - L_out_L,
+        (N_in_L - N_out_L) * 0.85,
+        flatRimStepX * 0.90,
+        darkInStepL
+      );
+      const macDL_x_R = Math.max(
+        L_out_L - L_in_L,
+        (N_out_L - N_in_L) * 0.85,
+        flatRimStepX * 0.90,
+        darkInStepR
+      );
 
       const surfDL1_x = L_surf[i + 1] - L_surf[i - 1];
       const surfDL2_x = L_surf[i + 2] - L_surf[i - 2];
-      const rawDL1_x = bothSidesPaperX ? (L_creaseX[i + 1] - L_creaseX[i - 1]) : (L[i + 1] - L[i - 1]);
-      const rawDL2_x = bothSidesPaperX ? (L_creaseX[i + 2] - L_creaseX[i - 2]) : (L[i + 2] - L[i - 2]);
-      const dr1x = R[i + 1] - R[i - 1], dg1x = G[i + 1] - G[i - 1], db1x = B[i + 1] - B[i - 1];
-      const rawDC1_x = bothSidesPaperX ? 0.0 : Math.sqrt(dr1x * dr1x + dg1x * dg1x + db1x * db1x);
-      const dr2x = R_surf[i + 2] - R_surf[i - 2], dg2x = G_surf[i + 2] - G_surf[i - 2], db2x = B_surf[i + 2] - B_surf[i - 2];
-      const surfDC2_x = Math.sqrt(dr2x * dr2x + dg2x * dg2x + db2x * db2x);
-      const surfDC1_x = (0.55 * rawDC1_x + 0.45 * surfDC2_x) * (isPopRimX ? 1.8 : 1.0);
-      const isoPeakX = effIsoX > 0 ? 0.5 * Math.abs(surfDL2_x) + 0.35 * effIsoX : 0.0;
+      const rawDL1_x = sameSurfaceX ? (L_creaseX[i + 1] - L_creaseX[i - 1]) : (L[i + 1] - L[i - 1]);
+      const rawDL2_x = sameSurfaceX ? (L_creaseX[i + 2] - L_creaseX[i - 2]) : (L[i + 2] - L[i - 2]);
+      const rawDC1_x = sameSurfaceX ? 0.0 : Math.hypot(R[i + 1] - R[i - 1], G[i + 1] - G[i - 1], B[i + 1] - B[i - 1]);
+      const surfDC2_x = Math.hypot(R_surf[i + 2] - R_surf[i - 2], G_surf[i + 2] - G_surf[i - 2], B_surf[i + 2] - B_surf[i - 2]);
+      const oppDC2_x = Math.hypot(Cr_surf[i + 2] - Cr_surf[i - 2], Cb_surf[i + 2] - Cb_surf[i - 2]);
+      const surfDC1_x = 0.45 * rawDC1_x + 0.55 * Math.max(surfDC2_x, oppDC2_x * 0.90);
+      const biPeakX = (flatRimStepX > 0 || darkInStepL > 0 || darkInStepR > 0) ? 0.55 * Math.abs(surfDL2_x) + 0.40 * Math.max(flatRimStepX, darkInStepL, darkInStepR) : 0.0;
 
-      if ((L_in_L > 32.0 || N_in_L > 78.0) && wDocInL > 0.05) {
-        const gateL = (Math.max(0.0, macDL_x) + 0.68 * macDC_x + 2.6 * effCreaseX) * wDocInL;
+      if (!isInternalInkX) {
+        const effColorX = Math.max(macDC_x, macDOpp_x * 0.95);
+        const gateL = (Math.max(0.0, macDL_x) + 0.62 * effColorX + 3.2 * wwCreaseX) * woodGrainDampX;
         if (gateL > 1.8) {
-          const peakL = (0.45 * Math.max(0.0, surfDL1_x, isoPeakX, docStepL * 0.45) + 0.35 * Math.max(0.0, rawDL1_x) + 0.20 * Math.max(0.0, rawDL2_x) + 0.55 * surfDC1_x + 2.5 * effCreaseX) * wDocInL;
-          rawLeft[i] = peakL * Math.min(1.9, gateL / 8.0);
+          const r1L = darkInStepL > 0 ? Math.abs(rawDL1_x) : Math.max(0.0, rawDL1_x);
+          const r2L = darkInStepL > 0 ? Math.abs(rawDL2_x) : Math.max(0.0, rawDL2_x);
+          const peakL = (0.45 * Math.max(0.0, surfDL1_x, biPeakX) + 0.35 * r1L + 0.20 * r2L + 0.52 * surfDC1_x + 3.0 * wwCreaseX) * woodGrainDampX;
+          rawLeft[i] = peakL * Math.min(1.8, gateL / 8.5);
         }
-      }
 
-      if ((L_out_L > 32.0 || N_out_L > 78.0) && wDocInR > 0.05) {
-        const gateR = (Math.max(0.0, macDL_x_R) + 0.68 * macDC_x + 2.6 * effCreaseX) * wDocInR;
+        const gateR = (Math.max(0.0, macDL_x_R) + 0.62 * effColorX + 3.2 * wwCreaseX) * woodGrainDampX;
         if (gateR > 1.8) {
-          const peakR = (0.45 * Math.max(0.0, -surfDL1_x, isoPeakX, docStepR * 0.45) + 0.35 * Math.max(0.0, -rawDL1_x) + 0.20 * Math.max(0.0, -rawDL2_x) + 0.55 * surfDC1_x + 2.5 * effCreaseX) * wDocInR;
-          rawRight[i] = peakR * Math.min(1.9, gateR / 8.0);
+          const r1R = darkInStepR > 0 ? Math.abs(rawDL1_x) : Math.max(0.0, -rawDL1_x);
+          const r2R = darkInStepR > 0 ? Math.abs(rawDL2_x) : Math.max(0.0, -rawDL2_x);
+          const peakR = (0.45 * Math.max(0.0, -surfDL1_x, biPeakX) + 0.35 * r1R + 0.20 * r2R + 0.52 * surfDC1_x + 3.0 * wwCreaseX) * woodGrainDampX;
+          rawRight[i] = peakR * Math.min(1.8, gateR / 8.5);
         }
       }
 
       // ==========================================================
-      // 2. VERTICAL TRANSITIONS (Top & Bottom Horizontal Edges)
+      // VERTICAL RIM TRANSITIONS (Top & Bottom Rims)
       // ==========================================================
       const L_in_T = 0.5 * (L_surf[i + 3 * w] + L_surf[i + 6 * w]);
       const L_out_T = 0.5 * (L_surf[i - 3 * w] + L_surf[i - 6 * w]);
       const N_in_T = 0.5 * (N_surf[i + 3 * w] + N_surf[i + 6 * w]);
       const N_out_T = 0.5 * (N_surf[i - 3 * w] + N_surf[i - 6 * w]);
-      const D_in_T = 0.5 * (D_doc[i + 3 * w] + D_doc[i + 6 * w]);
-      const D_out_T = 0.5 * (D_doc[i - 3 * w] + D_doc[i - 6 * w]);
+      const Cr_in_T = 0.5 * (Cr_surf[i + 3 * w] + Cr_surf[i + 6 * w]);
+      const Cr_out_T = 0.5 * (Cr_surf[i - 3 * w] + Cr_surf[i - 6 * w]);
+      const Cb_in_T = 0.5 * (Cb_surf[i + 3 * w] + Cb_surf[i + 6 * w]);
+      const Cb_out_T = 0.5 * (Cb_surf[i - 3 * w] + Cb_surf[i - 6 * w]);
 
-      const flatVarY = Math.abs(L_surf[i + 6 * w] - L_surf[i + 3 * w]) + Math.abs(L_surf[i - 3 * w] - L_surf[i - 6 * w]);
+      const flatVarInY = Math.abs(L_surf[i + 6 * w] - L_surf[i + 3 * w]) + 0.5 * Math.hypot(Cr_surf[i + 6 * w] - Cr_surf[i + 3 * w], Cb_surf[i + 6 * w] - Cb_surf[i + 3 * w]);
+      const flatVarOutY = Math.abs(L_surf[i - 6 * w] - L_surf[i - 3 * w]) + 0.5 * Math.hypot(Cr_surf[i - 6 * w] - Cr_surf[i - 3 * w], Cb_surf[i - 6 * w] - Cb_surf[i - 3 * w]);
+      const flatVarY = flatVarInY + flatVarOutY;
       const absStepY = Math.abs(L_in_T - L_out_T);
       const minLY = L_in_T < L_out_T ? L_in_T : L_out_T;
       const minNY = N_in_T < N_out_T ? N_in_T : N_out_T;
-      const bothSidesPaperY = minLY > 85.0 && minNY > 164.0 && D_in_T < 25.0 && D_out_T < 25.0;
 
+      const macDC_y = Math.hypot(
+        R_surf[i + 4 * w] - R_surf[i - 4 * w],
+        G_surf[i + 4 * w] - G_surf[i - 4 * w],
+        B_surf[i + 4 * w] - B_surf[i - 4 * w]
+      );
+      const macDOpp_y = Math.hypot(Cr_in_T - Cr_out_T, Cb_in_T - Cb_out_T);
+
+      const sameSurfaceY = absStepY < 9.0 && macDC_y < 9.0 && macDOpp_y < 7.5 && flatVarY < 6.0;
       const minCX = Math.min(L_creaseY[i - w], L_creaseY[i], L_creaseY[i + w]);
       const rawMinCY = Math.min(L_minY[i - w], L_minY[i], L_minY[i + w]);
       const dipX = Math.min(L_surf[i + 3 * w], L_surf[i - 3 * w]) - minCX;
       const rawDipY = minLY - rawMinCY;
-
-      const dr4y = R_surf[i + 4 * w] - R_surf[i - 4 * w];
-      const dg4y = G_surf[i + 4 * w] - G_surf[i - 4 * w];
-      const db4y = B_surf[i + 4 * w] - B_surf[i - 4 * w];
-      const macDC_y = Math.sqrt(dr4y * dr4y + dg4y * dg4y + db4y * db4y);
-
       const cInkY = Math.hypot(R[i] - 0.5 * (R_surf[i + 3 * w] + R_surf[i - 3 * w]), G[i] - 0.5 * (G_surf[i + 3 * w] + G_surf[i - 3 * w]), B[i] - 0.5 * (B_surf[i + 3 * w] + B_surf[i - 3 * w]));
-      const isInkStrokeY = bothSidesPaperY && (rawDipY > 32.0 || dipX > 30.0 || (cInkY > 26.0 && absStepY < 10.0 && macDC_y < 8.0));
+
+      const isInternalInkY = sameSurfaceY && minLY > 100.0 && (rawDipY > 32.0 || dipX > 30.0 || cInkY > 24.0);
 
       let wwCreaseY = 0.0;
-      if (!isInkStrokeY && minLY > 80.0 && minNY > 164.0 && absStepY < 32.0 && flatVarY < 4.8) {
-        if (dipX > 1.15 && dipX < 28.0) wwCreaseY = dipX;
+      if (!isInternalInkY && minLY > 80.0 && minNY > 155.0 && absStepY < 30.0 && flatVarY < 5.5) {
+        if (dipX > 0.90 && dipX < 30.0) wwCreaseY = dipX;
       }
 
-      let isoStepY = 0.0;
-      const effStepY = Math.max(absStepY, bothSidesPaperY ? macDC_y * 0.70 : 0.0);
-      if (!isInkStrokeY && (!hasStrongBgSeparation || bothSidesPaperY) && minLY > 90.0 && minNY > 164.0 && effStepY >= 2.0 && effStepY < 42.0 && flatVarY < effStepY * 0.42 + 1.2) {
-        isoStepY = effStepY - flatVarY * 0.85;
+      let flatRimStepY = 0.0;
+      const rawRimContrastY = Math.max(absStepY, macDC_y * 0.78, macDOpp_y * 0.85);
+      if (!isInternalInkY && rawRimContrastY >= 1.25 && flatVarY < rawRimContrastY * 0.48 + 1.5) {
+        flatRimStepY = rawRimContrastY - flatVarY * 0.75;
       }
 
-      const isPopRimY = bothSidesPaperY && !isInkStrokeY && (wwCreaseY >= 1.20 || isoStepY >= 2.1);
-      if (isPopRimY) {
-        popMapY[i] = Math.min(1.0, (wwCreaseY * 0.28 + isoStepY * 0.18));
+      if (!isInternalInkY && minLY > 85.0 && minNY > 155.0 && Math.max(Cr_in_T, Cr_out_T) < 22.0 && (wwCreaseY >= 0.95 || (flatRimStepY >= 1.25 && rawRimContrastY < 36.0))) {
+        popMapY[i] = Math.min(1.0, wwCreaseY * 0.34 + flatRimStepY * 0.22);
       }
 
-      const docStepT = Math.max(0.0, D_out_T - D_in_T);
-      const docStepB = Math.max(0.0, D_in_T - D_out_T);
+      const bothSidesChromaticWoodY = Math.hypot(Cr_in_T, Cb_in_T) > 18.0 && Math.hypot(Cr_out_T, Cb_out_T) > 18.0 && macDOpp_y < 14.0;
+      const woodGrainDampY = bothSidesChromaticWoodY ? 0.15 : 1.0;
 
-      let wDocInT = 1.0, wDocInB = 1.0;
-      if (isInkStrokeY) {
-        wDocInT = 0.0;
-        wDocInB = 0.0;
-      } else if (hasStrongBgSeparation) {
-        const exT = Math.max(0.0, D_in_T - 18.0) / dGateScale;
-        const exB = Math.max(0.0, D_out_T - 18.0) / dGateScale;
-        wDocInT = Math.exp(-exT * exT);
-        wDocInB = Math.exp(-exB * exB);
-        if (!isPopRimY) {
-          if (D_out_T < 14.0 && docStepT < 12.0) wDocInT *= 0.02;
-          if (D_in_T < 14.0 && docStepB < 12.0) wDocInB *= 0.02;
-        }
-      }
+      const darkInStepT = (L_out_T - L_in_T > 35.0 && Math.abs(L_surf[i + 6 * w] - L_surf[i + 3 * w]) < 8.0) ? (L_out_T - L_in_T) * 0.85 : 0.0;
+      const darkInStepB = (L_in_T - L_out_T > 35.0 && Math.abs(L_surf[i - 6 * w] - L_surf[i - 3 * w]) < 8.0) ? (L_in_T - L_out_T) * 0.85 : 0.0;
 
-      const popBoostY = (hasStrongBgSeparation && isPopRimY) ? 3.4 : 1.0;
-      const effCreaseY = wwCreaseY * popBoostY;
-      const effIsoY = isoStepY * popBoostY;
-
-      const macDL_y = Math.max(L_in_T - L_out_T, (N_in_T - N_out_T) * 0.85, docStepT * 0.80, (y < yDocMid || isPopRimY) ? effIsoY * 0.85 : 0.0);
-      const macDL_y_B = Math.max(L_out_T - L_in_T, (N_out_T - N_in_T) * 0.85, docStepB * 0.80, (y > yDocMid || isPopRimY) ? effIsoY * 0.85 : 0.0);
+      const macDL_y = Math.max(
+        L_in_T - L_out_T,
+        (N_in_T - N_out_T) * 0.85,
+        flatRimStepY * 0.90,
+        darkInStepT
+      );
+      const macDL_y_B = Math.max(
+        L_out_T - L_in_T,
+        (N_out_T - N_in_T) * 0.85,
+        flatRimStepY * 0.90,
+        darkInStepB
+      );
 
       const surfDL1_y = L_surf[i + w] - L_surf[i - w];
       const surfDL2_y = L_surf[i + 2 * w] - L_surf[i - 2 * w];
-      const rawDL1_y = bothSidesPaperY ? (L_creaseY[i + w] - L_creaseY[i - w]) : (L[i + w] - L[i - w]);
-      const rawDL2_y = bothSidesPaperY ? (L_creaseY[i + 2 * w] - L_creaseY[i - 2 * w]) : (L[i + 2 * w] - L[i - 2 * w]);
-      const dr1y = R[i + w] - R[i - w], dg1y = G[i + w] - G[i - w], db1y = B[i + w] - B[i - w];
-      const rawDC1_y = bothSidesPaperY ? 0.0 : Math.sqrt(dr1y * dr1y + dg1y * dg1y + db1y * db1y);
-      const dr2y = R_surf[i + 2 * w] - R_surf[i - 2 * w], dg2y = G_surf[i + 2 * w] - G_surf[i - 2 * w], db2y = B_surf[i + 2 * w] - B_surf[i - 2 * w];
-      const surfDC2_y = Math.sqrt(dr2y * dr2y + dg2y * dg2y + db2y * db2y);
-      const surfDC1_y = (0.55 * rawDC1_y + 0.45 * surfDC2_y) * (isPopRimY ? 1.8 : 1.0);
-      const isoPeakY = effIsoY > 0 ? 0.5 * Math.abs(surfDL2_y) + 0.35 * effIsoY : 0.0;
+      const rawDL1_y = sameSurfaceY ? (L_creaseY[i + w] - L_creaseY[i - w]) : (L[i + w] - L[i - w]);
+      const rawDL2_y = sameSurfaceY ? (L_creaseY[i + 2 * w] - L_creaseY[i - 2 * w]) : (L[i + 2 * w] - L[i - 2 * w]);
+      const rawDC1_y = sameSurfaceY ? 0.0 : Math.hypot(R[i + w] - R[i - w], G[i + w] - G[i - w], B[i + w] - B[i - w]);
+      const surfDC2_y = Math.hypot(R_surf[i + 2 * w] - R_surf[i - 2 * w], G_surf[i + 2 * w] - G_surf[i - 2 * w], B_surf[i + 2 * w] - B_surf[i - 2 * w]);
+      const oppDC2_y = Math.hypot(Cr_surf[i + 2 * w] - Cr_surf[i - 2 * w], Cb_surf[i + 2 * w] - Cb_surf[i - 2 * w]);
+      const surfDC1_y = 0.45 * rawDC1_y + 0.55 * Math.max(surfDC2_y, oppDC2_y * 0.90);
+      const biPeakY = (flatRimStepY > 0 || darkInStepT > 0 || darkInStepB > 0) ? 0.55 * Math.abs(surfDL2_y) + 0.40 * Math.max(flatRimStepY, darkInStepT, darkInStepB) : 0.0;
 
-      if ((L_in_T > 32.0 || N_in_T > 78.0) && wDocInT > 0.05) {
-        const gateT = (Math.max(0.0, macDL_y) + 0.68 * macDC_y + 2.6 * effCreaseY) * wDocInT;
+      if (!isInternalInkY) {
+        const effColorY = Math.max(macDC_y, macDOpp_y * 0.95);
+        const gateT = (Math.max(0.0, macDL_y) + 0.62 * effColorY + 3.2 * wwCreaseY) * woodGrainDampY;
         if (gateT > 1.8) {
-          const peakT = (0.45 * Math.max(0.0, surfDL1_y, isoPeakY, docStepT * 0.45) + 0.35 * Math.max(0.0, rawDL1_y) + 0.20 * Math.max(0.0, rawDL2_y) + 0.55 * surfDC1_y + 2.5 * effCreaseY) * wDocInT;
-          rawTop[i] = peakT * Math.min(1.9, gateT / 8.0);
+          const r1T = darkInStepT > 0 ? Math.abs(rawDL1_y) : Math.max(0.0, rawDL1_y);
+          const r2T = darkInStepT > 0 ? Math.abs(rawDL2_y) : Math.max(0.0, rawDL2_y);
+          const peakT = (0.45 * Math.max(0.0, surfDL1_y, biPeakY) + 0.35 * r1T + 0.20 * r2T + 0.52 * surfDC1_y + 3.0 * wwCreaseY) * woodGrainDampY;
+          rawTop[i] = peakT * Math.min(1.8, gateT / 8.5);
         }
-      }
 
-      if ((L_out_T > 32.0 || N_out_T > 78.0) && wDocInB > 0.05) {
-        const gateB = (Math.max(0.0, macDL_y_B) + 0.68 * macDC_y + 2.6 * effCreaseY) * wDocInB;
+        const gateB = (Math.max(0.0, macDL_y_B) + 0.62 * effColorY + 3.2 * wwCreaseY) * woodGrainDampY;
         if (gateB > 1.8) {
-          const peakB = (0.45 * Math.max(0.0, -surfDL1_y, isoPeakY, docStepB * 0.45) + 0.35 * Math.max(0.0, -rawDL1_y) + 0.20 * Math.max(0.0, -rawDL2_y) + 0.55 * surfDC1_y + 2.5 * effCreaseY) * wDocInB;
-          rawBot[i] = peakB * Math.min(1.9, gateB / 8.0);
+          const r1B = darkInStepB > 0 ? Math.abs(rawDL1_y) : Math.max(0.0, -rawDL1_y);
+          const r2B = darkInStepB > 0 ? Math.abs(rawDL2_y) : Math.max(0.0, -rawDL2_y);
+          const peakB = (0.45 * Math.max(0.0, -surfDL1_y, biPeakY) + 0.35 * r1B + 0.20 * r2B + 0.52 * surfDC1_y + 3.0 * wwCreaseY) * woodGrainDampY;
+          rawBot[i] = peakB * Math.min(1.8, gateB / 8.5);
         }
       }
     }
   }
 
-  function computeAdaptiveNorm(rmap) {
+  function computeSafeScale(rmap) {
     let maxV = 0;
     for (let i = 0; i < nPix; i += 2) {
       if (rmap[i] > maxV) maxV = rmap[i];
     }
-    if (maxV <= 0.5) return 6.0;
-    let sumHigh = 0, cntHigh = 0;
-    const thr = maxV * 0.35;
-    for (let i = 0; i < nPix; i += 2) {
-      const v = rmap[i];
-      if (v >= thr) { sumHigh += v; cntHigh++; }
-    }
-    const peakMean = cntHigh > 5 ? (sumHigh / cntHigh) : maxV;
-    return Math.max(1.5, Math.min(6.8, peakMean * 0.48));
+    if (maxV <= 0.4) return 1.0 / 7.5;
+    if (maxV >= 16.0) return 1.0 / 7.5;
+    return 1.0 / Math.max(1.8, maxV * 0.45);
   }
 
-  const normL = 1.0 / computeAdaptiveNorm(rawLeft);
-  const normR = 1.0 / computeAdaptiveNorm(rawRight);
-  const normT = 1.0 / computeAdaptiveNorm(rawTop);
-  const normB = 1.0 / computeAdaptiveNorm(rawBot);
+  const sL = computeSafeScale(rawLeft);
+  const sR = computeSafeScale(rawRight);
+  const sT = computeSafeScale(rawTop);
+  const sB = computeSafeScale(rawBot);
 
-  const eLeft = new Float32Array(nPix);
-  const eRight = new Float32Array(nPix);
-  const eTop = new Float32Array(nPix);
-  const eBot = new Float32Array(nPix);
   for (let i = 0; i < nPix; i++) {
-    if (rawLeft[i] > 0) eLeft[i] = Math.tanh(rawLeft[i] * normL);
-    if (rawRight[i] > 0) eRight[i] = Math.tanh(rawRight[i] * normR);
-    if (rawTop[i] > 0) eTop[i] = Math.tanh(rawTop[i] * normT);
-    if (rawBot[i] > 0) eBot[i] = Math.tanh(rawBot[i] * normB);
+    if (rawLeft[i] > 0) eLeft[i] = Math.tanh(rawLeft[i] * sL);
+    if (rawRight[i] > 0) eRight[i] = Math.tanh(rawRight[i] * sR);
+    if (rawTop[i] > 0) eTop[i] = Math.tanh(rawTop[i] * sT);
+    if (rawBot[i] > 0) eBot[i] = Math.tanh(rawBot[i] * sB);
   }
 
   const bLeft = new Float32Array(nPix);
@@ -3178,12 +3057,11 @@
   const bBot = new Float32Array(nPix);
   const bandPopX = new Float32Array(nPix);
   const bandPopY = new Float32Array(nPix);
-  const bandRad = 3;
+  const bandRad = 4;
   for (let y = 0; y < h; y++) {
     const rOff = y * w;
     for (let x = 0; x < w; x++) {
-      const x0 = x - bandRad > 0 ? x - bandRad : 0;
-      const x1 = x + bandRad < w - 1 ? x + bandRad : w - 1;
+      const x0 = Math.max(0, x - bandRad), x1 = Math.min(w - 1, x + bandRad);
       let ml = 0, mr = 0, mpX = 0;
       for (let nx = x0; nx <= x1; nx++) {
         const idx = rOff + nx;
@@ -3195,8 +3073,7 @@
       bRight[rOff + x] = mr;
       bandPopX[rOff + x] = mpX;
 
-      const y0 = y - bandRad > 0 ? y - bandRad : 0;
-      const y1 = y + bandRad < h - 1 ? y + bandRad : h - 1;
+      const y0 = Math.max(0, y - bandRad), y1 = Math.min(h - 1, y + bandRad);
       let mt = 0, mb = 0, mpY = 0;
       for (let ny = y0; ny <= y1; ny++) {
         const idx = ny * w + x;
@@ -3210,22 +3087,16 @@
     }
   }
 
-  const sharedVArr = new Float32Array(36);
-  const docSpanW = Math.max(Math.floor(w * 0.25), xDocMax - xDocMin);
-  const docSpanH = Math.max(Math.floor(h * 0.25), yDocMax - yDocMin);
-  const vYStart = Math.max(6, yDocMin + Math.floor(docSpanH * 0.12));
-  const vYSpan = Math.max(Math.floor(h * 0.24), Math.min(h - 12 - vYStart, Math.floor(docSpanH * 0.76)));
-  const hXStart = Math.max(6, xDocMin + Math.floor(docSpanW * 0.12));
-  const hXSpan = Math.max(Math.floor(w * 0.24), Math.min(w - 12 - hXStart, Math.floor(docSpanW * 0.76)));
+  const sharedVArr = new Float32Array(44);
 
-  function findBestVLines(bmap, xMinPx, xMaxPx, isLeft) {
-    const x0Min = Math.max(4, xMinPx), x0Max = Math.min(w - 5, xMaxPx);
+  function findBestVLines(bmap, xMinR, xMaxR, isLeft) {
+    const x0Min = Math.floor(w * xMinR), x0Max = Math.floor(w * xMaxR);
     const fullCands = [];
     const winCands = [];
-    const N = 32;
-    const yStart = vYStart, ySpan = vYSpan;
-    const maxTiltX = Math.floor(w * 0.34);
-    const winLen = 11;
+    const N = 40;
+    const yStart = Math.floor(h * 0.14), ySpan = Math.floor(h * 0.72);
+    const maxTiltX = Math.floor(w * 0.30);
+    const winLen = 13;
 
     for (let xt = x0Min; xt < x0Max; xt += 2) {
       const xbMin = Math.max(x0Min, xt - maxTiltX);
@@ -3240,7 +3111,7 @@
           const v = bmap[y * w + x];
           sharedVArr[k] = v;
           sumV += v;
-          if (v > 0.24) hits++;
+          if (v > 0.26) hits++;
           winSum += v;
           if (k >= winLen) winSum -= sharedVArr[k - winLen];
           if (k >= winLen - 1 && winSum > maxWinSum) maxWinSum = winSum;
@@ -3248,10 +3119,10 @@
         const meanSc = sumV / N;
         const cont = hits / N;
         const outerPref = isLeft ? 1.0 - (xt + xb) / (2.0 * w) : (xt + xb) / (2.0 * w);
-        const totalSc = meanSc * 0.58 + cont * 0.42 + outerPref * 0.02;
-        if (hits > N * 0.26) {
+        const totalSc = meanSc * 0.58 + cont * 0.42 + outerPref * 0.03;
+        if (hits > N * 0.32) {
           fullCands.push({ sc: totalSc, xt, xb });
-        } else if (hits >= 6 && maxWinSum / winLen > 0.58) {
+        } else if (hits >= 8 && maxWinSum / winLen > 0.65) {
           winCands.push({ sc: (maxWinSum / winLen) * 0.85 + outerPref * 0.02, xt, xb });
         }
       }
@@ -3262,7 +3133,7 @@
     for (let i = 0; i < fullCands.length; i++) {
       const c = fullCands[i];
       const cMid = 0.5 * (c.xt + c.xb);
-      if (kept.every((k) => Math.abs(cMid - 0.5 * (k.xt + k.xb)) > 5 && Math.abs(c.xt - k.xt) + Math.abs(c.xb - k.xb) > 8)) {
+      if (kept.every((k) => Math.abs(cMid - 0.5 * (k.xt + k.xb)) > 6 && Math.abs(c.xt - k.xt) + Math.abs(c.xb - k.xb) > 9)) {
         kept.push(c);
         if (kept.length >= 8) break;
       }
@@ -3270,22 +3141,22 @@
     for (let i = 0; i < winCands.length; i++) {
       const c = winCands[i];
       const cMid = 0.5 * (c.xt + c.xb);
-      if (kept.every((k) => Math.abs(cMid - 0.5 * (k.xt + k.xb)) > 5 && Math.abs(c.xt - k.xt) + Math.abs(c.xb - k.xb) > 8)) {
+      if (kept.every((k) => Math.abs(cMid - 0.5 * (k.xt + k.xb)) > 6 && Math.abs(c.xt - k.xt) + Math.abs(c.xb - k.xb) > 9)) {
         kept.push(c);
-        if (kept.length >= 10) break;
+        if (kept.length >= 11) break;
       }
     }
     return kept;
   }
 
-  function findBestHLines(bmap, yMinPx, yMaxPx, isTop) {
-    const y0Min = Math.max(4, yMinPx), y0Max = Math.min(h - 5, yMaxPx);
+  function findBestHLines(bmap, yMinR, yMaxR, isTop) {
+    const y0Min = Math.floor(h * yMinR), y0Max = Math.floor(h * yMaxR);
     const fullCands = [];
     const winCands = [];
-    const N = 32;
-    const xStart = hXStart, xSpan = hXSpan;
-    const maxTiltY = Math.floor(h * 0.34);
-    const winLen = 11;
+    const N = 40;
+    const xStart = Math.floor(w * 0.14), xSpan = Math.floor(w * 0.72);
+    const maxTiltY = Math.floor(h * 0.30);
+    const winLen = 13;
 
     for (let yl = y0Min; yl < y0Max; yl += 2) {
       const yrMin = Math.max(y0Min, yl - maxTiltY);
@@ -3300,7 +3171,7 @@
           const v = bmap[y * w + x];
           sharedVArr[k] = v;
           sumV += v;
-          if (v > 0.24) hits++;
+          if (v > 0.26) hits++;
           winSum += v;
           if (k >= winLen) winSum -= sharedVArr[k - winLen];
           if (k >= winLen - 1 && winSum > maxWinSum) maxWinSum = winSum;
@@ -3308,10 +3179,10 @@
         const meanSc = sumV / N;
         const cont = hits / N;
         const outerPref = isTop ? 1.0 - (yl + yr) / (2.0 * h) : (yl + yr) / (2.0 * h);
-        const totalSc = meanSc * 0.58 + cont * 0.42 + outerPref * 0.02;
-        if (hits > N * 0.26) {
+        const totalSc = meanSc * 0.58 + cont * 0.42 + outerPref * 0.03;
+        if (hits > N * 0.32) {
           fullCands.push({ sc: totalSc, yl, yr });
-        } else if (hits >= 6 && maxWinSum / winLen > 0.58) {
+        } else if (hits >= 8 && maxWinSum / winLen > 0.65) {
           winCands.push({ sc: (maxWinSum / winLen) * 0.85 + outerPref * 0.02, yl, yr });
         }
       }
@@ -3322,7 +3193,7 @@
     for (let i = 0; i < fullCands.length; i++) {
       const c = fullCands[i];
       const cMid = 0.5 * (c.yl + c.yr);
-      if (kept.every((k) => Math.abs(cMid - 0.5 * (k.yl + k.yr)) > 5 && Math.abs(c.yl - k.yl) + Math.abs(c.yr - k.yr) > 8)) {
+      if (kept.every((k) => Math.abs(cMid - 0.5 * (k.yl + k.yr)) > 6 && Math.abs(c.yl - k.yl) + Math.abs(c.yr - k.yr) > 9)) {
         kept.push(c);
         if (kept.length >= 8) break;
       }
@@ -3330,26 +3201,21 @@
     for (let i = 0; i < winCands.length; i++) {
       const c = winCands[i];
       const cMid = 0.5 * (c.yl + c.yr);
-      if (kept.every((k) => Math.abs(cMid - 0.5 * (k.yl + k.yr)) > 5 && Math.abs(c.yl - k.yl) + Math.abs(c.yr - k.yr) > 8)) {
+      if (kept.every((k) => Math.abs(cMid - 0.5 * (k.yl + k.yr)) > 6 && Math.abs(c.yl - k.yl) + Math.abs(c.yr - k.yr) > 9)) {
         kept.push(c);
-        if (kept.length >= 10) break;
+        if (kept.length >= 11) break;
       }
     }
     return kept;
   }
 
-  const leftSearchMax = Math.min(w - 6, Math.round(xDocMid + docSpanW * 0.22));
-  const rightSearchMin = Math.max(5, Math.round(xDocMid - docSpanW * 0.22));
-  const topSearchMax = Math.min(h - 6, Math.round(yDocMid + docSpanH * 0.22));
-  const botSearchMin = Math.max(5, Math.round(yDocMid - docSpanH * 0.22));
-
-  const leftCands = findBestVLines(bLeft, xDocMin, leftSearchMax, true);
-  const rightCands = findBestVLines(bRight, rightSearchMin, xDocMax, false);
-  const topCands = findBestHLines(bTop, yDocMin, topSearchMax, true);
-  const botCands = findBestHLines(bBot, botSearchMin, yDocMax, false);
+  const leftCands = findBestVLines(bLeft, 0.015, 0.56, true);
+  const rightCands = findBestVLines(bRight, 0.44, 0.985, false);
+  const topCands = findBestHLines(bTop, 0.015, 0.56, true);
+  const botCands = findBestHLines(bBot, 0.44, 0.985, false);
 
   function vlineToAbc(xt, xb) {
-    const p1x = xt, p1y = vYStart, p2x = xb, p2y = vYStart + vYSpan;
+    const p1x = xt, p1y = h * 0.14, p2x = xb, p2y = h * 0.86;
     let a = p1y - p2y, b = p2x - p1x;
     const n = Math.hypot(a, b) || 1.0;
     a /= n; b /= n;
@@ -3357,7 +3223,7 @@
   }
 
   function hlineToAbc(yl, yr) {
-    const p1x = hXStart, p1y = yl, p2x = hXStart + hXSpan, p2y = yr;
+    const p1x = w * 0.14, p1y = yl, p2x = w * 0.86, p2y = yr;
     let a = p1y - p2y, b = p2x - p1x;
     const n = Math.hypot(a, b) || 1.0;
     a /= n; b /= n;
@@ -3365,15 +3231,14 @@
   }
 
   function evalEdgeAndMargin(p1, p2, bmap, popBand, oppSpan) {
-    const N = 24;
+    const N = 30;
     const vx = p2.x - p1.x, vy = p2.y - p1.y;
     const len = Math.hypot(vx, vy) || 1.0;
-    const nx = -vy / len, ny = vx / len;
-    const deepDist = Math.min(36, Math.max(14, Math.round(oppSpan * 0.25)));
-    let sumV = 0, hits = 0, marginDeficitSum = 0, maxEdgeL = 0, sumDocMismatchIn = 0;
-    let popHits = 0;
-    let s0 = 0, s1 = 0, s2 = 0;
-    let tip0 = 0, tip1 = 0;
+    const nx = -vy / len, ny = vx / len; // inward normal
+    const deepDist = Math.min(48, Math.max(18, Math.round(oppSpan * 0.25)));
+    let sumV = 0, hits = 0, marginDeficitSum = 0, maxEdgeL = 0, maxEdgeN = 0;
+    let s0 = 0, s1 = 0, s2 = 0, tip0 = 0, tip1 = 0;
+    let popHits = 0, crossRimHits = 0;
 
     for (let k = 0; k < N; k++) {
       const t = 0.02 + (k / (N - 1)) * 0.96;
@@ -3384,42 +3249,52 @@
       const idx = y * w + x;
       const v = bmap[idx];
       sumV += v;
-      if (v > 0.24) hits++;
-      if (k < 8) s0 += v;
-      else if (k < 16) s1 += v;
+      if (v > 0.26) hits++;
+
+      if (k < 10) s0 += v;
+      else if (k < 20) s1 += v;
       else s2 += v;
+      if (k < 4) tip0 += v;
+      if (k >= N - 4) tip1 += v;
 
-      if (k < 3) tip0 += v;
-      if (k >= N - 3) tip1 += v;
+      const isPop = popBand[idx] > 0.16;
+      if (isPop) popHits++;
 
-      const isPopPt = popBand[idx] > 0.20;
-      if (isPopPt) popHits++;
-
-      const ix1 = Math.min(w - 2, Math.max(1, Math.round(bx + 5 * nx)));
-      const iy1 = Math.min(h - 2, Math.max(1, Math.round(by + 5 * ny)));
+      const ix1 = Math.min(w - 2, Math.max(1, Math.round(bx + 6 * nx)));
+      const iy1 = Math.min(h - 2, Math.max(1, Math.round(by + 6 * ny)));
+      const ox1 = Math.min(w - 2, Math.max(1, Math.round(bx - 6 * nx)));
+      const oy1 = Math.min(h - 2, Math.max(1, Math.round(by - 6 * ny)));
       const ix2 = Math.min(w - 2, Math.max(1, Math.round(bx + deepDist * nx)));
       const iy2 = Math.min(h - 2, Math.max(1, Math.round(by + deepDist * ny)));
 
       const i1 = iy1 * w + ix1;
+      const o1 = oy1 * w + ox1;
       const i2 = iy2 * w + ix2;
       if (L_surf[i1] > maxEdgeL) maxEdgeL = L_surf[i1];
-      const jump = Math.min(N_surf[i2] - N_surf[i1], L_surf[i2] - L_surf[i1]);
-      const def = Math.max(0.0, jump - 18.0);
-      marginDeficitSum += def;
-      if (hasStrongBgSeparation) {
-        const ox = Math.min(w - 2, Math.max(1, Math.round(bx - 8 * nx)));
-        const oy = Math.min(h - 2, Math.max(1, Math.round(by - 8 * ny)));
-        const iOut = oy * w + ox;
-        const outPen = isPopPt ? 0.0 : Math.max(0.0, 22.0 - D_doc[iOut]) * 1.15;
-        sumDocMismatchIn += Math.max(0.0, D_doc[i1] - 18.0) + outPen;
+      if (N_surf[i1] > maxEdgeN) maxEdgeN = N_surf[i1];
+
+      const stepL = Math.abs(L_surf[i1] - L_surf[o1]);
+      const stepC = Math.hypot(R_surf[i1] - R_surf[o1], G_surf[i1] - G_surf[o1], B_surf[i1] - B_surf[o1]);
+      const stepOpp = Math.hypot(Cr_surf[i1] - Cr_surf[o1], Cb_surf[i1] - Cb_surf[o1]);
+      if (stepL > 1.3 || stepC > 2.0 || stepOpp > 1.8 || isPop) {
+        crossRimHits++;
       }
+
+      const jumpL = Math.max(
+        Math.min(N_surf[i2] - N_surf[i1], L_surf[i2] - L_surf[i1]),
+        (L_surf[i1] - L_surf[i2]) - 18.0
+      );
+      const jumpC = Math.hypot(Cr_surf[i2] - Cr_surf[i1], Cb_surf[i2] - Cb_surf[i1]);
+      const def = Math.max(0.0, jumpL - 18.0) + Math.max(0.0, jumpC - 16.0) * 1.1;
+      marginDeficitSum += def;
     }
     const edgeSup = (sumV / N) * 0.52 + (hits / N) * 0.48;
-    const minThirdSup = Math.min(s0 / 8.0, s1 / 8.0, s2 / 8.0);
-    const minTipSup = Math.min(tip0 / 3.0, tip1 / 3.0);
+    const minThirdSup = Math.min(s0 / 10.0, s1 / 10.0, s2 / 10.0);
+    const minTipSup = Math.min(tip0 / 4.0, tip1 / 4.0);
     const popFrac = popHits / N;
-    const marginPenalty = (marginDeficitSum / N) / 40.0 + (sumDocMismatchIn / N) / 28.0;
-    return { edgeSup, minThirdSup, minTipSup, tip0: tip0 / 3.0, tip1: tip1 / 3.0, popFrac, marginPenalty, maxEdgeL };
+    const rimContrastFrac = crossRimHits / N;
+    const marginPenalty = (marginDeficitSum / N) / 38.0;
+    return { edgeSup, minThirdSup, minTipSup, popFrac, rimContrastFrac, marginPenalty, maxEdgeL, maxEdgeN };
   }
 
   let bestQuad = null;
@@ -3431,7 +3306,6 @@
   const LT_arr = topCands.map((c) => hlineToAbc(c.yl, c.yr));
   const LB_arr = botCands.map((c) => hlineToAbc(c.yl, c.yr));
 
-  // Precompute pairwise intersections & 3-index edge evaluations to eliminate 9x redundant work in 4-nested loop!
   const TL_mat = new Array(nL * nT);
   const TR_mat = new Array(nR * nT);
   const BR_mat = new Array(nR * nB);
@@ -3464,20 +3338,20 @@
 
   for (let iL = 0; iL < nL; iL++) {
     for (let iR = 0; iR < nR; iR++) {
-      if (rightCands[iR].xt <= leftCands[iL].xt + w * 0.14 && rightCands[iR].xb <= leftCands[iL].xb + w * 0.14) continue;
+      if (rightCands[iR].xt <= leftCands[iL].xt + w * 0.15 && rightCands[iR].xb <= leftCands[iL].xb + w * 0.15) continue;
       for (let iT = 0; iT < nT; iT++) {
         const tl = TL_mat[iL * nT + iT];
         const tr = TR_mat[iR * nT + iT];
         if (!tl || !tr) continue;
         const vTx = tr.x - tl.x, vTy = tr.y - tl.y;
         const lenT = Math.hypot(vTx, vTy);
-        if (lenT < Math.min(w, h) * 0.16) continue;
+        if (lenT < Math.min(w, h) * 0.18) continue;
 
         const eT = evalEdgeAndMargin(tl, tr, bTop, bandPopY, h * 0.65);
-        if (eT.edgeSup < 0.25) continue;
+        if (eT.edgeSup < 0.24) continue;
 
         for (let iB = 0; iB < nB; iB++) {
-          if (botCands[iB].yl <= topCands[iT].yl + h * 0.14 && botCands[iB].yr <= topCands[iT].yr + h * 0.14) continue;
+          if (botCands[iB].yl <= topCands[iT].yl + h * 0.15 && botCands[iB].yr <= topCands[iT].yr + h * 0.15) continue;
           const br = BR_mat[iR * nB + iB];
           const bl = BL_mat[iL * nB + iB];
           if (!br || !bl) continue;
@@ -3486,15 +3360,15 @@
           const vLx = bl.x - tl.x, vLy = bl.y - tl.y;
           const vRx = br.x - tr.x, vRy = br.y - tr.y;
           const lenB = Math.hypot(vBx, vBy), lenL = Math.hypot(vLx, vLy), lenR = Math.hypot(vRx, vRy);
-          if (Math.min(lenB, lenL, lenR) < Math.min(w, h) * 0.16) continue;
+          if (Math.min(lenB, lenL, lenR) < Math.min(w, h) * 0.18) continue;
 
           const cosTL = Math.abs(vTx * vLx + vTy * vLy) / (lenT * lenL + 1e-5);
           const cosBR = Math.abs(vBx * vRx + vBy * vRy) / (lenB * lenR + 1e-5);
-          if (cosTL > 0.45 || cosBR > 0.45) continue;
+          if (cosTL > 0.44 || cosBR > 0.44) continue;
 
           const cosTB = (vTx * vBx + vTy * vBy) / (lenT * lenB + 1e-5);
           const cosLR = (vLx * vRx + vLy * vRy) / (lenL * lenR + 1e-5);
-          if (cosTB < 0.72 || cosLR < 0.72) continue;
+          if (cosTB < 0.74 || cosLR < 0.74) continue;
 
           const spanH = 0.5 * (lenL + lenR);
           const spanW = 0.5 * (lenT + lenB);
@@ -3502,38 +3376,36 @@
           const idxL = (iL * nT + iT) * nB + iB;
           let eL = eL_cache[idxL];
           if (!eL) { eL = evalEdgeAndMargin(bl, tl, bLeft, bandPopX, w * 0.65); eL_cache[idxL] = eL; }
-          if (eL.edgeSup < 0.25) continue;
+          if (eL.edgeSup < 0.24) continue;
 
           const idxR = (iR * nT + iT) * nB + iB;
           let eR = eR_cache[idxR];
           if (!eR) { eR = evalEdgeAndMargin(tr, br, bRight, bandPopX, w * 0.65); eR_cache[idxR] = eR; }
-          if (eR.edgeSup < 0.25) continue;
+          if (eR.edgeSup < 0.24) continue;
 
           const idxB = (iL * nR + iR) * nB + iB;
           let eB = eB_cache[idxB];
           if (!eB) { eB = evalEdgeAndMargin(br, bl, bBot, bandPopY, h * 0.65); eB_cache[idxB] = eB; }
-          if (eB.edgeSup < 0.25) continue;
+          if (eB.edgeSup < 0.24) continue;
 
-          let peakInL = 0, sumInD = 0;
-          for (let iv = 1; iv <= 4; iv++) {
-            const v = iv / 5.0;
-            for (let iu = 1; iu <= 4; iu++) {
-              const u = iu / 5.0;
+          let peakInL = 0;
+          for (let iv = 1; iv <= 5; iv++) {
+            const v = iv / 6.0;
+            for (let iu = 1; iu <= 5; iu++) {
+              const u = iu / 6.0;
               const qx = Math.min(w - 2, Math.max(1, Math.round((tl.x * (1 - u) + tr.x * u) * (1 - v) + (bl.x * (1 - u) + br.x * u) * v)));
               const qy = Math.min(h - 2, Math.max(1, Math.round((tl.y * (1 - u) + tr.y * u) * (1 - v) + (bl.y * (1 - u) + br.y * u) * v)));
               const idxQ = qy * w + qx;
               if (L_surf[idxQ] > peakInL) peakInL = L_surf[idxQ];
-              sumInD += D_doc[idxQ];
             }
           }
-          const meanInD = sumInD / 16.0;
           const maxMarginL = Math.max(eT.maxEdgeL, eR.maxEdgeL, eB.maxEdgeL, eL.maxEdgeL);
           const wrapGap = Math.max(0.0, peakInL - maxMarginL - 24.0);
 
           let ovShoot = 0;
           const uLx = vLx / lenL, uLy = vLy / lenL;
           const uRx = vRx / lenR, uRy = vRy / lenR;
-          for (let s = 8; s <= 20; s += 6) {
+          for (let s = 10; s <= 26; s += 8) {
             const bxL = Math.min(w - 2, Math.max(1, Math.round(bl.x + uLx * s)));
             const byL = Math.min(h - 2, Math.max(1, Math.round(bl.y + uLy * s)));
             const bxR = Math.min(w - 2, Math.max(1, Math.round(br.x + uRx * s)));
@@ -3551,20 +3423,18 @@
           const minSup = Math.min(supT, supB, supL, supR);
           const minThird = Math.min(eT.minThirdSup, eR.minThirdSup, eB.minThirdSup, eL.minThirdSup);
           const minTip = Math.min(eT.minTipSup, eR.minTipSup, eB.minTipSup, eL.minTipSup);
+          const minRimContrast = Math.min(eT.rimContrastFrac, eR.rimContrastFrac, eB.rimContrastFrac, eL.rimContrastFrac);
 
-          // 3-Segment Continuity + 8-Corner-Tip Verification:
-          // Eliminates hybrid quads even when Paper A and Paper B are shifted by only 10% (50-80px),
-          // because at any phantom bridging corner, at least one edge tip (first/last 10%) has 0 support!
-          const thirdBonus = minThird * 1.05 + minTip * 0.85 - Math.max(0.0, 0.45 - minThird) * 2.0 - Math.max(0.0, 0.42 - minTip) * 2.4;
+          const allRimBonus = minThird * 1.05 + minTip * 0.85 + minRimContrast * 0.55 - Math.max(0.0, 0.45 - minThird) * 2.0 - Math.max(0.0, 0.42 - minTip) * 2.4;
 
           const aspect = Math.min(spanW, spanH) / (Math.max(spanW, spanH) || 1.0);
-          const isDocSized = spanW >= w * 0.34 && spanH >= h * 0.34 && aspect >= 0.48 && meanInD < 18.0;
+          const isDocSized = spanW >= w * 0.34 && spanH >= h * 0.34 && aspect >= 0.48;
           const popSum = eT.popFrac + eR.popFrac + eB.popFrac + eL.popFrac;
           const fgPopBonus = (isDocSized && minSup > 0.68 && minThird > 0.55 && minTip > 0.48 && popSum > 0.50) ? Math.min(1.10, popSum * 0.38) : 0.0;
 
           const totalMarginPen = eT.marginPenalty + eR.marginPenalty + eB.marginPenalty + eL.marginPenalty + (wrapGap / 14.0) + ovShoot;
           const orthoBonus = (1.0 - cosTL) * 0.35 + (1.0 - cosBR) * 0.35;
-          const qScore = (supT + supB + supL + supR) + minSup * 1.4 + thirdBonus + fgPopBonus + orthoBonus - totalMarginPen * 1.45;
+          const qScore = (supT + supB + supL + supR) + minSup * 1.4 + allRimBonus + fgPopBonus + orthoBonus - totalMarginPen * 1.45;
           if (qScore > bestQScore) {
             bestQScore = qScore;
             bestQuad = [tl, tr, br, bl];
@@ -3594,8 +3464,8 @@
   const refinedLines = pairsPts.map((item) => {
     const ptsAll = [];
     const rmap = item.rmap;
-    for (let k = 0; k < 40; k++) {
-      const t = 0.05 + (k / 39.0) * 0.90;
+    for (let k = 0; k < 44; k++) {
+      const t = 0.05 + (k / 43.0) * 0.90;
       const px = item.p1.x * (1.0 - t) + item.p2.x * t;
       const py = item.p1.y * (1.0 - t) + item.p2.y * t;
       const ix = Math.round(px), iy = Math.round(py);
@@ -3617,7 +3487,7 @@
   const idxPairs = [[3, 0], [0, 1], [1, 2], [2, 3]];
   const stage1Corners = idxPairs.map((pair, k) => {
     const pt = intersectAbc(refinedLines[pair[0]], refinedLines[pair[1]]);
-    if (pt && Math.hypot(pt.x - bestQuad[k].x, pt.y - bestQuad[k].y) < 18) {
+    if (pt && Math.hypot(pt.x - bestQuad[k].x, pt.y - bestQuad[k].y) < 24) {
       return { x: pt.x / scale, y: pt.y / scale };
     }
     return { x: bestQuad[k].x / scale, y: bestQuad[k].y / scale };
@@ -3632,9 +3502,9 @@
     }));
   }
 
-  // STAGE 2: FULL-RESOLUTION 2D-TANGENT-CLOSED NORMAL PROFILE VITERBI + DOCUMENT AFFINITY & PAPER-ON-PAPER GATE
-  const nProf = 45;
-  const searchRad = Math.min(26, Math.max(14, Math.round(Math.min(origW, origH) * 0.025)));
+  // STAGE 2: FULL-RESOLUTION 1D-CLOSED NORMAL PROFILE VITERBI + ALL-RIM CONTRAST & 5-SINE CURVED RIM
+  const nProf = 55;
+  const searchRad = Math.min(32, Math.max(16, Math.round(Math.min(origW, origH) * 0.032)));
   const M = searchRad + 8;
   const profLen = 2 * M + 1;
   const profL = new Float32Array(profLen);
@@ -3667,7 +3537,7 @@
     const ny = tx;
 
     for (let i = 0; i < nProf; i++) {
-      const t = 0.03 + (i / (nProf - 1)) * 0.94;
+      const t = 0.02 + (i / (nProf - 1)) * 0.96;
       const bx = p1.x * (1.0 - t) + p2.x * t;
       const by = p1.y * (1.0 - t) + p2.y * t;
 
@@ -3680,14 +3550,14 @@
         const r0 = fullData[i0], g0 = fullData[i0 + 1], b0 = fullData[i0 + 2];
         const l0 = 0.299 * r0 + 0.587 * g0 + 0.114 * b0;
 
-        const pxM = Math.min(origW - 1, Math.max(0, Math.round(cx - 5 * tx)));
-        const pyM = Math.min(origH - 1, Math.max(0, Math.round(cy - 5 * ty)));
+        const pxM = Math.min(origW - 1, Math.max(0, Math.round(cx - 4 * tx)));
+        const pyM = Math.min(origH - 1, Math.max(0, Math.round(cy - 4 * ty)));
         const iM = (pyM * origW + pxM) * 4;
         const rM = fullData[iM], gM = fullData[iM + 1], bM = fullData[iM + 2];
         const lM = 0.299 * rM + 0.587 * gM + 0.114 * bM;
 
-        const pxP = Math.min(origW - 1, Math.max(0, Math.round(cx + 5 * tx)));
-        const pyP = Math.min(origH - 1, Math.max(0, Math.round(cy + 5 * ty)));
+        const pxP = Math.min(origW - 1, Math.max(0, Math.round(cx + 4 * tx)));
+        const pyP = Math.min(origH - 1, Math.max(0, Math.round(cy + 4 * ty)));
         const iP = (pyP * origW + pxP) * 4;
         const rP = fullData[iP], gP = fullData[iP + 1], bP = fullData[iP + 2];
         const lP = 0.299 * rP + 0.587 * gP + 0.114 * bP;
@@ -3718,7 +3588,7 @@
         const dip0 = minS - Math.min(creaseProfL[cIdx - 1], creaseProfL[cIdx], creaseProfL[cIdx + 1]);
         const dc0 = Math.hypot(surfR[cIdx + 3] - surfR[cIdx - 3], surfG[cIdx + 3] - surfG[cIdx - 3], surfB[cIdx + 3] - surfB[cIdx - 3]);
         const step0 = Math.abs(lIn - lOut);
-        if (minS > 110.0 && step0 < 28.0 && ((dip0 > 1.25 && dip0 < 28.0) || (dc0 > 3.5 && dc0 < 36.0) || step0 >= 3.0)) {
+        if (minS > 110.0 && step0 < 28.0 && ((dip0 > 0.95 && dip0 < 28.0) || (dc0 > 3.5 && dc0 < 36.0) || (step0 >= 1.25 && step0 < 28.0))) {
           hasNearPopRim = true;
           break;
         }
@@ -3726,6 +3596,12 @@
 
       for (let si = 0; si < nStates; si++) {
         const s = si - searchRad;
+        const cx = bx + s * nx;
+        const cy = by + s * ny;
+        if (cx < 6 || cx > origW - 7 || cy < 6 || cy > origH - 7) {
+          scoreMat[rowOff + si] = 0.0;
+          continue;
+        }
         const cIdx = s + M;
 
         let L_in = 0, L_out = 0, R_in = 0, R_out = 0, G_in = 0, G_out = 0, B_in = 0, B_out = 0;
@@ -3744,72 +3620,56 @@
         G_in *= 0.2; G_out *= 0.2;
         B_in *= 0.2; B_out *= 0.2;
 
-        const normScaleIn = 190.0 / Math.max(55.0, L_in);
-        const crIn = (R_in - G_in) * normScaleIn - docCr;
-        const cbIn = (B_in - 0.5 * (R_in + G_in)) * normScaleIn - docCb;
-        const cDiffIn = Math.sqrt(crIn * crIn + cbIn * cbIn);
-
-        const normScaleOut = 190.0 / Math.max(55.0, L_out);
-        const crOut = (R_out - G_out) * normScaleOut - docCr;
-        const cbOut = (B_out - 0.5 * (R_out + G_out)) * normScaleOut - docCb;
-        const cDiffOut = Math.sqrt(crOut * crOut + cbOut * cbOut);
-
-        const minSideL = L_in < L_out ? L_in : L_out;
-        const bothSidesPaperS2 = minSideL > 85.0 && cDiffIn < 20.0 && cDiffOut < 20.0;
-
-        let wStage2Doc = 1.0;
-        if (hasStrongBgSeparation) {
-          const dIn = 1.25 * cDiffIn;
-          const ex = Math.max(0.0, dIn - 18.0) / dGateScale;
-          wStage2Doc = Math.exp(-ex * ex);
-          if (hasNearPopRim && Math.abs(s) > 7 && !bothSidesPaperS2) {
-            wStage2Doc *= 0.04;
-          }
-        }
-
         const flatVar = Math.abs(surfL[cIdx + 6] - surfL[cIdx + 2]) + Math.abs(surfL[cIdx - 2] - surfL[cIdx - 6]);
         const absStep = Math.abs(L_in - L_out);
-        const dr = R_in - R_out, dg = G_in - G_out, db = B_in - B_out;
-        const macDC = Math.sqrt(dr * dr + dg * dg + db * db);
-        const effStepS2 = Math.max(absStep, bothSidesPaperS2 ? macDC * 0.70 : 0.0);
+        const minSideL = L_in < L_out ? L_in : L_out;
+        const macDC = Math.hypot(R_in - R_out, G_in - G_out, B_in - B_out);
 
         const minC = Math.min(creaseProfL[cIdx - 1], creaseProfL[cIdx], creaseProfL[cIdx + 1]);
         const dip = minSideL - minC;
-        const isInkS2 = bothSidesPaperS2 && dip > 32.0;
+        const sameSurfS2 = absStep < 9.0 && macDC < 9.0 && flatVar < 5.5;
+        const isInkS2 = sameSurfS2 && minSideL > 100.0 && dip > 32.0;
 
-        let isoDL = 0.0;
-        if (!isInkS2 && (!hasStrongBgSeparation || bothSidesPaperS2) && minSideL > 85.0 && effStepS2 >= 1.6 && effStepS2 < 48.0 && flatVar < effStepS2 * 0.55 + 1.5) {
-          isoDL = effStepS2 - flatVar * 0.8;
+        let flatRimStepS2 = 0.0;
+        const rawRimS2 = Math.max(absStep, macDC * 0.78);
+        if (!isInkS2 && rawRimS2 >= 1.25 && flatVar < rawRimS2 * 0.50 + 1.2) {
+          flatRimStepS2 = rawRimS2 - flatVar * 0.80;
         }
 
         let wwCrease = 0.0;
-        if (!isInkS2 && minSideL > 65.0 && absStep < 32.0 && flatVar < 5.0) {
-          if (dip > 1.25 && dip < 30.0) wwCrease = dip;
+        if (!isInkS2 && minSideL > 75.0 && absStep < 32.0 && flatVar < 5.2) {
+          if (dip > 0.95 && dip < 30.0) wwCrease = dip;
         }
 
-        const isPopS2 = bothSidesPaperS2 && !isInkS2 && (wwCrease >= 1.25 || isoDL >= 1.8);
-        const popBoostS2 = (hasStrongBgSeparation && isPopS2) ? 3.5 : 1.0;
-        const effCreaseS2 = wwCrease * popBoostS2;
-        const effIsoS2 = isoDL * popBoostS2;
+        const darkObjS2 = (L_out - L_in > 35.0 && Math.abs(surfL[cIdx + 6] - surfL[cIdx + 2]) < 8.0) ? (L_out - L_in) * 0.85 : 0.0;
+        const macDL = Math.max(0.0, L_in - L_out, flatRimStepS2 * 0.90, darkObjS2);
+        let wJumpGuard = 1.0;
+        if (hasNearPopRim && Math.abs(s) > 7 && macDC > 35.0) {
+          wJumpGuard = 0.05;
+        }
 
-        const macDL = Math.max(0.0, L_in - L_out, effIsoS2 * 0.85);
-
-        if (isInkS2) wStage2Doc = 0.0;
-
-        const gate = (macDL + 0.68 * macDC + 2.6 * effCreaseS2) * wStage2Doc;
+        const gate = (macDL + 0.62 * macDC + 2.8 * wwCrease) * (isInkS2 ? 0.0 : wJumpGuard);
         let sc = 0.0;
-        if ((L_in > 32.0 || L_out > 90.0) && gate > 1.5) {
-          const step1 = surfL[cIdx + 1] - surfL[cIdx - 1];
-          const step2 = surfL[cIdx + 2] - surfL[cIdx - 2];
-          const dL1 = effIsoS2 > 0 ? Math.abs(step1) : (0.55 * Math.max(0.0, step1) + 0.45 * Math.max(0.0, profL[cIdx + 1] - profL[cIdx - 1]));
-          const dL2 = effIsoS2 > 0 ? Math.abs(step2) : (0.55 * Math.max(0.0, step2) + 0.45 * Math.max(0.0, profL[cIdx + 2] - profL[cIdx - 2]));
-          const dr1 = profR[cIdx + 1] - profR[cIdx - 1], dg1 = profG[cIdx + 1] - profG[cIdx - 1], db1 = profB[cIdx + 1] - profB[cIdx - 1];
-          const dr2 = surfR[cIdx + 2] - surfR[cIdx - 2], dg2 = surfG[cIdx + 2] - surfG[cIdx - 2], db2 = surfB[cIdx + 2] - surfB[cIdx - 2];
-          const dC1 = (0.55 * Math.sqrt(dr1 * dr1 + dg1 * dg1 + db1 * db1) + 0.45 * Math.sqrt(dr2 * dr2 + dg2 * dg2 + db2 * db2)) * (isPopS2 ? 1.8 : 1.0);
-          const peak = (0.60 * dL1 + 0.40 * dL2 + 0.52 * dC1 + 2.5 * effCreaseS2) * wStage2Doc;
+        if (gate > 1.5) {
+          const step1 = Math.abs(surfL[cIdx + 1] - surfL[cIdx - 1]);
+          const step2 = Math.abs(surfL[cIdx + 2] - surfL[cIdx - 2]);
+          const raw1 = sameSurfS2 ? step1 : Math.abs(creaseProfL[cIdx + 1] - creaseProfL[cIdx - 1]);
+          const raw2 = sameSurfS2 ? step2 : Math.abs(creaseProfL[cIdx + 2] - creaseProfL[cIdx - 2]);
+          const dL1 = 0.55 * step1 + 0.45 * raw1;
+          const dL2 = 0.55 * step2 + 0.45 * raw2;
+          const dC1 = (sameSurfS2 ? 0.0 : 0.55 * Math.hypot(
+            profR[cIdx + 1] - profR[cIdx - 1],
+            profG[cIdx + 1] - profG[cIdx - 1],
+            profB[cIdx + 1] - profB[cIdx - 1]
+          )) + 0.45 * Math.hypot(
+            surfR[cIdx + 2] - surfR[cIdx - 2],
+            surfG[cIdx + 2] - surfG[cIdx - 2],
+            surfB[cIdx + 2] - surfB[cIdx - 2]
+          );
+          const peak = (0.60 * dL1 + 0.40 * dL2 + 0.50 * dC1 + 2.6 * wwCrease) * wJumpGuard;
           const endWeight = Math.pow(2.0 * Math.abs(t - 0.5), 2.0);
-          const prior = 1.0 - (0.006 + 0.016 * endWeight) * ((s * s) / (searchRad * searchRad));
-          sc = peak * Math.min(1.9, gate / 9.0) * Math.max(0.25, prior);
+          const prior = 1.0 - (0.005 + 0.014 * endWeight) * ((s * s) / (searchRad * searchRad));
+          sc = peak * Math.min(1.85, gate / 9.0) * Math.max(0.25, prior);
         }
         scoreMat[rowOff + si] = sc;
       }
@@ -3817,7 +3677,7 @@
 
     for (let si = 0; si < nStates; si++) {
       const s = si - searchRad;
-      dpMat[si] = scoreMat[si] - 0.14 * s * s;
+      dpMat[si] = scoreMat[si] - 0.12 * s * s;
       prevMat[si] = si;
     }
 
@@ -3825,8 +3685,8 @@
       const currOff = i * nStates;
       const prevOff = (i - 1) * nStates;
       for (let si = 0; si < nStates; si++) {
-        const spMin = si - 3 > 0 ? si - 3 : 0;
-        const spMax = si + 3 < nStates - 1 ? si + 3 : nStates - 1;
+        const spMin = Math.max(0, si - 3);
+        const spMax = Math.min(nStates - 1, si + 3);
         let bestPrev = si;
         let bestVal = -1e12;
         for (let sp = spMin; sp <= spMax; sp++) {
@@ -3847,7 +3707,7 @@
     let bestEndScore = -1e12;
     for (let si = 0; si < nStates; si++) {
       const s = si - searchRad;
-      const v = dpMat[lastOff + si] - 0.14 * s * s;
+      const v = dpMat[lastOff + si] - 0.12 * s * s;
       if (v > bestEndScore) {
         bestEndScore = v;
         bestEndSi = si;
@@ -3863,7 +3723,7 @@
     const seamPts = [];
     const wArr = new Float64Array(nProf);
     for (let i = 0; i < nProf; i++) {
-      const t = 0.03 + (i / (nProf - 1)) * 0.94;
+      const t = 0.02 + (i / (nProf - 1)) * 0.96;
       const si = pathSi[i];
       const rowOff = i * nStates;
       let sVal = si - searchRad;
@@ -3890,7 +3750,7 @@
 
   const refinedCorners = idxPairs.map((pair, k) => {
     const pt = intersectAbc(chordLines[pair[0]], chordLines[pair[1]]);
-    if (pt && Math.hypot(pt.x - stage1Corners[k].x, pt.y - stage1Corners[k].y) < 32.0) {
+    if (pt && Math.hypot(pt.x - stage1Corners[k].x, pt.y - stage1Corners[k].y) < 36.0) {
       return {
         x: Math.max(0, Math.min(origW, Math.round(pt.x))),
         y: Math.max(0, Math.min(origH, Math.round(pt.y)))

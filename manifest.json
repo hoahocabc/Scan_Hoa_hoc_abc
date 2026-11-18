@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v32.0) — Ứng dụng quét tài liệu chuyên nghiệp: Nhận diện dòng chữ & đường kẻ ngang/dọc để căn thẳng đồng bộ với toàn trang giấy, bắt chuẩn rìa giấy chồng lên giấy (Paper-on-Paper) và mặt bàn gỗ.",
+  "description": "ScanhoahocABC (v33.0) — Ứng dụng quét tài liệu chuyên nghiệp: Bắt đối tượng theo toàn bộ 4 rìa chu vi (tương phản đa kênh giữa rìa đối tượng và nền), căn thẳng dòng chữ & đường kẻ khớp khung trang.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
