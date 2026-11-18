@@ -1,6 +1,6 @@
 # ScanhoahocABC (v16.0 — Non-Blocking Smartphone Hamburger Drawer • Coupled Page & Parallel Text-Line Dewarping)
 
-## 2 Nâng cấp trọng tâm trên ScanhoahocABC (v25.0)
+## 2 Nâng cấp trọng tâm trên ScanhoahocABC (v27.0)
 1. **Thanh công cụ Ba gạch (`☰`) phân tab siêu gọn trên Smartphone — Tuyệt đối không che khuất ảnh**:
    - Khi bấm vào nút **Ba gạch (`☰`)** ở góc trên bên trái màn hình sửa ảnh, thanh công cụ mở ra dưới dạng **Dải công cụ phân tab 2 dòng siêu gọn (`~86px`)** nằm tách biệt phía trên vùng chứa ảnh (khung ảnh bên dưới tự động co giãn `flex: 1`), giúp **100% bức ảnh luôn hiển thị trọn vẹn** để người dùng quan sát trực tiếp khi đổi màu, chỉnh độ sáng hay dàn phẳng sách trên điện thoại.
    - Bấm vào vùng ảnh bên dưới hoặc bấm lại nút ba gạch (`☰`) thì thanh công cụ tự động đóng lại ngay.
