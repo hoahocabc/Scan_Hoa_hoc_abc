@@ -4,25 +4,27 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=no, viewport-fit=cover" />
   <title>ScanhoahocABC</title>
-  <meta name="theme-color" content="#0a467d" />
+  <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v17.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Bắt rìa sub-pixel, dàn phẳng trang sách & nắn thẳng song song các dòng chữ cong, thanh công cụ ba gạch (☰) gọn nhẹ không che khuất ảnh." />
+  <meta name="description" content="ScanhoahocABC (v25.0) — Ứng dụng quét tài liệu chuyên nghiệp trên smartphone: Bắt rìa sub-pixel, dàn phẳng trang sách & nắn thẳng song song các dòng chữ cong, thanh công cụ ba gạch (☰) gọn nhẹ không che khuất ảnh." />
   <style>
     :root {
-      --primary: #0a467d;
-      --primary-dark: #073259;
-      --primary-soft: #eaf2fb;
-      --primary-border: #b8d0eb;
-      --danger-soft: #fef2f2;
-      --danger-text: #b91c1c;
-      --danger-border: #fecaca;
-      --bg: #0f172a;
-      --surface: #ffffff;
-      --surface-alt: #f8fafc;
-      --border: #cbd5e1;
-      --text: #0f172a;
-      --text-muted: #475569;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-gradient: linear-gradient(135deg, #2563eb 0%, #0284c7 100%);
+      --primary-soft: rgba(37, 99, 235, 0.18);
+      --primary-border: rgba(96, 165, 250, 0.38);
+      --accent-cyan: #38bdf8;
+      --danger-soft: rgba(239, 68, 68, 0.18);
+      --danger-text: #fca5a5;
+      --danger-border: rgba(248, 113, 113, 0.40);
+      --bg: #090d16;
+      --glass-bg: rgba(15, 23, 42, 0.72);
+      --glass-bg-strong: rgba(15, 23, 42, 0.82);
+      --glass-border: rgba(148, 163, 184, 0.30);
+      --text: #f8fafc;
+      --text-muted: #cbd5e1;
     }
 
     * {
@@ -42,6 +44,7 @@
       color: var(--text);
       user-select: none;
       -webkit-user-select: none;
+      touch-action: manipulation;
     }
 
     .app-shell {
@@ -53,16 +56,17 @@
       overflow: hidden;
     }
 
-    /* 1. TWO-TIER HEADER: Clean Brand Title on Top (No "Trang x/y" on Main Screen), 3 Action Buttons Below */
+    /* 1. MODERN TWO-TIER HEADER: Sleek Indigo-Slate Glass Gradient */
     .app-header {
       flex-shrink: 0;
-      background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%);
       color: #ffffff;
-      padding: 7px 12px 9px 12px;
+      padding: 7px 10px 9px 10px;
       display: flex;
       flex-direction: column;
       gap: 7px;
-      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.28);
+      border-bottom: 1px solid rgba(147, 197, 253, 0.24);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.38);
       z-index: 40;
     }
 
@@ -86,23 +90,22 @@
     .brand-logo {
       width: 26px;
       height: 26px;
-      border-radius: 7px;
-      background: rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid rgba(255, 255, 255, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      box-shadow: 0 2px 8px rgba(56, 189, 248, 0.35);
       flex-shrink: 0;
     }
 
     .brand-title {
-      font-size: 1.04rem;
+      font-size: 1.02rem;
       font-weight: 800;
-      letter-spacing: 0.25px;
+      letter-spacing: 0.3px;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: #ffffff;
+      color: #f8fafc;
     }
 
     .header-btn-row {
@@ -114,47 +117,46 @@
       margin: 0 auto;
     }
 
-    /* BALANCED SYNCHRONIZED BUTTON SYSTEM (#0a467d Palette, Zero Overflow) */
+    /* TOUCH-OPTIMIZED ZERO-OVERFLOW BUTTON SYSTEM */
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      height: 39px;
-      padding: 0 8px;
-      border-radius: 10px;
-      font-size: 0.79rem;
+      gap: 4px;
+      height: 40px;
+      padding: 0 6px;
+      border-radius: 11px;
+      font-size: 0.78rem;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.14s ease;
+      transition: transform 0.12s ease, background 0.15s ease, opacity 0.15s ease;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
       min-width: 0;
-      line-height: 1;
-      border: 1.5px solid transparent;
+      line-height: 1.1;
+      border: 1px solid transparent;
+      touch-action: manipulation;
     }
 
     .btn:active {
-      transform: scale(0.97);
+      transform: scale(0.96);
     }
 
     .btn:disabled {
-      opacity: 0.40;
+      opacity: 0.38;
       pointer-events: none;
     }
 
     .btn-main {
-      background: var(--primary);
+      background: var(--primary-gradient);
       color: #ffffff;
-      border-color: var(--primary);
-      box-shadow: 0 2px 6px rgba(10, 70, 125, 0.22);
+      border-color: rgba(125, 211, 252, 0.40);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.34);
     }
 
     .btn-sec {
-      background: var(--primary-soft);
-      color: var(--primary);
-      border-color: var(--primary-border);
+      background: rgba(30, 41, 59, 0.78);
+      color: #e0f2fe;
+      border-color: rgba(148, 163, 184, 0.34);
     }
 
     .btn-danger-soft {
@@ -164,28 +166,30 @@
     }
 
     .btn-sec.active {
-      background: var(--primary);
+      background: var(--primary-gradient);
       color: #ffffff;
-      border-color: var(--primary);
-      box-shadow: 0 2px 6px rgba(10, 70, 125, 0.22);
+      border-color: rgba(125, 211, 252, 0.50);
+      box-shadow: 0 3px 10px rgba(37, 99, 235, 0.32);
     }
 
     .btn-hdr-primary {
-      background: #ffffff;
-      color: var(--primary);
+      background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+      color: #1d4ed8;
       border-color: #ffffff;
-      height: 36px;
-      font-size: 0.77rem;
+      height: 37px;
+      font-size: 0.76rem;
       font-weight: 800;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.20);
     }
 
     .btn-hdr-outline {
-      background: rgba(255, 255, 255, 0.15);
-      color: #ffffff;
-      border-color: rgba(255, 255, 255, 0.42);
-      height: 36px;
-      font-size: 0.77rem;
+      background: rgba(255, 255, 255, 0.13);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #f8fafc;
+      border-color: rgba(186, 230, 253, 0.38);
+      height: 37px;
+      font-size: 0.76rem;
       font-weight: 700;
     }
 
@@ -205,7 +209,7 @@
       position: relative;
       display: flex;
       flex-direction: column;
-      background-color: #0f172a;
+      background: radial-gradient(circle at 50% 40%, #162238 0%, #090d16 100%);
       overflow: hidden;
     }
 
@@ -230,8 +234,8 @@
       justify-content: center;
       max-width: 100%;
       max-height: 100%;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
-      border-radius: 4px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
       transform-origin: center center;
       will-change: transform;
     }
@@ -239,18 +243,19 @@
     #mainCanvas {
       display: block;
       max-width: 100%;
-      max-height: calc(100dvh - 232px);
+      max-height: calc(100dvh - 230px);
       width: auto;
       height: auto;
       touch-action: none;
+      border-radius: 4px;
     }
 
-    /* Secondary Metadata Bar Directly Below Image (No "Trang x/y" here!) */
+    /* Secondary Metadata Bar Directly Below Image */
     .under-image-bar {
       flex-shrink: 0;
-      background: rgba(15, 23, 42, 0.94);
-      border-top: 1px solid rgba(255, 255, 255, 0.12);
-      padding: 6px 12px;
+      background: rgba(15, 23, 42, 0.90);
+      border-top: 1px solid rgba(148, 163, 184, 0.16);
+      padding: 6px 10px;
       display: flex;
       flex-direction: column;
       gap: 4px;
@@ -264,7 +269,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 6px;
     }
 
     .under-meta-text {
@@ -280,12 +285,12 @@
     }
 
     .stage-mini-btn {
-      height: 25px;
+      height: 26px;
       padding: 0 9px;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.24);
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
+      border: 1px solid rgba(56, 189, 248, 0.40);
+      background: rgba(37, 99, 235, 0.28);
+      color: #f8fafc;
       font-size: 0.70rem;
       font-weight: 700;
       cursor: pointer;
@@ -297,16 +302,18 @@
       flex-shrink: 0;
     }
 
-    /* 3. ULTRA-CLEAN MAIN BOTTOM DOCK: ONLY 3 BUTTONS ("Sửa", "Tải ảnh này", "Lưu PDF") */
+    /* 3. MODERN GLASS BOTTOM DOCK: ONLY 3 BUTTONS ("✨ Sửa", "⬇ Tải ảnh", "📄 Lưu PDF") */
     .bottom-dock {
       flex-shrink: 0;
       width: 100%;
       max-width: 100vw;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 9px 12px calc(9px + env(safe-area-inset-bottom, 0px));
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(148, 163, 184, 0.20);
+      padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
       z-index: 35;
-      box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.22);
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
     }
 
     .dock-inner {
@@ -318,35 +325,19 @@
     .grid-3 {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-      width: 100%;
-    }
-
-    .grid-4 {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 6px;
-      width: 100%;
-    }
-
-    .grid-2-confirm {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
-      gap: 8px;
+      gap: 7px;
       width: 100%;
     }
 
     /* ========================================================================= */
-    /* 4. SMARTPHONE-OPTIMIZED FULL-SCREEN VIEW & EDIT SCREEN (v17.0)             */
-    /*    - Dedicated 46px Top Bar holds ☰ Button on left & ◀/▶/Đóng on right    */
-    /*    - ☰ Menu opens at FULL 100% SCREEN WIDTH with 2-to-3 buttons per row   */
-    /*      so 100% of button labels are spacious & crystal-clear on phones!     */
-    /*    - Image stage below flexes automatically so 0% of image is covered!    */
+    /* 4. FULL-SCREEN EDITOR & UNIFIED SEMI-TRANSPARENT VERTICAL POPUPS          */
+    /*    - Both #editDropdownMenu (☰) and #fsCropBar (Căn chỉnh) use the exact  */
+    /*      same 1/3-screen vertical frosted-glass popup architecture!           */
     /* ========================================================================= */
     .fs-editor-backdrop {
       position: fixed;
       inset: 0;
-      background: #0b1120;
+      background: radial-gradient(circle at 50% 40%, #162238 0%, #090d16 100%);
       display: none;
       flex-direction: column;
       z-index: 130;
@@ -359,12 +350,14 @@
       display: flex;
     }
 
-    /* Dedicated Full-Width Top Bar in Full-Screen Editor (Never overlaps menu or image!) */
+    /* Top Bar in Full-Screen Editor */
     .fs-top-bar {
       flex-shrink: 0;
       width: 100%;
-      background: #0f172a;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.20);
       padding: 6px 10px;
       z-index: 168;
     }
@@ -376,227 +369,376 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 6px;
     }
 
-    /* Corner Hamburger Button (☰ Công cụ) at Top-Left */
+    /* Iconic Corner Hamburger Button (☰) at Top-Left — No redundant text label */
     .fs-corner-hamburger {
+      width: 40px;
       height: 36px;
-      padding: 0 12px;
-      border-radius: 9px;
-      background: var(--primary);
+      padding: 0;
+      border-radius: 10px;
+      background: var(--primary-gradient);
       color: #ffffff;
-      border: 1.5px solid rgba(255, 255, 255, 0.45);
+      border: 1px solid rgba(186, 230, 253, 0.45);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
-      font-size: 0.80rem;
-      font-weight: 800;
       cursor: pointer;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 3px 12px rgba(37, 99, 235, 0.35);
       transition: all 0.14s ease;
-      white-space: nowrap;
       flex-shrink: 0;
+      touch-action: manipulation;
     }
 
-    .fs-corner-hamburger:active {
-      transform: scale(0.96);
-    }
-
-    .fs-corner-hamburger.open {
-      background: #ffffff;
-      color: var(--primary);
-      border-color: #ffffff;
-    }
-
-    /* Right Nav & Close Group at Top-Right */
-    .fs-corner-right-group {
+    .fs-top-center-nav {
       display: flex;
       align-items: center;
       gap: 6px;
+      flex-shrink: 0;
+    }
+
+    /* Paired Action Row inside Vertical Popups (e.g. "✕ Hủy" beside "✓ Áp dụng") */
+    .vpop-pair-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .vpop-pair-row .vpop-action-btn,
+    .vpop-pair-row .dd-mode-btn {
+      justify-content: center;
+      padding: 0 6px;
+    }
+
+    .fs-corner-hamburger:active {
+      transform: scale(0.95);
+    }
+
+    .fs-corner-hamburger.open {
+      background: rgba(56, 189, 248, 0.22);
+      color: #38bdf8;
+      border-color: #38bdf8;
+    }
+
+    /* Compact Right Nav & Close Group at Top-Right (Never overflows even on 320px!) */
+    .fs-corner-right-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
       flex-shrink: 0;
     }
 
     .fs-corner-btn {
       height: 36px;
-      padding: 0 11px;
-      border-radius: 9px;
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.28);
-      font-size: 0.78rem;
+      padding: 0 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.10);
+      color: #f8fafc;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      font-size: 0.76rem;
       font-weight: 700;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       white-space: nowrap;
+      touch-action: manipulation;
     }
 
     .fs-corner-btn:disabled {
-      opacity: 0.35;
+      opacity: 0.32;
       pointer-events: none;
     }
 
-    /* Full-Width 100% Readable Hamburger Dropdown Drawer (Zero left-padding cutoff, max 3 buttons/row!) */
-    .edit-compact-drawer {
-      flex-shrink: 0;
-      width: 100%;
-      background: #ffffff;
-      color: var(--text);
-      border-bottom: 2px solid var(--primary);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-      padding: 9px 12px 10px 12px;
+    /* UNIFIED SEMI-TRANSPARENT VERTICAL POPUP (~1/3 OF SMARTPHONE SCREEN) */
+    .edit-vertical-popup {
+      position: absolute;
+      top: 52px;
+      left: 10px;
+      width: clamp(204px, 50vw, 244px);
+      max-height: calc(100dvh - 154px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      background: var(--glass-bg);
+      backdrop-filter: blur(14px) saturate(165%);
+      -webkit-backdrop-filter: blur(14px) saturate(165%);
+      color: #f8fafc;
+      border: 1px solid var(--glass-border);
+      border-radius: 15px;
+      box-shadow: 0 16px 38px rgba(0, 0, 0, 0.52);
+      padding: 9px;
       display: none;
       flex-direction: column;
-      gap: 8px;
-      z-index: 162;
+      gap: 5px;
+      z-index: 166;
+      transition: opacity 0.14s ease;
     }
 
-    .edit-compact-drawer.open {
+    .edit-vertical-popup.open,
+    .edit-vertical-popup.visible {
       display: flex;
+      animation: popSlideIn 0.15s ease-out;
     }
 
-    .edit-drawer-inner {
-      max-width: 600px;
-      width: 100%;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    /* Automatically fades when finger is dragging a corner handle on touchscreen! */
+    .edit-vertical-popup.dragging-fade {
+      opacity: 0.14;
+      pointer-events: none;
     }
 
-    /* 3 Spacious Category Tabs across full width (~108px each on 360px phone!) */
-    .drawer-tabs-row {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 6px;
-      width: 100%;
+    @keyframes popSlideIn {
+      from { opacity: 0; transform: translateY(-5px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .drawer-tab-btn {
-      height: 35px;
-      border-radius: 8px;
-      border: 1.5px solid var(--primary-border);
-      background: var(--surface-alt);
-      color: var(--text-muted);
-      font-size: 0.79rem;
+    .vpop-section-lbl {
+      font-size: 0.66rem;
       font-weight: 800;
-      cursor: pointer;
-      padding: 0 6px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.45px;
+      color: #7dd3fc;
+      padding: 3px 4px 1px 4px;
       white-space: nowrap;
     }
 
-    .drawer-tab-btn.active {
-      background: var(--primary);
-      color: #ffffff;
-      border-color: var(--primary);
-      box-shadow: 0 2px 6px rgba(10, 70, 125, 0.22);
+    .vpop-divider {
+      height: 1px;
+      background: rgba(148, 163, 184, 0.22);
+      margin: 2px 0;
+      flex-shrink: 0;
     }
 
-    .drawer-pane {
-      display: none;
-      flex-direction: column;
-      gap: 7px;
+    /* Vertical List Item Button (1 per row from top to bottom, zero overflow) */
+    .dd-mode-btn, .vpop-action-btn {
       width: 100%;
-    }
-
-    .drawer-pane.active {
-      display: flex;
-    }
-
-    /* 3-Column & 2-Column Spacious Mode Grids (108px to 165px per button on 360px phone!) */
-    .drawer-grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 6px;
-      width: 100%;
-    }
-
-    .drawer-grid-2 {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 6px;
-      width: 100%;
-    }
-
-    .drawer-grid-flatten {
-      display: grid;
-      grid-template-columns: minmax(0, 1.85fr) minmax(0, 1fr);
-      gap: 6px;
-      width: 100%;
-    }
-
-    .dd-mode-btn {
-      height: 36px;
-      border-radius: 8px;
-      border: 1.5px solid var(--primary-border);
-      background: var(--surface-alt);
-      color: var(--text);
-      font-size: 0.80rem;
+      height: 35px;
+      border-radius: 9px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.09);
+      color: #f8fafc;
+      font-size: 0.77rem;
       font-weight: 700;
       cursor: pointer;
-      padding: 0 8px;
-      display: inline-flex;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 7px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: transform 0.12s ease, background 0.14s ease;
+      touch-action: manipulation;
+    }
+
+    .dd-mode-btn:active, .vpop-action-btn:active {
+      transform: scale(0.97);
+    }
+
+    .dd-mode-btn.active, .vpop-action-btn.primary-item {
+      background: var(--primary-gradient);
+      color: #ffffff;
+      border-color: rgba(125, 211, 252, 0.55);
+      box-shadow: 0 3px 10px rgba(37, 99, 235, 0.35);
+    }
+
+    .vpop-action-btn.danger-item {
+      background: var(--danger-soft);
+      color: var(--danger-text);
+      border-color: var(--danger-border);
+    }
+
+    /* Touch-Optimized Vertical Slider Item inside Semi-Transparent Popup */
+    .vpop-slider-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 9px;
+      padding: 6px 8px 7px 8px;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .vpop-slider-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .vpop-slider-lbl {
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      white-space: nowrap;
+    }
+
+    .vpop-slider-val {
+      font-size: 0.73rem;
+      font-weight: 800;
+      color: #38bdf8;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    /* Large tactile thumb & pan-x touch action for effortless mobile slider dragging */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 22px;
+      background: transparent;
+      cursor: pointer;
+      touch-action: pan-x;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.35);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #38bdf8;
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.40);
+      margin-top: -7px;
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.35);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #38bdf8;
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.40);
+    }
+
+    .vpop-mini-reset {
+      background: rgba(255, 255, 255, 0.14);
+      color: #f8fafc;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 5px;
+      font-size: 0.66rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* Compact Vertical Inputs inside Semi-Transparent Popup */
+    .vpop-input {
+      width: 100%;
+      height: 33px;
+      padding: 0 9px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(15, 23, 42, 0.60);
+      color: #ffffff;
+      font-size: 0.76rem;
+      font-weight: 600;
+      font-family: inherit;
+      flex-shrink: 0;
+    }
+
+    .vpop-input::placeholder {
+      color: #94a3b8;
+    }
+
+    .vpop-note-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .vpop-note-input-wrap .vpop-input {
+      padding-right: 28px;
+    }
+
+    .vpop-note-clear {
+      position: absolute;
+      right: 5px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.16);
+      color: #cbd5e1;
+      font-size: 0.70rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: none;
       align-items: center;
       justify-content: center;
+    }
+
+    .vpop-note-clear.visible {
+      display: inline-flex;
+    }
+
+    .vpop-color-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       gap: 5px;
-      white-space: nowrap;
-    }
-
-    .dd-mode-btn.active {
-      background: var(--primary);
-      color: #ffffff;
-      border-color: var(--primary);
-      box-shadow: 0 2px 6px rgba(10, 70, 125, 0.22);
-    }
-
-    .dd-slider-row {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      background: var(--surface-alt);
-      padding: 6px 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
+      padding: 3px 2px;
       width: 100%;
+      flex-shrink: 0;
     }
 
-    .dd-slider-label {
-      font-size: 0.78rem;
-      font-weight: 800;
-      color: var(--primary);
-      white-space: nowrap;
-      min-width: 66px;
-    }
-
-    .dd-slider-row input[type="range"] {
-      flex: 1;
-      min-width: 0;
-      accent-color: var(--primary);
-      height: 6px;
+    .note-color-swatch {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.35);
       cursor: pointer;
+      padding: 0;
+      transition: transform 0.12s ease, border-color 0.12s ease;
+      flex-shrink: 0;
     }
 
-    .dd-slider-val {
-      font-size: 0.78rem;
-      font-weight: 800;
-      color: var(--text);
-      min-width: 38px;
-      text-align: right;
-      font-variant-numeric: tabular-nums;
+    .note-color-swatch.active {
+      border-color: #ffffff;
+      transform: scale(1.16);
+      box-shadow: 0 0 0 2px #38bdf8;
     }
 
-    .drawer-note-row {
+    .vpop-check-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      width: 100%;
+      gap: 6px;
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      padding: 3px 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .vpop-check-row input {
+      width: 15px;
+      height: 15px;
+      accent-color: #38bdf8;
+      flex-shrink: 0;
     }
 
     /* Full-Screen Image Viewport */
@@ -611,7 +753,7 @@
       overflow: hidden;
       padding: 8px;
       touch-action: none;
-      background: #0b1120;
+      background: transparent;
     }
 
     .fs-canvas-holder {
@@ -623,57 +765,32 @@
       max-height: 100%;
       transform-origin: center center;
       will-change: transform;
-      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.65);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
     }
 
     #fsCanvas {
       display: block;
       max-width: 100%;
-      max-height: calc(100dvh - 150px);
+      max-height: calc(100dvh - 146px);
       width: auto;
       height: auto;
       touch-action: none;
+      border-radius: 4px;
     }
 
-    .fs-editor-backdrop.drawer-open #fsCanvas {
-      max-height: calc(100dvh - 330px);
-    }
-
-    /* Floating Crop Toolbar inside Full-Screen Editor when Crop Mode is Active */
-    .fs-crop-bar {
-      position: absolute;
-      bottom: 8px;
-      left: 8px;
-      right: 8px;
-      max-width: 520px;
-      margin: 0 auto;
-      background: rgba(255, 255, 255, 0.97);
-      border: 1.5px solid var(--primary-border);
-      border-radius: 12px;
-      padding: 8px 10px;
-      display: none;
-      flex-direction: column;
-      gap: 7px;
-      z-index: 160;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-    }
-
-    .fs-crop-bar.visible {
-      display: flex;
-    }
-
-        /* Smart Magnifier Loupe */
+    /* Smart Magnifier Loupe */
     .magnifier-loupe {
       position: absolute;
       width: 114px;
       height: 114px;
       border-radius: 50%;
-      border: 3px solid var(--primary);
+      border: 3px solid #38bdf8;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
       pointer-events: none;
       overflow: hidden;
       display: none;
-      z-index: 165;
+      z-index: 170;
       background: #000;
     }
 
@@ -688,10 +805,10 @@
       bottom: 4px;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--primary);
-      color: #fff;
+      background: rgba(15, 23, 42, 0.88);
+      color: #38bdf8;
       font-size: 0.62rem;
-      font-weight: 700;
+      font-weight: 800;
       padding: 1px 7px;
       border-radius: 99px;
       white-space: nowrap;
@@ -700,9 +817,11 @@
     /* Secondary Info & Bottom Bar directly below the Full-Screen Image */
     .fs-bottom-area {
       flex-shrink: 0;
-      background: #ffffff;
-      border-top: 1px solid var(--border);
-      padding: 6px 12px calc(7px + env(safe-area-inset-bottom, 0px));
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(148, 163, 184, 0.20);
+      padding: 6px 10px calc(7px + env(safe-area-inset-bottom, 0px));
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -713,18 +832,18 @@
       max-width: 600px;
       width: 100%;
       margin: 0 auto;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
+      display: block;
       font-size: 0.71rem;
       font-weight: 600;
-      color: var(--text-muted);
-      background: var(--surface-alt);
+      color: #cbd5e1;
+      background: rgba(30, 41, 59, 0.65);
       padding: 4px 10px;
       border-radius: 7px;
-      border: 1px solid #e2e8f0;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
     }
 
     .fs-note-preview {
@@ -733,8 +852,9 @@
       margin: 0 auto;
       font-size: 0.72rem;
       font-weight: 700;
-      color: var(--primary);
-      background: var(--primary-soft);
+      color: #7dd3fc;
+      background: rgba(37, 99, 235, 0.20);
+      border: 1px solid rgba(56, 189, 248, 0.30);
       padding: 3px 9px;
       border-radius: 6px;
       display: none;
@@ -747,11 +867,16 @@
       display: block;
     }
 
-    /* 5. MODALS: CAMERA, CLEAN LIBRARY ("THƯ VIỆN"), AND EXPORT POPUP ("LƯU PDF" / "TẢI ẢNH NÀY") */
+    /* ========================================================================= */
+    /* 5. UNIFIED SEMI-TRANSPARENT VERTICAL POPUP MODALS                         */
+    /*    (Export Popup, Library Popup, Camera Popup — 100% Synchronized Glass)  */
+    /* ========================================================================= */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.84);
+      background: rgba(9, 13, 22, 0.62);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       display: none;
       align-items: center;
       justify-content: center;
@@ -764,23 +889,28 @@
     }
 
     .modal-card {
-      background: #ffffff;
-      border-radius: 16px;
-      max-width: 560px;
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(16px) saturate(170%);
+      -webkit-backdrop-filter: blur(16px) saturate(170%);
+      color: #f8fafc;
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      max-width: 480px;
       width: 100%;
-      max-height: 90dvh;
+      max-height: 88dvh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 22px 50px rgba(0, 0, 0, 0.60);
     }
 
     .modal-header {
       padding: 11px 14px;
-      background: var(--primary);
+      background: linear-gradient(135deg, rgba(30, 58, 138, 0.85) 0%, rgba(29, 78, 216, 0.85) 100%);
+      border-bottom: 1px solid rgba(147, 197, 253, 0.24);
       color: #ffffff;
       font-weight: 800;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -791,7 +921,8 @@
     .modal-body {
       padding: 12px;
       overflow-y: auto;
-      font-size: 0.81rem;
+      -webkit-overflow-scrolling: touch;
+      font-size: 0.80rem;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -804,27 +935,27 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 6px;
       flex-shrink: 0;
     }
 
     .view-toggle-group {
       display: inline-flex;
-      background: var(--surface-alt);
+      background: rgba(15, 23, 42, 0.65);
       padding: 3px;
       border-radius: 9px;
-      border: 1px solid var(--border);
+      border: 1px solid rgba(148, 163, 184, 0.25);
       gap: 3px;
       flex-shrink: 0;
     }
 
     .view-toggle-btn {
       height: 30px;
-      padding: 0 10px;
+      padding: 0 9px;
       border-radius: 7px;
       border: none;
       background: transparent;
-      color: var(--text-muted);
+      color: #94a3b8;
       font-size: 0.74rem;
       font-weight: 700;
       cursor: pointer;
@@ -832,16 +963,16 @@
     }
 
     .view-toggle-btn.active {
-      background: var(--primary);
+      background: var(--primary-gradient);
       color: #ffffff;
     }
 
     .lib-page-badge {
       font-size: 0.73rem;
       font-weight: 800;
-      color: var(--primary);
-      background: var(--primary-soft);
-      border: 1px solid var(--primary-border);
+      color: #7dd3fc;
+      background: rgba(37, 99, 235, 0.24);
+      border: 1px solid rgba(56, 189, 248, 0.35);
       padding: 4px 10px;
       border-radius: 999px;
       white-space: nowrap;
@@ -852,10 +983,10 @@
       align-items: center;
       justify-content: space-between;
       gap: 6px;
-      background: var(--primary-soft);
-      border: 1.5px solid var(--primary-border);
+      background: rgba(37, 99, 235, 0.22);
+      border: 1px solid rgba(56, 189, 248, 0.38);
       border-radius: 10px;
-      padding: 6px 10px;
+      padding: 6px 9px;
       flex-shrink: 0;
     }
 
@@ -864,18 +995,18 @@
     }
 
     .lib-ms-count {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       font-weight: 800;
-      color: var(--primary);
+      color: #7dd3fc;
       white-space: nowrap;
     }
 
     .lib-ms-actions {
       display: none;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 7px;
+      gap: 6px;
       padding-top: 6px;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid rgba(148, 163, 184, 0.22);
       flex-shrink: 0;
     }
 
@@ -888,20 +1019,22 @@
       flex-direction: column;
       gap: 8px;
       flex: 1;
-      min-height: 220px;
-      max-height: 66dvh;
+      min-height: 200px;
+      max-height: 62dvh;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       padding-right: 2px;
     }
 
     .lib-container.grid-mode {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+      gap: 9px;
       flex: 1;
-      min-height: 220px;
-      max-height: 66dvh;
+      min-height: 200px;
+      max-height: 62dvh;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       padding-right: 2px;
       align-content: start;
     }
@@ -915,12 +1048,12 @@
     .lib-empty-box {
       grid-column: 1 / -1;
       text-align: center;
-      padding: 36px 14px;
+      padding: 34px 14px;
       border-radius: 12px;
-      border: 1.5px dashed var(--border);
-      background: var(--surface-alt);
-      color: var(--text-muted);
-      font-size: 0.8rem;
+      border: 1.5px dashed rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.45);
+      color: #cbd5e1;
+      font-size: 0.79rem;
       font-weight: 600;
       line-height: 1.5;
     }
@@ -929,31 +1062,31 @@
       position: relative;
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 10px;
+      gap: 9px;
+      padding: 8px 9px;
       border-radius: 12px;
-      border: 1.5px solid var(--border);
-      background: var(--surface-alt);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(30, 41, 59, 0.65);
       cursor: pointer;
       transition: all 0.14s ease;
     }
 
     .lib-item-list.active {
-      border-color: var(--primary);
-      background: #f4f9ff;
+      border-color: #38bdf8;
+      background: rgba(37, 99, 235, 0.24);
     }
 
     .lib-item-list.selected {
-      border-color: var(--primary);
-      background: var(--primary-soft);
-      box-shadow: 0 0 0 1px var(--primary);
+      border-color: #38bdf8;
+      background: rgba(37, 99, 235, 0.32);
+      box-shadow: 0 0 0 1px #38bdf8;
     }
 
     .lib-thumb-list {
       width: 46px;
       height: 62px;
       border-radius: 6px;
-      border: 1px solid var(--border);
+      border: 1px solid rgba(255, 255, 255, 0.20);
       background: #ffffff;
       object-fit: contain;
       flex-shrink: 0;
@@ -968,35 +1101,35 @@
     }
 
     .lib-meta-title {
-      font-size: 0.82rem;
+      font-size: 0.80rem;
       font-weight: 800;
-      color: var(--text);
+      color: #f8fafc;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .lib-meta-page-tag {
-      font-size: 0.70rem;
+      font-size: 0.69rem;
       font-weight: 700;
-      color: var(--primary);
+      color: #7dd3fc;
     }
 
     .lib-item-actions {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       flex-shrink: 0;
     }
 
     .btn-item-action {
       height: 32px;
-      padding: 0 11px;
+      padding: 0 10px;
       border-radius: 8px;
       font-size: 0.74rem;
       font-weight: 700;
       cursor: pointer;
-      border: 1.5px solid transparent;
+      border: 1px solid transparent;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -1009,29 +1142,29 @@
       flex-direction: column;
       padding: 8px;
       border-radius: 12px;
-      border: 1.5px solid var(--border);
-      background: var(--surface-alt);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(30, 41, 59, 0.65);
       cursor: pointer;
       gap: 6px;
       transition: all 0.14s ease;
     }
 
     .lib-item-grid.active {
-      border-color: var(--primary);
-      background: #f4f9ff;
+      border-color: #38bdf8;
+      background: rgba(37, 99, 235, 0.24);
     }
 
     .lib-item-grid.selected {
-      border-color: var(--primary);
-      background: var(--primary-soft);
-      box-shadow: 0 0 0 1px var(--primary);
+      border-color: #38bdf8;
+      background: rgba(37, 99, 235, 0.32);
+      box-shadow: 0 0 0 1px #38bdf8;
     }
 
     .lib-thumb-grid {
       width: 100%;
-      height: 112px;
+      height: 110px;
       border-radius: 7px;
-      border: 1px solid var(--border);
+      border: 1px solid rgba(255, 255, 255, 0.20);
       background: #ffffff;
       object-fit: contain;
     }
@@ -1054,8 +1187,8 @@
       width: 22px;
       height: 22px;
       border-radius: 999px;
-      border: 2px solid var(--border);
-      background: #ffffff;
+      border: 2px solid rgba(148, 163, 184, 0.55);
+      background: rgba(15, 23, 42, 0.80);
       color: transparent;
       display: none;
       align-items: center;
@@ -1071,7 +1204,7 @@
 
     .lib-select-check.checked {
       background: var(--primary);
-      border-color: var(--primary);
+      border-color: #38bdf8;
       color: #ffffff;
     }
 
@@ -1080,49 +1213,75 @@
       top: 13px;
       left: 13px;
       z-index: 5;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
     }
 
-    /* Form Fields inside Export Popup */
+    /* Form Fields inside Semi-Transparent Vertical Export Popup */
     .form-field label {
       font-size: 0.72rem;
       font-weight: 700;
-      color: var(--text-muted);
+      color: #93c5fd;
       display: block;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .form-field select, .form-field input {
       width: 100%;
-      height: 34px;
-      padding: 0 8px;
-      border-radius: 8px;
-      border: 1.5px solid var(--border);
-      font-size: 0.76rem;
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 9px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      font-size: 0.78rem;
       font-weight: 600;
-      color: var(--text);
-      background: #ffffff;
+      color: #f8fafc;
+      background: rgba(15, 23, 42, 0.72);
       font-family: inherit;
     }
 
-    .checkbox-inline {
-      display: inline-flex;
+    .form-field select option {
+      background: #0f172a;
+      color: #f8fafc;
+    }
+
+    .dd-slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: rgba(15, 23, 42, 0.65);
+      padding: 7px 10px;
+      border-radius: 9px;
+      border: 1px solid rgba(148, 163, 184, 0.30);
+      width: 100%;
+    }
+
+    .dd-slider-top {
+      display: flex;
       align-items: center;
-      gap: 5px;
-      font-size: 0.71rem;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .dd-slider-label {
+      font-size: 0.75rem;
       font-weight: 700;
-      color: var(--text);
-      cursor: pointer;
+      color: #e2e8f0;
       white-space: nowrap;
     }
 
-    .checkbox-inline input {
-      width: 14px;
-      height: 14px;
-      accent-color: var(--primary);
+    .dd-slider-val {
+      font-size: 0.76rem;
+      font-weight: 800;
+      color: #38bdf8;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .vertical-actions-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      width: 100%;
+      margin-top: 2px;
     }
 
     .camera-video-wrap {
@@ -1131,8 +1290,8 @@
       border-radius: 12px;
       overflow: hidden;
       width: 100%;
-      height: 66dvh;
-      max-height: 560px;
+      height: 64dvh;
+      max-height: 540px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1159,13 +1318,15 @@
       bottom: 10px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(10, 70, 125, 0.88);
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       padding: 3px 7px;
       border-radius: 999px;
       display: flex;
       align-items: center;
       gap: 5px;
-      border: 1px solid rgba(255,255,255,0.4);
+      border: 1px solid rgba(148, 163, 184, 0.35);
       z-index: 10;
     }
 
@@ -1181,29 +1342,32 @@
     }
 
     .zoom-pill.active {
-      background: #ffffff;
-      color: var(--primary);
+      background: var(--primary-gradient);
+      color: #ffffff;
     }
 
     .toast-box {
       position: fixed;
-      top: 94px;
+      top: 90px;
       left: 16px;
       right: 16px;
-      max-width: 340px;
+      max-width: 330px;
       margin: 0 auto;
-      background: var(--primary);
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(56, 189, 248, 0.45);
       color: #ffffff;
       padding: 8px 14px;
       border-radius: 999px;
-      font-size: 0.78rem;
+      font-size: 0.77rem;
       font-weight: 700;
       text-align: center;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
       opacity: 0;
       transform: translateY(-8px);
       pointer-events: none;
-      transition: all 0.18s ease;
+      transition: all 0.16s ease;
       z-index: 250;
     }
 
@@ -1232,10 +1396,10 @@
       <div class="header-btn-row">
         <input type="file" id="fileInput" accept="image/*" multiple style="display:none" />
         <button type="button" class="btn btn-hdr-primary" id="btnOpenCamera">
-          📸 Chụp ảnh
+          📷 Chụp ảnh
         </button>
         <button type="button" class="btn btn-hdr-outline" id="btnTriggerUpload">
-          📁 Chọn ảnh
+          📂 Chọn ảnh
         </button>
         <button type="button" class="btn btn-hdr-outline" id="btnOpenLibrary">
           🗂 Thư viện
@@ -1256,25 +1420,25 @@
         <div class="under-image-bar">
           <div class="under-image-inner">
             <div class="under-meta-text" id="mainUnderMetaText">
-              Tỉ lệ 1:1.41 (A4 Dọc) • 720×1018 px • Ảnh gốc • Hôm nay
+              1:1.41 (A4) • 720×1018 px • Ảnh gốc
             </div>
-            <button type="button" class="stage-mini-btn" id="btnZoomReset" style="display:none;">100% ✕</button>
+            <button type="button" class="stage-mini-btn" id="btnZoomReset" style="display:none;">100%</button>
           </div>
         </div>
       </section>
 
-      <!-- 3. ULTRA-CLEAN BOTTOM BAR: ONLY "Sửa", "Tải ảnh này", "Lưu PDF" -->
+      <!-- 3. MAIN BOTTOM BAR: Col 1 = Sửa, Col 2 = Tải ảnh, Col 3 = Lưu PDF -->
       <section class="bottom-dock" id="panelControls" aria-label="Điều khiển">
         <div class="dock-inner">
           <div class="grid-3">
             <button type="button" class="btn btn-sec" id="btnOpenFullEditor">
-              ✨ Sửa
+              🛠 Sửa
             </button>
             <button type="button" class="btn btn-main" id="btnOpenImgExport">
-              ⬇ Tải ảnh này
+              ⬇ Tải ảnh
             </button>
             <button type="button" class="btn btn-main" id="btnOpenPdfExport">
-              📄 Lưu PDF
+              📕 Lưu PDF
             </button>
           </div>
         </div>
@@ -1283,215 +1447,211 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- FULL-SCREEN VIEW & EDIT SCREEN (v17.0 — SPACIOUS 100% READABLE ☰ MENU)   -->
-  <!-- - Dedicated Top Bar holds ☰ Công cụ on left & ◀ / ▶ / Đóng ✕ on right     -->
-  <!-- - ☰ Menu opens at 100% full width with at most 2–3 buttons per row        -->
-  <!-- - Document image below resizes cleanly so 0% of the image is covered!     -->
+  <!-- FULL-SCREEN VIEW & EDIT SCREEN (v21.0 — CLEAN SCIENTIFIC LAYOUT)          -->
   <!-- ========================================================================= -->
   <div class="fs-editor-backdrop" id="fullScreenEditorModal" role="dialog" aria-modal="true" aria-label="Chỉnh sửa ảnh toàn màn hình">
 
-    <!-- DEDICATED TOP BAR: 3-LINE HAMBURGER (☰) ON LEFT, NAV & CLOSE ON RIGHT -->
+    <!-- TOP BAR: Left = ☰, Center = ◀ / ▶, Right = ✕ Đóng -->
     <div class="fs-top-bar">
       <div class="fs-top-bar-inner">
-        <button type="button" class="fs-corner-hamburger" id="btnToggleEditDropdown" title="Mở / Đóng menu công cụ sửa ảnh" aria-label="Công cụ sửa ảnh">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <button type="button" class="fs-corner-hamburger" id="btnToggleEditDropdown" title="Mở / Đóng menu công cụ" aria-label="Menu công cụ">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
             <line x1="3" y1="6" x2="21" y2="6" />
             <line x1="3" y1="12" x2="21" y2="12" />
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
-          <span>Công cụ</span>
         </button>
 
-        <div class="fs-corner-right-group">
+        <div class="fs-top-center-nav">
           <button type="button" class="fs-corner-btn" id="btnFsPrev" title="Ảnh trước">◀ Trước</button>
           <button type="button" class="fs-corner-btn" id="btnFsNext" title="Ảnh sau">Sau ▶</button>
-          <button type="button" class="fs-corner-btn" id="btnCloseFsEditor" title="Đóng màn hình sửa">Đóng ✕</button>
         </div>
+
+        <button type="button" class="fs-corner-btn" id="btnCloseFsEditor" title="Đóng màn hình sửa">✕ Đóng</button>
       </div>
     </div>
 
-    <!-- SPACIOUS 100%-WIDTH HAMBURGER MENU (Max 2–3 buttons per row, 100% readable labels!) -->
-    <div class="edit-compact-drawer" id="editDropdownMenu">
-      <div class="edit-drawer-inner">
-        <!-- Row 1: 3 Spacious Category Tabs (~108px each on 360px phone) -->
-        <div class="drawer-tabs-row" role="tablist">
-          <button type="button" class="drawer-tab-btn active" data-tab="tabColor">🎨 Màu &amp; Sáng</button>
-          <button type="button" class="drawer-tab-btn" data-tab="tabCropFlatten">📐 Cắt &amp; Phẳng</button>
-          <button type="button" class="drawer-tab-btn" data-tab="tabNote">📝 Ghi chú</button>
+    <!-- POPUP 1: SEMI-TRANSPARENT VERTICAL HAMBURGER MENU (No redundant section headers!) -->
+    <div class="edit-vertical-popup" id="editDropdownMenu">
+      <button type="button" class="vpop-action-btn primary-item" id="btnDdStartCrop">
+        📐 Căn chỉnh
+      </button>
+      <button type="button" class="vpop-action-btn" id="btnDdRotate90">
+        ↻ Xoay 90°
+      </button>
+
+      <div class="vpop-divider"></div>
+      <div id="ddColorModeGrid" style="display:flex; flex-direction:column; gap:4px; width:100%;">
+        <button type="button" class="dd-mode-btn active" data-mode="original">🖼 Ảnh gốc</button>
+        <button type="button" class="dd-mode-btn" data-mode="magic_color">🎨 Tài liệu màu</button>
+        <button type="button" class="dd-mode-btn" data-mode="bw_sauvola">◐ Đen trắng</button>
+        <button type="button" class="dd-mode-btn" data-mode="faint_boost">✒ Làm rõ chữ</button>
+        <button type="button" class="dd-mode-btn" id="btnDdToggleAlpha">🪄 Tách nền</button>
+      </div>
+
+      <div class="vpop-divider"></div>
+      <div class="vpop-slider-item">
+        <div class="vpop-slider-top">
+          <span class="vpop-slider-lbl">📖 Độ phẳng</span>
+          <span class="vpop-slider-val" id="ddBookCurveVal" title="Chạm để đặt lại 0%" style="cursor:pointer;">0%</span>
         </div>
+        <input type="range" id="ddBookCurveSlider" min="-100" max="100" value="0" />
+      </div>
 
-        <!-- Pane 1: Color Modes (3+2 spacious grid) + Full-Width Brightness & Clean Sliders -->
-        <div class="drawer-pane active" id="tabColor">
-          <div id="ddColorModeGrid" style="display:flex; flex-direction:column; gap:6px; width:100%;">
-            <div class="drawer-grid-3">
-              <button type="button" class="dd-mode-btn active" data-mode="original">Ảnh gốc</button>
-              <button type="button" class="dd-mode-btn" data-mode="magic_color">Tài liệu màu</button>
-              <button type="button" class="dd-mode-btn" data-mode="bw_sauvola">Đen trắng</button>
-            </div>
-            <div class="drawer-grid-2">
-              <button type="button" class="dd-mode-btn" data-mode="faint_boost">Làm rõ chữ</button>
-              <button type="button" class="dd-mode-btn" id="btnDdToggleAlpha">Tách nền</button>
-            </div>
-          </div>
-
-          <div class="dd-slider-row">
-            <span class="dd-slider-label">Độ sáng</span>
-            <input type="range" id="ddBrightnessSlider" min="-50" max="50" value="0" />
-            <span class="dd-slider-val" id="ddBrightnessVal">0</span>
-          </div>
-
-          <div class="dd-slider-row">
-            <span class="dd-slider-label">Sạch nền</span>
-            <input type="range" id="ddCleanSlider" min="0" max="100" value="68" />
-            <span class="dd-slider-val" id="ddCleanVal">68%</span>
-          </div>
+      <div class="vpop-slider-item">
+        <div class="vpop-slider-top">
+          <span class="vpop-slider-lbl">☀️ Độ sáng</span>
+          <span class="vpop-slider-val" id="ddBrightnessVal" title="Chạm để đặt lại 0" style="cursor:pointer;">0</span>
         </div>
+        <input type="range" id="ddBrightnessSlider" min="-50" max="50" value="0" />
+      </div>
 
-        <!-- Pane 2: Crop 4 Corners, Rotate 90° & Book/Line Flattening (Removed "Tách 2 trang") -->
-        <div class="drawer-pane" id="tabCropFlatten">
-          <div class="drawer-grid-2">
-            <button type="button" class="btn btn-sec" id="btnDdStartCrop" style="height:37px; font-size:0.81rem;">📐 Cắt 4 góc</button>
-            <button type="button" class="btn btn-sec" id="btnDdRotate90" style="height:37px; font-size:0.81rem;">↻ Xoay 90°</button>
-          </div>
-
-          <div class="drawer-grid-flatten">
-            <button type="button" class="btn btn-main" id="btnAutoFlattenBookLines" style="height:37px; font-size:0.80rem;">
-              📏 Tự nắn dòng chữ
-            </button>
-            <button type="button" class="btn btn-sec" id="btnResetFlattenBook" style="height:37px; font-size:0.79rem;">
-              Đặt lại 0%
-            </button>
-          </div>
-
-          <div class="dd-slider-row">
-            <span class="dd-slider-label">Uốn phẳng</span>
-            <input type="range" id="ddBookCurveSlider" min="-100" max="100" value="0" />
-            <span class="dd-slider-val" id="ddBookCurveVal">0%</span>
-          </div>
+      <div class="vpop-slider-item">
+        <div class="vpop-slider-top">
+          <span class="vpop-slider-lbl">🧹 Sạch nền</span>
+          <span class="vpop-slider-val" id="ddCleanVal">68%</span>
         </div>
+        <input type="range" id="ddCleanSlider" min="0" max="100" value="68" />
+      </div>
 
-        <!-- Pane 3: Spacious Full-Width Rename & Note Inputs -->
-        <div class="drawer-pane" id="tabNote">
-          <div class="drawer-note-row">
-            <span class="dd-slider-label" style="min-width:62px;">Tên ảnh</span>
-            <div class="form-field" style="flex:1; min-width:0;">
-              <input type="text" id="ddFilenameInput" placeholder="Nhập tên tệp ảnh..." />
-            </div>
-          </div>
-          <div class="drawer-note-row">
-            <div class="form-field" style="flex:1; min-width:0;">
-              <input type="text" id="ddNoteInput" placeholder="Nhập ghi chú cho trang này..." />
-            </div>
-            <label class="checkbox-inline" title="In ghi chú lên chân trang khi tải về" style="padding:0 4px;">
-              <input type="checkbox" id="chkPrintNoteOnExport" />
-              <span>In lên ảnh</span>
-            </label>
-          </div>
+      <div class="vpop-divider"></div>
+      <div class="vpop-note-input-wrap">
+        <input type="text" class="vpop-input" id="ddNoteInput" placeholder="Nhập ghi chú lên ảnh..." />
+        <button type="button" class="vpop-note-clear" id="btnClearNote" title="Xóa ghi chú">✕</button>
+      </div>
+
+      <div class="vpop-slider-item">
+        <div class="vpop-slider-top">
+          <span class="vpop-slider-lbl">🔤 Cỡ chữ</span>
+          <span class="vpop-slider-val" id="ddNoteSizeVal">28px</span>
         </div>
+        <input type="range" id="ddNoteSizeSlider" min="14" max="64" value="28" />
+      </div>
+
+      <div class="vpop-color-row" id="ddNoteColorRow" aria-label="Màu ghi chú">
+        <button type="button" class="note-color-swatch active" data-color="#dc2626" style="background:#dc2626;" title="Màu đỏ"></button>
+        <button type="button" class="note-color-swatch" data-color="#2563eb" style="background:#2563eb;" title="Màu xanh dương"></button>
+        <button type="button" class="note-color-swatch" data-color="#16a34a" style="background:#16a34a;" title="Màu xanh lá"></button>
+        <button type="button" class="note-color-swatch" data-color="#d97706" style="background:#d97706;" title="Màu cam"></button>
+        <button type="button" class="note-color-swatch" data-color="#7c3aed" style="background:#7c3aed;" title="Màu tím"></button>
+        <button type="button" class="note-color-swatch" data-color="#0f172a" style="background:#0f172a;" title="Màu đen"></button>
+      </div>
+
+      <input type="text" class="vpop-input" id="ddFilenameInput" placeholder="Tên tệp ảnh..." />
+    </div>
+
+    <!-- POPUP 2: SEMI-TRANSPARENT VERTICAL "CĂN CHỈNH" POPUP (Scientific paired rows!) -->
+    <div class="edit-vertical-popup" id="fsCropBar">
+      <button type="button" class="dd-mode-btn active" id="btnAlignMode4Pt">
+        ◰ Căn 4 góc
+      </button>
+      <button type="button" class="dd-mode-btn" id="btnAlignModeMultiPt">
+        ❖ Căn đa điểm
+      </button>
+
+      <div class="vpop-divider"></div>
+      <button type="button" class="vpop-action-btn" id="btnAutoDetectCorners">
+        🎯 Tự động
+      </button>
+      <button type="button" class="vpop-action-btn" id="btnFullFrameCorners">
+        ⛶ Toàn ảnh
+      </button>
+
+      <div class="vpop-divider"></div>
+      <div class="vpop-pair-row">
+        <button type="button" class="vpop-action-btn danger-item" id="btnCancelCrop">
+          ✕ Hủy
+        </button>
+        <button type="button" class="vpop-action-btn primary-item" id="btnApplyCropNow">
+          ✓ Áp dụng
+        </button>
       </div>
     </div>
 
-    <!-- Center Full-Screen Image Viewport (Automatically resizes below the drawer so 100% of image is visible!) -->
+    <!-- Center Full-Screen Image Viewport -->
     <div class="fs-stage-wrap" id="fsStageWrap">
-
-      <!-- Full-Screen Document Canvas -->
       <div class="fs-canvas-holder" id="fsCanvasHolder">
         <canvas id="fsCanvas" width="720" height="1018"></canvas>
       </div>
 
-      <!-- 4x Magnifier Loupe when dragging corners in Full-Screen Crop Sub-mode -->
+      <!-- 4x Magnifier Loupe when dragging handles in Alignment Mode -->
       <div class="magnifier-loupe" id="magnifierLoupe">
         <canvas id="loupeCanvas" width="114" height="114"></canvas>
         <div class="magnifier-label" id="loupeLabel">Góc TL</div>
       </div>
-
-      <!-- Floating Crop Bar (Appears only when user selects "📐 Cắt 4 góc" from the ☰ Menu) -->
-      <div class="fs-crop-bar" id="fsCropBar">
-        <div class="drawer-grid-3">
-          <button type="button" class="btn btn-sec" id="btnAutoDetectCorners" style="height:36px; font-size:0.79rem;">Tự bắt rìa</button>
-          <button type="button" class="btn btn-sec" id="btnFullFrameCorners" style="height:36px; font-size:0.79rem;">Đầy khung</button>
-          <button type="button" class="btn btn-sec" id="btnRotateInCrop" style="height:36px; font-size:0.79rem;">Xoay 90°</button>
-        </div>
-        <div class="grid-2-confirm">
-          <button type="button" class="btn btn-sec" id="btnCancelCrop" style="height:37px; font-size:0.80rem;">Hủy cắt</button>
-          <button type="button" class="btn btn-main" id="btnApplyCropNow" style="height:37px; font-size:0.80rem;">
-            ✓ Áp dụng cắt &amp; Dàn phẳng
-          </button>
-        </div>
-      </div>
     </div>
 
-        <!-- Secondary Info Directly Below Image + Quick Export Actions -->
+    <!-- Secondary Info Directly Below Image + Synchronized Bottom Actions (Col 1=Xóa, Col 2=Tải ảnh, Col 3=Lưu PDF) -->
     <div class="fs-bottom-area" id="fsBottomArea">
       <div class="fs-note-preview" id="fsNotePreview"></div>
-      <div class="fs-meta-strip">
-        <span id="fsMetaRatioAndRes">Tỉ lệ 1:1.41 (A4 Dọc) • 720×1018 px</span>
-        <span id="fsMetaModeAndTime">Ảnh gốc • Hôm nay</span>
+      <div class="fs-meta-strip" id="fsMetaSingleLine">
+        1:1.41 (A4) • 720×1018 px • Ảnh gốc • Hôm nay
       </div>
       <div class="dock-inner">
         <div class="grid-3">
-          <button type="button" class="btn btn-main" id="btnFsTriggerImgExport">⬇ Tải ảnh này</button>
-          <button type="button" class="btn btn-sec" id="btnFsTriggerPdfExport">📄 Lưu PDF</button>
-          <button type="button" class="btn btn-danger-soft" id="btnFsDeletePage">🗑 Xóa ảnh</button>
+          <button type="button" class="btn btn-danger-soft" id="btnFsDeletePage">🗑 Xóa</button>
+          <button type="button" class="btn btn-main" id="btnFsTriggerImgExport">⬇ Tải ảnh</button>
+          <button type="button" class="btn btn-main" id="btnFsTriggerPdfExport">📕 Lưu PDF</button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ========================================================================= -->
-  <!-- CLEAN "THƯ VIỆN" (LIBRARY) MODAL — SHOWS "TRANG X / Y" & IMAGE LIST/GRID -->
+  <!-- POPUP 3: SEMI-TRANSPARENT VERTICAL LIBRARY ("THƯ VIỆN") MODAL             -->
   <!-- ========================================================================= -->
   <div class="modal-backdrop" id="libraryModal" role="dialog" aria-modal="true" aria-labelledby="libraryModalTitle">
     <div class="modal-card">
       <div class="modal-header">
         <span id="libraryModalTitle">Thư Viện Ảnh</span>
-        <button type="button" class="btn btn-hdr-outline" id="btnCloseLibrary" style="height:30px; padding:0 10px;">Đóng ✕</button>
+        <button type="button" class="btn btn-hdr-outline" id="btnCloseLibrary" style="height:31px; padding:0 10px;">✕ Đóng</button>
       </div>
       <div class="modal-body">
         <div class="lib-toolbar" id="libNormalToolbar">
           <div class="view-toggle-group" role="tablist">
-            <button type="button" class="view-toggle-btn active" id="btnViewList">☰ Danh sách</button>
+            <button type="button" class="view-toggle-btn active" id="btnViewList">≣ Danh sách</button>
             <button type="button" class="view-toggle-btn" id="btnViewGrid">⊞ Thu nhỏ</button>
           </div>
           <span class="lib-page-badge" id="libPageStatusBadge">Trang 1 / 1</span>
         </div>
 
         <div class="lib-multiselect-bar" id="libMultiSelectBar">
-          <span class="lib-ms-count" id="libSelectedCountText">Đã chọn 1 ảnh</span>
+          <span class="lib-ms-count" id="libSelectedCountText">Chọn 1/1</span>
           <div style="display:flex; align-items:center; gap:5px;">
-            <button type="button" class="btn btn-sec" id="btnSelectAllInLib" style="height:28px; padding:0 9px; font-size:0.72rem;">Chọn tất cả</button>
-            <button type="button" class="btn btn-sec" id="btnExitMultiSelect" style="height:28px; padding:0 9px; font-size:0.72rem;">Bỏ chọn ✕</button>
+            <button type="button" class="btn btn-sec" id="btnSelectAllInLib" style="height:28px; padding:0 8px; font-size:0.71rem;">☑ Tất cả</button>
+            <button type="button" class="btn btn-danger-soft" id="btnExitMultiSelect" style="height:28px; padding:0 8px; font-size:0.71rem;">✕ Hủy</button>
           </div>
         </div>
 
         <div class="lib-container list-mode" id="pageListContainer"></div>
 
+        <!-- Synchronized Col 1 = Xóa, Col 2 = Tải ảnh, Col 3 = Lưu PDF -->
         <div class="lib-ms-actions" id="libMultiSelectActions">
-          <button type="button" class="btn btn-main" id="btnBatchPdfSelected">📑 Lưu PDF</button>
-          <button type="button" class="btn btn-sec" id="btnBatchDownloadSelected">⬇ Tải ảnh</button>
-          <button type="button" class="btn btn-danger-soft" id="btnBatchDeleteSelected">🗑 Xóa mục chọn</button>
+          <button type="button" class="btn btn-danger-soft" id="btnBatchDeleteSelected">🗑 Xóa</button>
+          <button type="button" class="btn btn-main" id="btnBatchDownloadSelected">⬇ Tải ảnh</button>
+          <button type="button" class="btn btn-main" id="btnBatchPdfSelected">📕 Lưu PDF</button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ========================================================================= -->
-  <!-- DEDICATED EXPORT POPUP ("LƯU PDF" OR "TẢI ẢNH NÀY" — FORMAT & QUALITY ONLY HERE) -->
+  <!-- POPUP 4: SEMI-TRANSPARENT VERTICAL EXPORT POPUP ("LƯU PDF" / "TẢI ẢNH")  -->
   <!-- ========================================================================= -->
   <div class="modal-backdrop" id="exportPopupModal" role="dialog" aria-modal="true" aria-labelledby="exportPopupTitle" style="z-index: 190;">
-    <div class="modal-card" style="max-width: 420px;">
+    <div class="modal-card" style="max-width: 340px;">
       <div class="modal-header">
-        <span id="exportPopupTitle">⬇ Tải Ảnh Này</span>
-        <button type="button" class="btn btn-hdr-outline" id="btnCloseExportPopup" style="height:30px; padding:0 10px;">Đóng ✕</button>
+        <span id="exportPopupTitle">⬇ Tải Ảnh</span>
+        <button type="button" class="btn btn-hdr-outline" id="btnCloseExportPopup" style="height:31px; padding:0 10px;">✕ Đóng</button>
       </div>
-      <div class="modal-body" style="gap: 11px;">
+      <div class="modal-body" style="gap: 10px;">
         <div class="form-field">
-          <label for="exportFilename">Tên tệp tải về</label>
+          <label for="exportFilename">Tên tệp</label>
           <input type="text" id="exportFilename" value="ScanhoahocABC_1" />
         </div>
 
         <div class="form-field" id="exportFormatFieldWrap">
-          <label for="exportFormat">Định dạng ảnh</label>
+          <label for="exportFormat">Định dạng</label>
           <select id="exportFormat">
             <option value="jpeg" selected>Ảnh JPEG (.jpg)</option>
             <option value="png">Ảnh PNG (.png)</option>
@@ -1503,43 +1663,46 @@
         </div>
 
         <div class="form-field" id="exportPdfScopeFieldWrap" style="display:none;">
-          <label for="exportPdfScope">Phạm vi trang PDF</label>
+          <label for="exportPdfScope">Phạm vi trang</label>
           <select id="exportPdfScope">
-            <option value="current" selected>Chỉ trang đang xem (1 trang)</option>
-            <option value="all">Tất cả ảnh trong Thư viện</option>
+            <option value="current" selected>Trang đang xem (1 trang)</option>
+            <option value="all">Tất cả trang trong Thư viện</option>
           </select>
         </div>
 
         <div class="form-field">
-          <label for="exportScale">Độ phân giải / DPI</label>
+          <label for="exportScale">Độ phân giải</label>
           <select id="exportScale">
-            <option value="0.75">150 DPI (Dung lượng nhẹ)</option>
+            <option value="0.75">150 DPI (Nhẹ)</option>
             <option value="1" selected>200 DPI (Tiêu chuẩn)</option>
-            <option value="1.5">300 DPI (In ấn sắc nét)</option>
-            <option value="2">600 DPI (Chất lượng cao nhất)</option>
+            <option value="1.5">300 DPI (Sắc nét)</option>
+            <option value="2">600 DPI (Cao nhất)</option>
           </select>
         </div>
 
         <div class="dd-slider-row">
-          <span class="dd-slider-label">Chất lượng ảnh</span>
+          <div class="dd-slider-top">
+            <span class="dd-slider-label">Chất lượng</span>
+            <span class="dd-slider-val" id="exportQualityVal">94%</span>
+          </div>
           <input type="range" id="exportQualitySlider" min="50" max="100" value="94" />
-          <span class="dd-slider-val" id="exportQualityVal">94%</span>
         </div>
 
-        <div class="grid-2-confirm" style="margin-top: 2px;">
-          <button type="button" class="btn btn-sec" id="btnCancelExportPopup">Hủy</button>
-          <button type="button" class="btn btn-main" id="btnConfirmExportNow">⬇ Tải về ngay</button>
+        <!-- Paired "✕ Hủy" beside "✓ Lưu" at the bottom of Export Popup! -->
+        <div class="vpop-pair-row" style="margin-top: 2px;">
+          <button type="button" class="btn btn-sec" id="btnCancelExportPopup" style="width:100%;">✕ Hủy</button>
+          <button type="button" class="btn btn-main" id="btnConfirmExportNow" style="width:100%;">✓ Lưu</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- REAR-CAMERA-ONLY MODAL -->
+  <!-- POPUP 5: SEMI-TRANSPARENT VERTICAL REAR-CAMERA MODAL -->
   <div class="modal-backdrop" id="cameraModal" role="dialog" aria-modal="true" aria-labelledby="cameraModalTitle">
     <div class="modal-card">
       <div class="modal-header">
         <span id="cameraModalTitle">Chụp Tài Liệu</span>
-        <button type="button" class="btn btn-hdr-outline" id="btnCloseCamera" style="height:30px; padding:0 10px;">Đóng ✕</button>
+        <button type="button" class="btn btn-hdr-outline" id="btnCloseCamera" style="height:31px; padding:0 10px;">✕ Đóng</button>
       </div>
       <div class="modal-body">
         <div class="camera-video-wrap" id="cameraVideoWrap">
@@ -1551,14 +1714,15 @@
             <button type="button" class="zoom-pill" data-zoom="1.5" id="btnZoom15x">1.5x</button>
           </div>
         </div>
-        <button type="button" class="btn btn-main" id="btnCapturePhoto" style="width:100%; height:42px; font-size:0.86rem;">
-          📸 Chụp tài liệu
-        </button>
+        <div class="vpop-pair-row">
+          <button type="button" class="btn btn-sec" id="btnCancelCameraBottom" style="width:100%;">✕ Hủy</button>
+          <button type="button" class="btn btn-main" id="btnCapturePhoto" style="width:100%;">📷 Chụp</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- TOAST -->
+    <!-- TOAST -->
   <div class="toast-box" id="toastBox" role="status" aria-live="polite">Đã xử lý xong!</div>
 
   <script>
@@ -1572,6 +1736,7 @@
         pages: [],
         currentPageIndex: -1,
         fsCropMode: false,
+        alignPointMode: "4pt", // "4pt" (4 corner points) or "multipt" (4 corners + 3 points per edge = 16 points)
         exportPopupType: "image",
         libViewMode: "list",
         libMultiSelect: false,
@@ -1633,15 +1798,16 @@
         ddBrightnessVal: document.getElementById("ddBrightnessVal"),
         ddCleanSlider: document.getElementById("ddCleanSlider"),
         ddCleanVal: document.getElementById("ddCleanVal"),
-        btnAutoFlattenBookLines: document.getElementById("btnAutoFlattenBookLines"),
         ddBookCurveSlider: document.getElementById("ddBookCurveSlider"),
         ddBookCurveVal: document.getElementById("ddBookCurveVal"),
-        btnResetFlattenBook: document.getElementById("btnResetFlattenBook"),
         btnDdStartCrop: document.getElementById("btnDdStartCrop"),
         btnDdRotate90: document.getElementById("btnDdRotate90"),
         ddFilenameInput: document.getElementById("ddFilenameInput"),
         ddNoteInput: document.getElementById("ddNoteInput"),
-        chkPrintNoteOnExport: document.getElementById("chkPrintNoteOnExport"),
+        btnClearNote: document.getElementById("btnClearNote"),
+        ddNoteSizeSlider: document.getElementById("ddNoteSizeSlider"),
+        ddNoteSizeVal: document.getElementById("ddNoteSizeVal"),
+        ddNoteColorRow: document.getElementById("ddNoteColorRow"),
         fsStageWrap: document.getElementById("fsStageWrap"),
         fsCanvasHolder: document.getElementById("fsCanvasHolder"),
         fsCanvas: document.getElementById("fsCanvas"),
@@ -1651,13 +1817,13 @@
         fsCropBar: document.getElementById("fsCropBar"),
         btnAutoDetectCorners: document.getElementById("btnAutoDetectCorners"),
         btnFullFrameCorners: document.getElementById("btnFullFrameCorners"),
-        btnRotateInCrop: document.getElementById("btnRotateInCrop"),
+        btnAlignMode4Pt: document.getElementById("btnAlignMode4Pt"),
+        btnAlignModeMultiPt: document.getElementById("btnAlignModeMultiPt"),
         btnCancelCrop: document.getElementById("btnCancelCrop"),
         btnApplyCropNow: document.getElementById("btnApplyCropNow"),
         fsBottomArea: document.getElementById("fsBottomArea"),
         fsNotePreview: document.getElementById("fsNotePreview"),
-        fsMetaRatioAndRes: document.getElementById("fsMetaRatioAndRes"),
-        fsMetaModeAndTime: document.getElementById("fsMetaModeAndTime"),
+        fsMetaSingleLine: document.getElementById("fsMetaSingleLine"),
         btnFsTriggerImgExport: document.getElementById("btnFsTriggerImgExport"),
         btnFsTriggerPdfExport: document.getElementById("btnFsTriggerPdfExport"),
         btnFsDeletePage: document.getElementById("btnFsDeletePage"),
@@ -1700,6 +1866,7 @@
         cameraVideo: document.getElementById("cameraVideo"),
         cameraOverlay: document.getElementById("cameraOverlay"),
         btnCapturePhoto: document.getElementById("btnCapturePhoto"),
+        btnCancelCameraBottom: document.getElementById("btnCancelCameraBottom"),
         btnZoomMin: document.getElementById("btnZoomMin"),
         btnZoom1x: document.getElementById("btnZoom1x"),
         btnZoom15x: document.getElementById("btnZoom15x"),
@@ -1735,11 +1902,11 @@
       }
 
       function describeAspectRatio(w, h) {
-        if (!w || !h) return "Tỉ lệ chuẩn";
+        if (!w || !h) return "Chuẩn";
         const r = h / w;
-        if (Math.abs(r - 1.414) < 0.08) return "Tỉ lệ 1:1.41 (A4 Dọc)";
-        if (Math.abs(r - 0.707) < 0.08) return "Tỉ lệ 1.41:1 (A4 Ngang)";
-        return `Tỉ lệ 1:${r.toFixed(2)}`;
+        if (Math.abs(r - 1.414) < 0.08) return "1:1.41 (A4)";
+        if (Math.abs(r - 0.707) < 0.08) return "1.41:1 (A4 Ngang)";
+        return `1:${r.toFixed(2)}`;
       }
 
       function getModeLabel(mode) {
@@ -1760,7 +1927,7 @@
         }
         el.canvasWrapper.style.transform = `translate3d(${state.stagePanX.toFixed(1)}px, ${state.stagePanY.toFixed(1)}px, 0) scale(${state.stageZoom.toFixed(3)})`;
         const pct = Math.round(state.stageZoom * 100);
-        el.btnZoomReset.textContent = `${pct}% ✕`;
+        el.btnZoomReset.textContent = `${pct}%`;
         el.btnZoomReset.style.display = pct === 100 ? "none" : "inline-flex";
       }
 
@@ -1788,18 +1955,28 @@
       }
 
       function toggleEditDropdown(forceState) {
+        if (state.fsCropMode) {
+          const cropOpen = typeof forceState === "boolean" ? forceState : !el.fsCropBar.classList.contains("visible");
+          el.fsCropBar.classList.toggle("visible", cropOpen);
+          el.btnToggleEditDropdown.classList.toggle("open", cropOpen);
+          return;
+        }
         const shouldOpen = typeof forceState === "boolean" ? forceState : !el.editDropdownMenu.classList.contains("open");
         el.editDropdownMenu.classList.toggle("open", shouldOpen);
         el.btnToggleEditDropdown.classList.toggle("open", shouldOpen);
-        el.fullScreenEditorModal.classList.toggle("drawer-open", shouldOpen);
       }
 
       function setFsCropMode(enable) {
         state.fsCropMode = !!enable;
         resetFsZoom();
-        el.fsCropBar.classList.toggle("visible", state.fsCropMode);
         if (state.fsCropMode) {
-          toggleEditDropdown(false);
+          el.editDropdownMenu.classList.remove("open");
+          el.fsCropBar.classList.add("visible");
+          el.btnToggleEditDropdown.classList.add("open");
+        } else {
+          el.fsCropBar.classList.remove("visible");
+          el.fsCropBar.classList.remove("dragging-fade");
+          el.btnToggleEditDropdown.classList.remove("open");
         }
         renderFullScreenEditor();
       }
@@ -1835,13 +2012,13 @@
         dctx.fillStyle = "#f8f8f5";
         dctx.fillRect(0, 0, docW, docH);
 
-        dctx.fillStyle = "#0a467d";
+        dctx.fillStyle = "#2563eb";
         dctx.font = "bold 17px Arial";
         dctx.fillText("TRƯỜNG THPT ABC - TỔ HÓA - SINH - CNNN", 48, 58);
         dctx.fillStyle = "#0f172a";
         dctx.font = "bold 21px Arial";
         dctx.fillText("ĐỀ KIỂM TRA CHUYÊN ĐỀ ESTE – LIPIT (MÃ ĐỀ 104)", 48, 94);
-        dctx.strokeStyle = "#0a467d";
+        dctx.strokeStyle = "#2563eb";
         dctx.lineWidth = 2.2;
         dctx.beginPath();
         dctx.moveTo(48, 110);
@@ -1867,10 +2044,10 @@
           dctx.fillText(line, 48, 148 + idx * 31);
         });
 
-        dctx.strokeStyle = "#0a467d";
+        dctx.strokeStyle = "#2563eb";
         dctx.lineWidth = 2.0;
         dctx.strokeRect(48, 540, 624, 158);
-        dctx.fillStyle = "#073259";
+        dctx.fillStyle = "#1d4ed8";
         dctx.font = "bold 15px Arial";
         dctx.fillText("Phần II — Bảng thông số & Ghi chú chuyên đề:", 66, 570);
         dctx.fillStyle = "#1e293b";
@@ -2066,6 +2243,22 @@
         };
       }
 
+      function close1DProfile(src, len, rad, dst) {
+        const tmp = new Float32Array(len);
+        for (let i = 0; i < len; i++) {
+          const a = Math.max(0, i - rad), b = Math.min(len - 1, i + rad);
+          let m = -Infinity;
+          for (let j = a; j <= b; j++) if (src[j] > m) m = src[j];
+          tmp[i] = m;
+        }
+        for (let i = 0; i < len; i++) {
+          const a = Math.max(0, i - rad), b = Math.min(len - 1, i + rad);
+          let m = Infinity;
+          for (let j = a; j <= b; j++) if (tmp[j] < m) m = tmp[j];
+          dst[i] = m;
+        }
+      }
+
       function detectDocumentCorners(srcCanvas, skipFullResRefine) {
         const origW = srcCanvas.width;
         const origH = srcCanvas.height;
@@ -2099,10 +2292,11 @@
           L[i] = 0.299 * r + 0.587 * g + 0.114 * b;
         }
 
-        const L_surf = sepMinFilter(sepMaxFilter(L, w, h, 2), w, h, 2);
-        const R_surf = sepMinFilter(sepMaxFilter(R, w, h, 2), w, h, 2);
-        const G_surf = sepMinFilter(sepMaxFilter(G, w, h, 2), w, h, 2);
-        const B_surf = sepMinFilter(sepMaxFilter(B, w, h, 2), w, h, 2);
+        // Radius 3 (7x7 closing) completely erases all internal text characters, bold headers, and table borders!
+        const L_surf = sepMinFilter(sepMaxFilter(L, w, h, 3), w, h, 3);
+        const R_surf = sepMinFilter(sepMaxFilter(R, w, h, 3), w, h, 3);
+        const G_surf = sepMinFilter(sepMaxFilter(G, w, h, 3), w, h, 3);
+        const B_surf = sepMinFilter(sepMaxFilter(B, w, h, 3), w, h, 3);
 
         const rawLeft = new Float32Array(nPix);
         const rawRight = new Float32Array(nPix);
@@ -2118,70 +2312,117 @@
           for (let x = 4; x < w - 4; x++) {
             const i = rOff + x;
 
-            const macDL_x = L_surf[i + 4] - L_surf[i - 4];
+            const macDL_x = L_surf[i + 3] - L_surf[i - 3];
             const macDC_x = Math.hypot(
-              R_surf[i + 4] - R_surf[i - 4],
-              G_surf[i + 4] - G_surf[i - 4],
-              B_surf[i + 4] - B_surf[i - 4]
+              R_surf[i + 3] - R_surf[i - 3],
+              G_surf[i + 3] - G_surf[i - 3],
+              B_surf[i + 3] - B_surf[i - 3]
             );
-            const creaseX = Math.max(0.0, Math.min(L_surf[i + 4], L_surf[i - 4]) - L[i]);
+            // White-on-white subtle shadow crease ONLY when both sides on L_surf are bright (>175) and not black ink!
+            let wwCreaseX = 0.0;
+            if (Math.min(L_surf[i + 4], L_surf[i - 4]) > 175.0 && Math.abs(macDL_x) < 18.0) {
+              const dip = Math.min(L_surf[i + 3], L_surf[i - 3]) - L[i];
+              if (dip > 3.0 && dip < 42.0) wwCreaseX = dip;
+            }
 
+            const surfDL1_x = L_surf[i + 1] - L_surf[i - 1];
             const rawDL1_x = L[i + 1] - L[i - 1];
-            const rawDL2_x = L[i + 2] - L[i - 2];
-            const rawDC1_x = Math.hypot(R[i + 1] - R[i - 1], G[i + 1] - G[i - 1], B[i + 1] - B[i - 1]);
+            const surfDC1_x = Math.hypot(R_surf[i + 1] - R_surf[i - 1], G_surf[i + 1] - G_surf[i - 1], B_surf[i + 1] - B_surf[i - 1]);
 
-            const gateL = Math.max(0.0, macDL_x) + 0.55 * macDC_x + 2.2 * creaseX;
-            if (gateL > 4.0) {
-              const peakL = 0.65 * Math.max(0.0, rawDL1_x) + 0.35 * Math.max(0.0, rawDL2_x) + 0.45 * rawDC1_x + 2.2 * creaseX;
-              const vL = peakL * Math.min(1.5, gateL / 12.0);
-              rawLeft[i] = vL;
-              eLeft[i] = Math.tanh(vL / 8.0);
+            if (L_surf[i + 3] > 75.0) {
+              const gateL = Math.max(0.0, macDL_x) + 0.58 * macDC_x + 1.8 * wwCreaseX;
+              if (gateL > 4.0) {
+                const peakL = 0.55 * Math.max(0.0, surfDL1_x) + 0.45 * Math.max(0.0, rawDL1_x) + 0.48 * surfDC1_x + 1.8 * wwCreaseX;
+                const vL = peakL * Math.min(1.6, gateL / 12.0);
+                rawLeft[i] = vL;
+                eLeft[i] = Math.tanh(vL / 8.0);
+              }
             }
 
-            const gateR = Math.max(0.0, -macDL_x) + 0.55 * macDC_x + 2.2 * creaseX;
-            if (gateR > 4.0) {
-              const peakR = 0.65 * Math.max(0.0, -rawDL1_x) + 0.35 * Math.max(0.0, -rawDL2_x) + 0.45 * rawDC1_x + 2.2 * creaseX;
-              const vR = peakR * Math.min(1.5, gateR / 12.0);
-              rawRight[i] = vR;
-              eRight[i] = Math.tanh(vR / 8.0);
+            if (L_surf[i - 3] > 75.0) {
+              const gateR = Math.max(0.0, -macDL_x) + 0.58 * macDC_x + 1.8 * wwCreaseX;
+              if (gateR > 4.0) {
+                const peakR = 0.55 * Math.max(0.0, -surfDL1_x) + 0.45 * Math.max(0.0, -rawDL1_x) + 0.48 * surfDC1_x + 1.8 * wwCreaseX;
+                const vR = peakR * Math.min(1.6, gateR / 12.0);
+                rawRight[i] = vR;
+                eRight[i] = Math.tanh(vR / 8.0);
+              }
             }
 
-            const macDL_y = L_surf[i + 4 * w] - L_surf[i - 4 * w];
+            const macDL_y = L_surf[i + 3 * w] - L_surf[i - 3 * w];
             const macDC_y = Math.hypot(
-              R_surf[i + 4 * w] - R_surf[i - 4 * w],
-              G_surf[i + 4 * w] - G_surf[i - 4 * w],
-              B_surf[i + 4 * w] - B_surf[i - 4 * w]
+              R_surf[i + 3 * w] - R_surf[i - 3 * w],
+              G_surf[i + 3 * w] - G_surf[i - 3 * w],
+              B_surf[i + 3 * w] - B_surf[i - 3 * w]
             );
-            const creaseY = Math.max(0.0, Math.min(L_surf[i + 4 * w], L_surf[i - 4 * w]) - L[i]);
-
-            const rawDL1_y = L[i + w] - L[i - w];
-            const rawDL2_y = L[i + 2 * w] - L[i - 2 * w];
-            const rawDC1_y = Math.hypot(R[i + w] - R[i - w], G[i + w] - G[i - w], B[i + w] - B[i - w]);
-
-            const gateT = Math.max(0.0, macDL_y) + 0.55 * macDC_y + 2.2 * creaseY;
-            if (gateT > 4.0) {
-              const peakT = 0.65 * Math.max(0.0, rawDL1_y) + 0.35 * Math.max(0.0, rawDL2_y) + 0.45 * rawDC1_y + 2.2 * creaseY;
-              const vT = peakT * Math.min(1.5, gateT / 12.0);
-              rawTop[i] = vT;
-              eTop[i] = Math.tanh(vT / 8.0);
+            let wwCreaseY = 0.0;
+            if (Math.min(L_surf[i + 4 * w], L_surf[i - 4 * w]) > 175.0 && Math.abs(macDL_y) < 18.0) {
+              const dip = Math.min(L_surf[i + 3 * w], L_surf[i - 3 * w]) - L[i];
+              if (dip > 3.0 && dip < 42.0) wwCreaseY = dip;
             }
 
-            const gateB = Math.max(0.0, -macDL_y) + 0.55 * macDC_y + 2.2 * creaseY;
-            if (gateB > 4.0) {
-              const peakB = 0.65 * Math.max(0.0, -rawDL1_y) + 0.35 * Math.max(0.0, -rawDL2_y) + 0.45 * rawDC1_y + 2.2 * creaseY;
-              const vB = peakB * Math.min(1.5, gateB / 12.0);
-              rawBot[i] = vB;
-              eBot[i] = Math.tanh(vB / 8.0);
+            const surfDL1_y = L_surf[i + w] - L_surf[i - w];
+            const rawDL1_y = L[i + w] - L[i - w];
+            const surfDC1_y = Math.hypot(R_surf[i + w] - R_surf[i - w], G_surf[i + w] - G_surf[i - w], B_surf[i + w] - B_surf[i - w]);
+
+            if (L_surf[i + 3 * w] > 75.0) {
+              const gateT = Math.max(0.0, macDL_y) + 0.58 * macDC_y + 1.8 * wwCreaseY;
+              if (gateT > 4.0) {
+                const peakT = 0.55 * Math.max(0.0, surfDL1_y) + 0.45 * Math.max(0.0, rawDL1_y) + 0.48 * surfDC1_y + 1.8 * wwCreaseY;
+                const vT = peakT * Math.min(1.6, gateT / 12.0);
+                rawTop[i] = vT;
+                eTop[i] = Math.tanh(vT / 8.0);
+              }
+            }
+
+            if (L_surf[i - 3 * w] > 75.0) {
+              const gateB = Math.max(0.0, -macDL_y) + 0.58 * macDC_y + 1.8 * wwCreaseY;
+              if (gateB > 4.0) {
+                const peakB = 0.55 * Math.max(0.0, -surfDL1_y) + 0.45 * Math.max(0.0, -rawDL1_y) + 0.48 * surfDC1_y + 1.8 * wwCreaseY;
+                const vB = peakB * Math.min(1.6, gateB / 12.0);
+                rawBot[i] = vB;
+                eBot[i] = Math.tanh(vB / 8.0);
+              }
             }
           }
         }
 
-        function findBestVLines(emap, xMinR, xMaxR, isLeft) {
+        // Band-dilate eLeft/eRight horizontally by ±6px and eTop/eBot vertically by ±6px so curved book rims pass line candidacy!
+        const bLeft = new Float32Array(nPix);
+        const bRight = new Float32Array(nPix);
+        const bTop = new Float32Array(nPix);
+        const bBot = new Float32Array(nPix);
+        const bandRad = 6;
+        for (let y = 0; y < h; y++) {
+          const rOff = y * w;
+          for (let x = 0; x < w; x++) {
+            const x0 = Math.max(0, x - bandRad), x1 = Math.min(w - 1, x + bandRad);
+            let ml = 0, mr = 0;
+            for (let nx = x0; nx <= x1; nx++) {
+              if (eLeft[rOff + nx] > ml) ml = eLeft[rOff + nx];
+              if (eRight[rOff + nx] > mr) mr = eRight[rOff + nx];
+            }
+            bLeft[rOff + x] = ml;
+            bRight[rOff + x] = mr;
+
+            const y0 = Math.max(0, y - bandRad), y1 = Math.min(h - 1, y + bandRad);
+            let mt = 0, mb = 0;
+            for (let ny = y0; ny <= y1; ny++) {
+              if (eTop[ny * w + x] > mt) mt = eTop[ny * w + x];
+              if (eBot[ny * w + x] > mb) mb = eBot[ny * w + x];
+            }
+            bTop[rOff + x] = mt;
+            bBot[rOff + x] = mb;
+          }
+        }
+
+        function findBestVLines(bmap, xMinR, xMaxR, isLeft) {
           const x0Min = Math.floor(w * xMinR), x0Max = Math.floor(w * xMaxR);
           const candidates = [];
+          const fallbackCands = [];
           const N = 40;
-          const yStart = Math.floor(h * 0.18), ySpan = Math.floor(h * 0.64);
-          const maxTiltX = Math.floor(w * 0.28);
+          const yStart = Math.floor(h * 0.16), ySpan = Math.floor(h * 0.68);
+          const maxTiltX = Math.floor(w * 0.30);
 
           for (let xt = x0Min; xt < x0Max; xt += 2) {
             const xbMin = Math.max(x0Min, xt - maxTiltX);
@@ -2192,24 +2433,26 @@
                 const t = k / (N - 1);
                 const y = (yStart + t * ySpan + 0.5) | 0;
                 const x = (xt * (1 - t) + xb * t + 0.5) | 0;
-                const idx = y * w + x;
-                const v = Math.max(emap[idx], emap[idx - 1], emap[idx + 1]);
+                const v = bmap[y * w + x];
                 sumV += v;
-                if (v > 0.30) hits++;
+                if (v > 0.28) hits++;
               }
-              if (hits > N * 0.48) {
-                const meanSc = sumV / N;
-                const cont = hits / N;
-                const outerPref = isLeft ? 1.0 - (xt + xb) / (2.0 * w) : (xt + xb) / (2.0 * w);
-                const totalSc = meanSc * 0.55 + cont * 0.45 + outerPref * 0.10;
+              const meanSc = sumV / N;
+              const cont = hits / N;
+              const outerPref = isLeft ? 1.0 - (xt + xb) / (2.0 * w) : (xt + xb) / (2.0 * w);
+              const totalSc = meanSc * 0.55 + cont * 0.45 + outerPref * 0.14;
+              if (hits > N * 0.42) {
                 candidates.push({ sc: totalSc, xt, xb });
+              } else if (hits > N * 0.18) {
+                fallbackCands.push({ sc: totalSc, xt, xb });
               }
             }
           }
-          candidates.sort((a, b) => b.sc - a.sc);
+          const pool = candidates.length > 0 ? candidates : fallbackCands;
+          pool.sort((a, b) => b.sc - a.sc);
           const kept = [];
-          for (let i = 0; i < candidates.length; i++) {
-            const c = candidates[i];
+          for (let i = 0; i < pool.length; i++) {
+            const c = pool[i];
             if (kept.every((k) => Math.abs(c.xt - k.xt) + Math.abs(c.xb - k.xb) > 8)) {
               kept.push(c);
               if (kept.length >= 6) break;
@@ -2218,12 +2461,13 @@
           return kept;
         }
 
-        function findBestHLines(emap, yMinR, yMaxR, isTop) {
+        function findBestHLines(bmap, yMinR, yMaxR, isTop) {
           const y0Min = Math.floor(h * yMinR), y0Max = Math.floor(h * yMaxR);
           const candidates = [];
+          const fallbackCands = [];
           const N = 40;
-          const xStart = Math.floor(w * 0.18), xSpan = Math.floor(w * 0.64);
-          const maxTiltY = Math.floor(h * 0.28);
+          const xStart = Math.floor(w * 0.16), xSpan = Math.floor(w * 0.68);
+          const maxTiltY = Math.floor(h * 0.30);
 
           for (let yl = y0Min; yl < y0Max; yl += 2) {
             const yrMin = Math.max(y0Min, yl - maxTiltY);
@@ -2234,24 +2478,26 @@
                 const t = k / (N - 1);
                 const x = (xStart + t * xSpan + 0.5) | 0;
                 const y = (yl * (1 - t) + yr * t + 0.5) | 0;
-                const idx = y * w + x;
-                const v = Math.max(emap[idx], emap[idx - w], emap[idx + w]);
+                const v = bmap[y * w + x];
                 sumV += v;
-                if (v > 0.30) hits++;
+                if (v > 0.28) hits++;
               }
-              if (hits > N * 0.48) {
-                const meanSc = sumV / N;
-                const cont = hits / N;
-                const outerPref = isTop ? 1.0 - (yl + yr) / (2.0 * h) : (yl + yr) / (2.0 * h);
-                const totalSc = meanSc * 0.55 + cont * 0.45 + outerPref * 0.10;
+              const meanSc = sumV / N;
+              const cont = hits / N;
+              const outerPref = isTop ? 1.0 - (yl + yr) / (2.0 * h) : (yl + yr) / (2.0 * h);
+              const totalSc = meanSc * 0.55 + cont * 0.45 + outerPref * 0.14;
+              if (hits > N * 0.42) {
                 candidates.push({ sc: totalSc, yl, yr });
+              } else if (hits > N * 0.18) {
+                fallbackCands.push({ sc: totalSc, yl, yr });
               }
             }
           }
-          candidates.sort((a, b) => b.sc - a.sc);
+          const pool = candidates.length > 0 ? candidates : fallbackCands;
+          pool.sort((a, b) => b.sc - a.sc);
           const kept = [];
-          for (let i = 0; i < candidates.length; i++) {
-            const c = candidates[i];
+          for (let i = 0; i < pool.length; i++) {
+            const c = pool[i];
             if (kept.every((k) => Math.abs(c.yl - k.yl) + Math.abs(c.yr - k.yr) > 8)) {
               kept.push(c);
               if (kept.length >= 6) break;
@@ -2260,13 +2506,13 @@
           return kept;
         }
 
-        const leftCands = findBestVLines(eLeft, 0.02, 0.46, true);
-        const rightCands = findBestVLines(eRight, 0.54, 0.98, false);
-        const topCands = findBestHLines(eTop, 0.02, 0.46, true);
-        const botCands = findBestHLines(eBot, 0.54, 0.98, false);
+        const leftCands = findBestVLines(bLeft, 0.01, 0.47, true);
+        const rightCands = findBestVLines(bRight, 0.53, 0.99, false);
+        const topCands = findBestHLines(bTop, 0.01, 0.47, true);
+        const botCands = findBestHLines(bBot, 0.53, 0.99, false);
 
         function vlineToAbc(xt, xb) {
-          const p1x = xt, p1y = h * 0.18, p2x = xb, p2y = h * 0.82;
+          const p1x = xt, p1y = h * 0.16, p2x = xb, p2y = h * 0.84;
           let a = p1y - p2y, b = p2x - p1x;
           const n = Math.hypot(a, b) || 1.0;
           a /= n; b /= n;
@@ -2274,24 +2520,23 @@
         }
 
         function hlineToAbc(yl, yr) {
-          const p1x = w * 0.18, p1y = yl, p2x = w * 0.82, p2y = yr;
+          const p1x = w * 0.16, p1y = yl, p2x = w * 0.84, p2y = yr;
           let a = p1y - p2y, b = p2x - p1x;
           const n = Math.hypot(a, b) || 1.0;
           a /= n; b /= n;
           return { a, b, c: -(a * p1x + b * p1y) };
         }
 
-        function segmentSupport(p1, p2, emap) {
+        function segmentSupport(p1, p2, bmap) {
           const N = 40;
           let sumV = 0, hits = 0;
           for (let k = 0; k < N; k++) {
             const t = 0.06 + (k / (N - 1)) * 0.88;
             const x = Math.min(w - 2, Math.max(1, (p1.x * (1 - t) + p2.x * t + 0.5) | 0));
             const y = Math.min(h - 2, Math.max(1, (p1.y * (1 - t) + p2.y * t + 0.5) | 0));
-            const idx = y * w + x;
-            const v = Math.max(emap[idx], emap[idx - 1], emap[idx + 1], emap[idx - w], emap[idx + w]);
+            const v = bmap[y * w + x];
             sumV += v;
-            if (v > 0.30) hits++;
+            if (v > 0.28) hits++;
           }
           return (sumV / N) * 0.5 + (hits / N) * 0.5;
         }
@@ -2313,10 +2558,10 @@
                 const bl = intersectAbc(LB, LL);
                 if (!tl || !tr || !br || !bl) continue;
                 if (
-                  tl.x < 2 || tl.x > w - 3 || tl.y < 2 || tl.y > h - 3 ||
-                  tr.x < 2 || tr.x > w - 3 || tr.y < 2 || tr.y > h - 3 ||
-                  br.x < 2 || br.x > w - 3 || br.y < 2 || br.y > h - 3 ||
-                  bl.x < 2 || bl.x > w - 3 || bl.y < 2 || bl.y > h - 3
+                  tl.x < 1 || tl.x > w - 2 || tl.y < 1 || tl.y > h - 2 ||
+                  tr.x < 1 || tr.x > w - 2 || tr.y < 1 || tr.y > h - 2 ||
+                  br.x < 1 || br.x > w - 2 || br.y < 1 || br.y > h - 2 ||
+                  bl.x < 1 || bl.x > w - 2 || bl.y < 1 || bl.y > h - 2
                 ) continue;
 
                 const vTx = tr.x - tl.x, vTy = tr.y - tl.y;
@@ -2325,20 +2570,20 @@
                 const vRx = br.x - tr.x, vRy = br.y - tr.y;
                 const lenT = Math.hypot(vTx, vTy), lenB = Math.hypot(vBx, vBy);
                 const lenL = Math.hypot(vLx, vLy), lenR = Math.hypot(vRx, vRy);
-                if (Math.min(lenT, lenB, lenL, lenR) < Math.min(w, h) * 0.25) continue;
+                if (Math.min(lenT, lenB, lenL, lenR) < Math.min(w, h) * 0.22) continue;
 
                 const cosTL = Math.abs(vTx * vLx + vTy * vLy) / (lenT * lenL + 1e-5);
                 const cosBR = Math.abs(vBx * vRx + vBy * vRy) / (lenB * lenR + 1e-5);
-                if (cosTL > 0.38 || cosBR > 0.38) continue;
+                if (cosTL > 0.42 || cosBR > 0.42) continue;
 
                 const cosTB = (vTx * vBx + vTy * vBy) / (lenT * lenB + 1e-5);
                 const cosLR = (vLx * vRx + vLy * vRy) / (lenL * lenR + 1e-5);
-                if (cosTB < 0.80 || cosLR < 0.80) continue;
+                if (cosTB < 0.78 || cosLR < 0.78) continue;
 
-                const supT = segmentSupport(tl, tr, eTop);
-                const supB = segmentSupport(bl, br, eBot);
-                const supL = segmentSupport(tl, bl, eLeft);
-                const supR = segmentSupport(tr, br, eRight);
+                const supT = segmentSupport(tl, tr, bTop);
+                const supB = segmentSupport(bl, br, bBot);
+                const supL = segmentSupport(tl, bl, bLeft);
+                const supR = segmentSupport(tr, br, bRight);
 
                 const minSup = Math.min(supT, supB, supL, supR);
                 const orthoBonus = (1.0 - cosTL) * 0.35 + (1.0 - cosBR) * 0.35;
@@ -2353,6 +2598,8 @@
         }
 
         if (!bestQuad) {
+          srcCanvas._detectedEdgeOffsets = createZeroEdgeOffsets();
+          srcCanvas._hasCurvedRim = false;
           return [
             { x: Math.round(origW * 0.06), y: Math.round(origH * 0.06) },
             { x: Math.round(origW * 0.94), y: Math.round(origH * 0.06) },
@@ -2368,58 +2615,86 @@
           { p1: bestQuad[3], p2: bestQuad[0], rmap: rawLeft, isH: false }
         ];
         const refinedLines = pairsPts.map((item) => {
-          const ptsK = [];
+          const ptsAll = [];
+          const ptsEnds = [];
           const rmap = item.rmap;
           for (let k = 0; k < 44; k++) {
-            const t = 0.08 + (k / 43.0) * 0.84;
+            const t = 0.05 + (k / 43.0) * 0.90;
             const px = item.p1.x * (1.0 - t) + item.p2.x * t;
             const py = item.p1.y * (1.0 - t) + item.p2.y * t;
             const ix = Math.round(px), iy = Math.round(py);
             let bestOff = 0, bestVal = -1.0;
-            for (let d = -4; d <= 4; d++) {
+            for (let d = -10; d <= 10; d++) {
               const nx = item.isH ? ix : Math.min(w - 2, Math.max(1, ix + d));
               const ny = item.isH ? Math.min(h - 2, Math.max(1, iy + d)) : iy;
               const val = rmap[ny * w + nx];
               if (val > bestVal) { bestVal = val; bestOff = d; }
             }
-            if (item.isH) {
-              ptsK.push({ x: px, y: Math.min(h - 2, Math.max(1, iy + bestOff)) });
-            } else {
-              ptsK.push({ x: Math.min(w - 2, Math.max(1, ix + bestOff)), y: py });
-            }
+            const pt = item.isH
+              ? { x: px, y: Math.min(h - 2, Math.max(1, iy + bestOff)) }
+              : { x: Math.min(w - 2, Math.max(1, ix + bestOff)), y: py };
+            ptsAll.push(pt);
+            if (t <= 0.20 || t >= 0.80) ptsEnds.push(pt);
           }
-          return fitSingleIrlsLine(ptsK);
+          const lineAll = fitSingleIrlsLine(ptsAll);
+          let midErr = 0, midCnt = 0;
+          for (let k = 12; k <= 31; k++) {
+            midErr += Math.abs(lineAll.a * ptsAll[k].x + lineAll.b * ptsAll[k].y + lineAll.c);
+            midCnt++;
+          }
+          if (midErr / midCnt > 1.8 && ptsEnds.length >= 6) {
+            return fitSingleIrlsLine(ptsEnds);
+          }
+          return lineAll;
         });
 
         const idxPairs = [[3, 0], [0, 1], [1, 2], [2, 3]];
         const stage1Corners = idxPairs.map((pair, k) => {
           const pt = intersectAbc(refinedLines[pair[0]], refinedLines[pair[1]]);
-          if (pt && Math.hypot(pt.x - bestQuad[k].x, pt.y - bestQuad[k].y) < 18) {
+          if (pt && Math.hypot(pt.x - bestQuad[k].x, pt.y - bestQuad[k].y) < 24) {
             return { x: pt.x / scale, y: pt.y / scale };
           }
           return { x: bestQuad[k].x / scale, y: bestQuad[k].y / scale };
         });
 
-        if (skipFullResRefine || scale >= 0.98) {
+        if (skipFullResRefine) {
+          srcCanvas._detectedEdgeOffsets = createZeroEdgeOffsets();
+          srcCanvas._hasCurvedRim = false;
           return stage1Corners.map((p) => ({
             x: Math.max(0, Math.min(origW, Math.round(p.x))),
             y: Math.max(0, Math.min(origH, Math.round(p.y)))
           }));
         }
 
-        // STAGE 2: FULL-RESOLUTION (1:1 NATIVE PIXEL) 64-NORMAL-PROFILE RIM SNAPPING
+        // =========================================================================
+        // STAGE 2 (v25.0): FULL-RESOLUTION 1D-CLOSED NORMAL PROFILE VITERBI +
+        // ORTHOGONAL 5-SINE CURVED-RIM TRACKING
+        // - 1D Morphological Closing (rad=5) along each normal profile completely
+        //   erases bold text and table borders inside the document margin.
+        // - Fits 5-Sine offsets directly relative to the final refinedCorners chord!
+        // =========================================================================
         const fullData = srcCanvas.getContext("2d").getImageData(0, 0, origW, origH).data;
-        const nProf = 64;
-        const searchRad = 10;
-        const M = searchRad + 6;
+        const nProf = 65;
+        const searchRad = Math.min(40, Math.max(20, Math.round(Math.min(origW, origH) * 0.042)));
+        const M = searchRad + 8;
         const profLen = 2 * M + 1;
         const profL = new Float32Array(profLen);
         const profR = new Float32Array(profLen);
         const profG = new Float32Array(profLen);
         const profB = new Float32Array(profLen);
-        const scores = new Float32Array(2 * searchRad + 1);
+        const surfL = new Float32Array(profLen);
+        const surfR = new Float32Array(profLen);
+        const surfG = new Float32Array(profLen);
+        const surfB = new Float32Array(profLen);
+        const nStates = 2 * searchRad + 1;
+        const scoreMat = new Float32Array(nProf * nStates);
+        const dpMat = new Float64Array(nProf * nStates);
+        const prevMat = new Int32Array(nProf * nStates);
 
-        const fullLines = [];
+        const chordLines = [];
+        const allSeamPts = [];
+        const allSeamWeights = [];
+
         for (let k = 0; k < 4; k++) {
           const p1 = stage1Corners[k];
           const p2 = stage1Corners[(k + 1) % 4];
@@ -2429,9 +2704,8 @@
           const nx = -vy / segLen;
           const ny = vx / segLen;
 
-          const edgePts = [];
           for (let i = 0; i < nProf; i++) {
-            const t = 0.08 + (i / (nProf - 1)) * 0.84;
+            const t = 0.02 + (i / (nProf - 1)) * 0.96;
             const bx = p1.x * (1.0 - t) + p2.x * t;
             const by = p1.y * (1.0 - t) + p2.y * t;
 
@@ -2449,77 +2723,149 @@
               profL[pIdx] = 0.299 * r + 0.587 * g + 0.114 * b;
             }
 
-            let bestSi = 0;
-            let bestSc = -1.0;
-            for (let si = 0; si <= 2 * searchRad; si++) {
+            close1DProfile(profL, profLen, 5, surfL);
+            close1DProfile(profR, profLen, 5, surfR);
+            close1DProfile(profG, profLen, 5, surfG);
+            close1DProfile(profB, profLen, 5, surfB);
+
+            const rowOff = i * nStates;
+            for (let si = 0; si < nStates; si++) {
               const s = si - searchRad;
               const cIdx = s + M;
 
               let L_in = 0, L_out = 0, R_in = 0, R_out = 0, G_in = 0, G_out = 0, B_in = 0, B_out = 0;
-              for (let j = 2; j <= 5; j++) {
-                L_in += profL[cIdx + j];
-                R_in += profR[cIdx + j];
-                G_in += profG[cIdx + j];
-                B_in += profB[cIdx + j];
-                L_out += profL[cIdx - j];
-                R_out += profR[cIdx - j];
-                G_out += profG[cIdx - j];
-                B_out += profB[cIdx - j];
+              for (let j = 2; j <= 6; j++) {
+                L_in += surfL[cIdx + j];
+                R_in += surfR[cIdx + j];
+                G_in += surfG[cIdx + j];
+                B_in += surfB[cIdx + j];
+                L_out += surfL[cIdx - j];
+                R_out += surfR[cIdx - j];
+                G_out += surfG[cIdx - j];
+                B_out += surfB[cIdx - j];
               }
-              L_in *= 0.25; L_out *= 0.25;
-              R_in *= 0.25; R_out *= 0.25;
-              G_in *= 0.25; G_out *= 0.25;
-              B_in *= 0.25; B_out *= 0.25;
+              L_in *= 0.2; L_out *= 0.2;
+              R_in *= 0.2; R_out *= 0.2;
+              G_in *= 0.2; G_out *= 0.2;
+              B_in *= 0.2; B_out *= 0.2;
 
               const macDL = Math.max(0.0, L_in - L_out);
               const macDC = Math.hypot(R_in - R_out, G_in - G_out, B_in - B_out);
-              const minCrease = Math.min(profL[cIdx - 1], profL[cIdx], profL[cIdx + 1]);
-              const crease = Math.max(0.0, Math.min(L_in, L_out) - minCrease);
+              let wwCrease = 0.0;
+              if (Math.min(L_in, L_out) > 175.0 && Math.abs(L_in - L_out) < 18.0) {
+                const minC = Math.min(profL[cIdx - 1], profL[cIdx], profL[cIdx + 1]);
+                const dip = Math.min(L_in, L_out) - minC;
+                if (dip > 3.0 && dip < 42.0) wwCrease = dip;
+              }
 
-              const gate = macDL + 0.55 * macDC + 2.2 * crease;
+              const gate = macDL + 0.58 * macDC + 2.0 * wwCrease;
               let sc = 0.0;
-              if (gate > 3.5) {
-                const dL1 = Math.max(0.0, profL[cIdx + 1] - profL[cIdx - 1]);
-                const dL2 = Math.max(0.0, profL[cIdx + 2] - profL[cIdx - 2]);
+              if (L_in > 75.0 && gate > 3.6) {
+                const dL1 = 0.55 * Math.max(0.0, surfL[cIdx + 1] - surfL[cIdx - 1]) + 0.45 * Math.max(0.0, profL[cIdx + 1] - profL[cIdx - 1]);
+                const dL2 = 0.55 * Math.max(0.0, surfL[cIdx + 2] - surfL[cIdx - 2]) + 0.45 * Math.max(0.0, profL[cIdx + 2] - profL[cIdx - 2]);
                 const dC1 = Math.hypot(
-                  profR[cIdx + 1] - profR[cIdx - 1],
-                  profG[cIdx + 1] - profG[cIdx - 1],
-                  profB[cIdx + 1] - profB[cIdx - 1]
+                  surfR[cIdx + 1] - surfR[cIdx - 1],
+                  surfG[cIdx + 1] - surfG[cIdx - 1],
+                  surfB[cIdx + 1] - surfB[cIdx - 1]
                 );
-                const creaseLoc = Math.max(0.0, 0.5 * (profL[cIdx + 2] + profL[cIdx - 2]) - profL[cIdx]);
-                const peak = 0.65 * dL1 + 0.35 * dL2 + 0.45 * dC1 + 2.5 * creaseLoc;
-                const prior = 1.0 - 0.015 * ((s * s) / (searchRad * searchRad));
-                sc = peak * Math.min(1.6, gate / 12.0) * prior;
+                const peak = 0.65 * dL1 + 0.35 * dL2 + 0.48 * dC1 + 2.2 * wwCrease;
+                const endWeight = Math.pow(2.0 * Math.abs(t - 0.5), 2.0);
+                const prior = 1.0 - (0.004 + 0.012 * endWeight) * ((s * s) / (searchRad * searchRad));
+                sc = peak * Math.min(1.8, gate / 12.0) * Math.max(0.25, prior);
               }
-              scores[si] = sc;
-              if (sc > bestSc) {
-                bestSc = sc;
-                bestSi = si;
-              }
-            }
-
-            if (bestSc > 1.0) {
-              let bestS = bestSi - searchRad;
-              if (bestSi > 0 && bestSi < 2 * searchRad) {
-                const vm = scores[bestSi - 1];
-                const v0 = scores[bestSi];
-                const vp = scores[bestSi + 1];
-                const denom = 2.0 * (2.0 * v0 - vm - vp);
-                if (Math.abs(denom) > 1e-4) {
-                  bestS += Math.max(-0.5, Math.min(0.5, (vm - vp) / denom));
-                }
-              }
-              edgePts.push({ x: bx + bestS * nx, y: by + bestS * ny });
-            } else {
-              edgePts.push({ x: bx, y: by });
+              scoreMat[rowOff + si] = sc;
             }
           }
-          fullLines.push(fitSingleIrlsLine(edgePts));
+
+          for (let si = 0; si < nStates; si++) {
+            const s = si - searchRad;
+            dpMat[si] = scoreMat[si] - 0.12 * s * s;
+            prevMat[si] = si;
+          }
+
+          for (let i = 1; i < nProf; i++) {
+            const currOff = i * nStates;
+            const prevOff = (i - 1) * nStates;
+            for (let si = 0; si < nStates; si++) {
+              const spMin = Math.max(0, si - 3);
+              const spMax = Math.min(nStates - 1, si + 3);
+              let bestPrev = si;
+              let bestVal = -1e12;
+              for (let sp = spMin; sp <= spMax; sp++) {
+                const ds = si - sp;
+                const cand = dpMat[prevOff + sp] - (1.0 * Math.abs(ds) + 0.5 * ds * ds);
+                if (cand > bestVal) {
+                  bestVal = cand;
+                  bestPrev = sp;
+                }
+              }
+              dpMat[currOff + si] = scoreMat[currOff + si] + bestVal;
+              prevMat[currOff + si] = bestPrev;
+            }
+          }
+
+          const lastOff = (nProf - 1) * nStates;
+          let bestEndSi = searchRad;
+          let bestEndScore = -1e12;
+          for (let si = 0; si < nStates; si++) {
+            const s = si - searchRad;
+            const v = dpMat[lastOff + si] - 0.12 * s * s;
+            if (v > bestEndScore) {
+              bestEndScore = v;
+              bestEndSi = si;
+            }
+          }
+
+          const pathSi = new Int32Array(nProf);
+          pathSi[nProf - 1] = bestEndSi;
+          for (let i = nProf - 2; i >= 0; i--) {
+            pathSi[i] = prevMat[(i + 1) * nStates + pathSi[i + 1]];
+          }
+
+          const seamPts = [];
+          const endPts = [];
+          const wArr = new Float64Array(nProf);
+          for (let i = 0; i < nProf; i++) {
+            const t = 0.02 + (i / (nProf - 1)) * 0.96;
+            const si = pathSi[i];
+            const rowOff = i * nStates;
+            let sVal = si - searchRad;
+            if (si > 0 && si < nStates - 1) {
+              const vm = scoreMat[rowOff + si - 1];
+              const v0 = scoreMat[rowOff + si];
+              const vp = scoreMat[rowOff + si + 1];
+              const denom = 2.0 * (2.0 * v0 - vm - vp);
+              if (Math.abs(denom) > 1e-4) {
+                sVal += Math.max(-0.5, Math.min(0.5, (vm - vp) / denom));
+              }
+            }
+            wArr[i] = Math.max(0.15, scoreMat[rowOff + si]);
+            const bx = p1.x * (1.0 - t) + p2.x * t;
+            const by = p1.y * (1.0 - t) + p2.y * t;
+            const pt = { x: bx + sVal * nx, y: by + sVal * ny, t };
+            seamPts.push(pt);
+            if (t <= 0.09 || t >= 0.91) endPts.push(pt);
+          }
+
+          allSeamPts.push(seamPts);
+          allSeamWeights.push(wArr);
+
+          const irlsAll = fitSingleIrlsLine(seamPts);
+          let midErr = 0, midCnt = 0;
+          for (let i = 16; i <= 48; i++) {
+            midErr += Math.abs(irlsAll.a * seamPts[i].x + irlsAll.b * seamPts[i].y + irlsAll.c);
+            midCnt++;
+          }
+          if (midErr / midCnt > 3.2 && endPts.length >= 6) {
+            chordLines.push(fitSingleIrlsLine(endPts));
+          } else {
+            chordLines.push(irlsAll);
+          }
         }
 
-        return idxPairs.map((pair, k) => {
-          const pt = intersectAbc(fullLines[pair[0]], fullLines[pair[1]]);
-          if (pt && Math.hypot(pt.x - stage1Corners[k].x, pt.y - stage1Corners[k].y) < 36.0) {
+        const refinedCorners = idxPairs.map((pair, k) => {
+          const pt = intersectAbc(chordLines[pair[0]], chordLines[pair[1]]);
+          if (pt && Math.hypot(pt.x - stage1Corners[k].x, pt.y - stage1Corners[k].y) < 42.0) {
             return {
               x: Math.max(0, Math.min(origW, Math.round(pt.x))),
               y: Math.max(0, Math.min(origH, Math.round(pt.y)))
@@ -2530,6 +2876,100 @@
             y: Math.max(0, Math.min(origH, Math.round(stage1Corners[k].y)))
           };
         });
+
+        // Fit 5-Sine curve directly to normal displacements of seamPts from final refinedCorners chord!
+        const detectedEdgeOffsets = createZeroEdgeOffsets();
+        let anyEdgeCurved = false;
+        const pi = Math.PI;
+
+        for (let k = 0; k < 4; k++) {
+          const p1 = refinedCorners[k];
+          const p2 = refinedCorners[(k + 1) % 4];
+          const vx = p2.x - p1.x;
+          const vy = p2.y - p1.y;
+          const segLen = Math.hypot(vx, vy) || 1.0;
+          const nx = -vy / segLen;
+          const ny = vx / segLen;
+          const seamPts = allSeamPts[k];
+          const wArr = allSeamWeights[k];
+
+          const A5 = Array.from({ length: 5 }, (_, r) => {
+            const row = new Float64Array(5);
+            row[r] = [0.15, 0.25, 0.35, 0.60, 0.90][r];
+            return row;
+          });
+          const b5 = new Float64Array(5);
+
+          let absLinSum = 0, absCurveSum = 0, wSum = 0;
+          const sTrueArr = new Float64Array(nProf);
+
+          for (let i = 0; i < nProf; i++) {
+            const pt = seamPts[i];
+            const t = pt.t;
+            const sTrue = (pt.x - p1.x) * nx + (pt.y - p1.y) * ny;
+            sTrueArr[i] = sTrue;
+            const w = wArr[i];
+            const bVec = [
+              Math.sin(pi * t),
+              Math.sin(2.0 * pi * t),
+              Math.sin(3.0 * pi * t),
+              Math.sin(4.0 * pi * t),
+              Math.sin(5.0 * pi * t)
+            ];
+            for (let r = 0; r < 5; r++) {
+              const wbr = w * bVec[r];
+              b5[r] += wbr * sTrue;
+              for (let c = 0; c < 5; c++) A5[r][c] += wbr * bVec[c];
+            }
+            absLinSum += w * Math.abs(sTrue);
+            wSum += w;
+          }
+
+          const cHarm = solveLinearSystem(A5, b5);
+          cHarm[3] *= 0.45;
+          cHarm[4] *= 0.25;
+
+          for (let i = 0; i < nProf; i++) {
+            const t = seamPts[i].t;
+            const sPred =
+              cHarm[0] * Math.sin(pi * t) +
+              cHarm[1] * Math.sin(2.0 * pi * t) +
+              cHarm[2] * Math.sin(3.0 * pi * t) +
+              cHarm[3] * Math.sin(4.0 * pi * t) +
+              cHarm[4] * Math.sin(5.0 * pi * t);
+            absCurveSum += wArr[i] * Math.abs(sTrueArr[i] - sPred);
+          }
+
+          const meanLinErr = absLinSum / (wSum || 1.0);
+          const meanCurveErr = absCurveSum / (wSum || 1.0);
+
+          const sVals = [1 / 6, 2 / 6, 3 / 6, 4 / 6, 5 / 6].map((tm) => (
+            cHarm[0] * Math.sin(pi * tm) +
+            cHarm[1] * Math.sin(2.0 * pi * tm) +
+            cHarm[2] * Math.sin(3.0 * pi * tm) +
+            cHarm[3] * Math.sin(4.0 * pi * tm) +
+            cHarm[4] * Math.sin(5.0 * pi * tm)
+          ));
+          let edgeMax = 0;
+          for (let m = 0; m < NUM_EDGE_SUBPOINTS; m++) {
+            if (Math.abs(sVals[m]) > edgeMax) edgeMax = Math.abs(sVals[m]);
+          }
+
+          const minCurveThresh = Math.max(4.5, segLen * 0.006);
+          if (edgeMax >= minCurveThresh && meanLinErr > 2.2 && meanCurveErr < meanLinErr * 0.65) {
+            anyEdgeCurved = true;
+            for (let m = 0; m < NUM_EDGE_SUBPOINTS; m++) {
+              detectedEdgeOffsets[k][m] = {
+                x: Math.round(sVals[m] * nx),
+                y: Math.round(sVals[m] * ny)
+              };
+            }
+          }
+        }
+
+        srcCanvas._detectedEdgeOffsets = detectedEdgeOffsets;
+        srcCanvas._hasCurvedRim = anyEdgeCurved;
+        return refinedCorners;
       }
 
       // =========================================================================
@@ -2580,31 +3020,41 @@
         return [h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], 1];
       }
 
-      function evalHarmonicBasis7(xn) {
+      // Pure Dirichlet Sine Basis on x in [0, 1]: vanishes strictly at both left (x=0) and right (x=1) page borders!
+      // - sin(pi*x): single-page cylindrical arch
+      // - sin(2*pi*x): asymmetric 2-page book arch
+      // - sin(3*pi*x): symmetric 2-page open book M-arch (arches on left/right pages, dips at central spine x=0.5)
+      // Eliminates cosine boundary steps & high-frequency 4*pi ripples that caused wavy lines on flat paper!
+      function evalDirichletSineBasis3(xn) {
         const pi = Math.PI;
         return [
-          xn - 0.5,
           Math.sin(pi * xn),
-          Math.cos(pi * xn),
           Math.sin(2.0 * pi * xn),
-          Math.cos(2.0 * pi * xn),
-          Math.sin(3.0 * pi * xn),
-          Math.cos(4.0 * pi * xn)
+          Math.sin(3.0 * pi * xn)
         ];
       }
 
-      // Fast 2-Stage 1D Vertical Profile NCC + Orthogonal Harmonic Basis Estimator
-      // Measures exact text-line vertical displacement curve w(x) across M=32 columns:
-      // - Returns 0.00px on flat pages (even with multi-column A/B/C/D gaps!)
-      // - Accurately straightens curved single-page or 2-page book text lines so all lines are straight & parallel!
-      function estimateTextLineHarmonicWave(rgbaData, dstW, dstH) {
+      function evalVertBasis2(ty) {
+        return [1.0, ty - 0.5];
+      }
+
+      // =========================================================================
+      // v24.0 FLAT-PAPER-SAFE 2D TOP/BOTTOM BOOK SURFACE & TEXT-LINE DEWARPING
+      // - Uses Dirichlet Sine Basis [sin(pi*x), sin(2*pi*x), sin(3*pi*x)] x [1, ty-0.5]
+      //   so endpoints x=0 and x=1 are strictly pinned (zero edge shear) and
+      //   high-frequency ripples are physically impossible.
+      // - Enforces a strict Flat-Paper Immunity Gate (requires coherent multi-column
+      //   curvature >= 4.8 px and soft deadzone shrinkage) so flat sheets stay
+      //   100% razor-straight (0.00 px wave) while curved open books are flattened!
+      // =========================================================================
+      function estimate2DBookSurfaceModes(rgbaData, dstW, dstH) {
         const M = 32;
         const subW = M * 6; // 192
         const Hs = 320;
         const scaleY = dstH / Hs;
 
         // 1. Downsample luminance to (subW x Hs)
-        const L = new Float32Array(subW * Hs);
+        const L0 = new Float32Array(subW * Hs);
         for (let sy = 0; sy < Hs; sy++) {
           const y = Math.min(dstH - 1, Math.round((sy / (Hs - 1)) * (dstH - 1)));
           const rOff = y * dstW;
@@ -2612,20 +3062,20 @@
           for (let sx = 0; sx < subW; sx++) {
             const x = Math.min(dstW - 1, Math.round((sx / (subW - 1)) * (dstW - 1)));
             const idx4 = (rOff + x) * 4;
-            L[sOff + sx] = 0.299 * rgbaData[idx4] + 0.587 * rgbaData[idx4 + 1] + 0.114 * rgbaData[idx4 + 2];
+            L0[sOff + sx] = 0.299 * rgbaData[idx4] + 0.587 * rgbaData[idx4 + 1] + 0.114 * rgbaData[idx4 + 2];
           }
         }
 
-        // 2. Vertical high-pass ink stroke energy E(sy, sx)
-        const E = new Float32Array(subW * Hs);
-        const my = Math.floor(Hs * 0.06);
+        // 2. Vertical high-pass ink stroke energy E0(sy, sx)
+        const E0 = new Float32Array(subW * Hs);
+        const my = Math.floor(Hs * 0.04);
         for (let sy = Math.max(3, my); sy < Hs - Math.max(3, my); sy++) {
           const sOff = sy * subW;
           const upOff = (sy - 3) * subW;
           const dnOff = (sy + 3) * subW;
           for (let sx = 0; sx < subW; sx++) {
-            const diff = 0.5 * (L[upOff + sx] + L[dnOff + sx]) - L[sOff + sx];
-            if (diff > 0) E[sOff + sx] = diff;
+            const diff = 0.5 * (L0[upOff + sx] + L0[dnOff + sx]) - L0[sOff + sx];
+            if (diff > 0) E0[sOff + sx] = diff;
           }
         }
 
@@ -2633,16 +3083,15 @@
         const P = new Float64Array(M * Hs);
         const rawP = new Float64Array(Hs);
         for (let k = 0; k < M; k++) {
-          const x0 = Math.max(0, k * 6 - 3);
-          const x1 = Math.min(subW - 1, (k + 1) * 6 + 2);
+          const x0 = Math.max(0, k * 6 - 4);
+          const x1 = Math.min(subW - 1, (k + 1) * 6 + 3);
           const span = x1 - x0 + 1;
           for (let sy = 0; sy < Hs; sy++) {
             let s = 0;
             const sOff = sy * subW;
-            for (let sx = x0; sx <= x1; sx++) s += E[sOff + sx];
+            for (let sx = x0; sx <= x1; sx++) s += E0[sOff + sx];
             rawP[sy] = s / span;
           }
-          // Subtract local 15px moving average so only sharp text-line peaks remain
           const kOff = k * Hs;
           for (let sy = 0; sy < Hs; sy++) {
             const y0 = Math.max(0, sy - 7), y1 = Math.min(Hs - 1, sy + 7);
@@ -2653,150 +3102,214 @@
           }
         }
 
+        const K = 3; // 3 smooth Dirichlet Sine modes: sin(pi*x), sin(2*pi*x), sin(3*pi*x)
         const B_cols = [];
         for (let k = 0; k < M; k++) {
-          B_cols.push(evalHarmonicBasis7(k / (M - 1)));
+          B_cols.push(evalDirichletSineBasis3(k / (M - 1)));
         }
-        const diff_B = [];
-        for (let k = 0; k < M - 1; k++) {
-          const row = new Float64Array(7);
-          for (let j = 0; j < 7; j++) row[j] = B_cols[k + 1][j] - B_cols[k][j];
-          diff_B.push(row);
-        }
-        const regDiag = [0.06, 0.03, 0.03, 0.03, 0.03, 0.06, 0.03];
 
-        function runNccPass(P_in, maxD) {
-          const deltas = new Float64Array(M);
-          const weights = new Float64Array(M);
-          const corrs = new Float64Array(2 * maxD + 1);
-          const corrsSorted = new Float64Array(2 * maxD + 1);
+        // 4 vertical zones covering Top-Half and Bottom-Half
+        const zones = [
+          [0.05, 0.48, 0.265],
+          [0.15, 0.52, 0.335],
+          [0.48, 0.85, 0.665],
+          [0.52, 0.95, 0.735]
+        ];
+
+        const regH = [0.06, 0.12, 0.22];
+        const regV = [1.0, 1.2];
+        const nParams = 2 * K; // 6 ultra-clean parameters!
+        const A_sys = Array.from({ length: nParams }, (_, r) => {
+          const row = new Float64Array(nParams);
+          const vm = (r / K) | 0;
+          const hm = r % K;
+          row[r] = regV[vm] * regH[hm];
+          return row;
+        });
+        const b_sys = new Float64Array(nParams);
+
+        const maxD = 7;
+        const corrs = new Float64Array(2 * maxD + 1);
+        const corrsSorted = new Float64Array(2 * maxD + 1);
+        const norms = new Float64Array(M);
+        const dB_full = new Float64Array(nParams);
+        let nonZeroShiftCount = 0;
+        let totalMatchedSteps = 0;
+
+        for (let z = 0; z < zones.length; z++) {
+          const y0_f = zones[z][0], y1_f = zones[z][1], ty_c = zones[z][2];
+          const ya = Math.max(maxD + 4, Math.floor(Hs * y0_f));
+          const yb = Math.min(Hs - maxD - 4, Math.floor(Hs * y1_f));
+          if (yb - ya < 18) continue;
+          const vVec = evalVertBasis2(ty_c);
+
+          let maxNorm = 0;
+          for (let k = 0; k < M; k++) {
+            const kOff = k * Hs;
+            let sq = 0;
+            for (let y = ya; y < yb; y++) {
+              const v = P[kOff + y];
+              sq += v * v;
+            }
+            norms[k] = Math.sqrt(sq);
+            if (norms[k] > maxNorm) maxNorm = norms[k];
+          }
+          if (maxNorm < 1e-3) continue;
 
           for (let k = 1; k < M; k++) {
-            const prevOff = (k - 1) * Hs;
-            const currOff = k * Hs;
-            let normPrevSq = 0, normCurrCenterSq = 0;
-            for (let y = my; y < Hs - my; y++) {
-              const vp = P_in[prevOff + y];
-              const vc = P_in[currOff + y];
-              normPrevSq += vp * vp;
-              normCurrCenterSq += vc * vc;
-            }
-            const normPrev = Math.sqrt(normPrevSq);
-            if (normPrev < 1e-3 || Math.sqrt(normCurrCenterSq) < 1e-3) continue;
+            if (norms[k] < 0.25 * maxNorm) continue;
+            for (let step = 1; step <= 2; step++) {
+              const kp = k - step;
+              if (kp < 0 || norms[kp] < 0.25 * maxNorm) continue;
 
-            let bestI = maxD;
-            let bestC = -1.0;
-            for (let di = 0; di <= 2 * maxD; di++) {
-              const d = di - maxD;
-              let dot = 0, normSegSq = 0;
-              for (let y = my; y < Hs - my; y++) {
-                const vp = P_in[prevOff + y];
-                const vc = P_in[currOff + y + d];
-                dot += vp * vc;
-                normSegSq += vc * vc;
-              }
-              const cVal = dot / (normPrev * (Math.sqrt(normSegSq) + 1e-6));
-              corrs[di] = cVal;
-              corrsSorted[di] = cVal;
-              if (cVal > bestC) {
-                bestC = cVal;
-                bestI = di;
-              }
-            }
+              const prevOff = kp * Hs;
+              const currOff = k * Hs;
+              const normPrev = norms[kp];
+              let bestI = maxD;
+              let bestC = -1.0;
 
-            corrsSorted.sort();
-            const medC = corrsSorted[maxD];
-            if (bestC > 0.35 && (bestC - medC) > 0.08) {
-              let bestD = bestI - maxD;
-              if (bestI > 0 && bestI < 2 * maxD) {
-                const vm = corrs[bestI - 1], v0 = corrs[bestI], vp = corrs[bestI + 1];
-                const denom = 2.0 * (2.0 * v0 - vm - vp);
-                if (Math.abs(denom) > 1e-9) {
-                  bestD += Math.max(-0.5, Math.min(0.5, (vm - vp) / denom));
+              for (let di = 0; di <= 2 * maxD; di++) {
+                const d = di - maxD;
+                let dot = 0, normSegSq = 0;
+                for (let y = ya; y < yb; y++) {
+                  const vp = P[prevOff + y];
+                  const vc = P[currOff + y + d];
+                  dot += vp * vc;
+                  normSegSq += vc * vc;
+                }
+                const cVal = dot / (normPrev * (Math.sqrt(normSegSq) + 1e-6));
+                corrs[di] = cVal;
+                corrsSorted[di] = cVal;
+                if (cVal > bestC) {
+                  bestC = cVal;
+                  bestI = di;
                 }
               }
-              deltas[k] = bestD * scaleY;
-              weights[k] = (bestC - medC) * bestC;
-            }
-          }
 
-          const A_sys = Array.from({ length: 7 }, (_, r) => {
-            const row = new Float64Array(7);
-            row[r] = regDiag[r];
-            return row;
-          });
-          const b_sys = new Float64Array(7);
+              corrsSorted.sort();
+              const medC = corrsSorted[maxD];
+              if (bestC > 0.42 && (bestC - medC) > 0.11) {
+                let bestD = bestI - maxD;
+                if (bestI > 0 && bestI < 2 * maxD) {
+                  const vm = corrs[bestI - 1], v0 = corrs[bestI], vp = corrs[bestI + 1];
+                  const denom = 2.0 * (2.0 * v0 - vm - vp);
+                  if (Math.abs(denom) > 1e-9) {
+                    bestD += Math.max(-0.5, Math.min(0.5, (vm - vp) / denom));
+                  }
+                }
+                // Deadband on tiny sub-pixel jitter from character ascenders/descenders on flat sheets!
+                if (Math.abs(bestD) < 0.55) {
+                  bestD = 0.0;
+                } else if (step === 1) {
+                  nonZeroShiftCount++;
+                }
+                if (step === 1) totalMatchedSteps++;
 
-          for (let k = 0; k < M - 1; k++) {
-            const w = weights[k + 1];
-            if (w <= 0) continue;
-            const target = -deltas[k + 1];
-            const dB = diff_B[k];
-            for (let r = 0; r < 7; r++) {
-              const wdBr = w * dB[r];
-              b_sys[r] += wdBr * target;
-              for (let c = 0; c < 7; c++) {
-                A_sys[r][c] += wdBr * dB[c];
+                const deltaPx = bestD * scaleY;
+                const w = ((bestC - medC) * bestC * bestC) / step;
+
+                const Bk = B_cols[k], Bkp = B_cols[kp];
+                for (let vm = 0; vm < 2; vm++) {
+                  const vv = vVec[vm];
+                  const baseIdx = vm * K;
+                  for (let hm = 0; hm < K; hm++) {
+                    dB_full[baseIdx + hm] = vv * (Bk[hm] - Bkp[hm]);
+                  }
+                }
+
+                for (let r = 0; r < nParams; r++) {
+                  const wdBr = w * dB_full[r];
+                  b_sys[r] += wdBr * deltaPx;
+                  const rowA = A_sys[r];
+                  for (let c = 0; c < nParams; c++) {
+                    rowA[c] += wdBr * dB_full[c];
+                  }
+                }
               }
             }
           }
-
-          const coeffs = solveLinearSystem(A_sys, b_sys);
-          const wCols = new Float64Array(M);
-          let meanW = 0;
-          for (let k = 0; k < M; k++) {
-            let s = 0;
-            for (let j = 0; j < 7; j++) s += B_cols[k][j] * coeffs[j];
-            wCols[k] = s;
-            meanW += s;
-          }
-          meanW /= M;
-          let maxAbs = 0;
-          for (let k = 0; k < M; k++) {
-            wCols[k] -= meanW;
-            if (Math.abs(wCols[k]) > maxAbs) maxAbs = Math.abs(wCols[k]);
-          }
-          return { coeffs, wCols, maxAbs };
         }
 
-        const pass1 = runNccPass(P, 6);
-        // Strict Flat-Paper Gate: if max curve amplitude < 1.6px, paper is already flat!
-        if (pass1.maxAbs < 1.6) return null;
-
-        // Pass 2: shift 1D profiles P in-place by -pass1.wCols / scaleY and refine residual!
-        const P2 = new Float64Array(M * Hs);
-        for (let k = 0; k < M; k++) {
-          const shiftSub = -pass1.wCols[k] / scaleY;
-          const kOff = k * Hs;
-          for (let sy = 0; sy < Hs; sy++) {
-            const yf = sy + shiftSub;
-            if (yf >= 0 && yf < Hs - 1) {
-              const y0 = yf | 0;
-              const dy = yf - y0;
-              P2[kOff + sy] = P[kOff + y0] * (1.0 - dy) + P[kOff + y0 + 1] * dy;
-            }
-          }
+        // Flat-Paper Immunity Gate 1: If fewer than 22% of column steps have a real shift >= 0.55 sub-pixels, paper is flat!
+        if (totalMatchedSteps < 16 || nonZeroShiftCount < Math.max(8, totalMatchedSteps * 0.22)) {
+          return null;
         }
-        const pass2 = runNccPass(P2, 4);
 
-        const totalCoeffs = new Float64Array(7);
-        for (let j = 0; j < 7; j++) totalCoeffs[j] = pass1.coeffs[j] + pass2.coeffs[j];
+        const coeffs = solveLinearSystem(A_sys, b_sys);
 
-        const waveFull = new Float32Array(dstW);
-        let meanFull = 0;
+        const mode0 = new Float32Array(dstW);
+        const mode1 = new Float32Array(dstW);
+        const mode2 = new Float32Array(dstW); // Kept zero for API compatibility
+
+        let maxSurfaceDisp = 0;
         for (let x = 0; x < dstW; x++) {
-          const B = evalHarmonicBasis7(x / (dstW - 1));
-          let s = 0;
-          for (let j = 0; j < 7; j++) s += B[j] * totalCoeffs[j];
-          waveFull[x] = s;
-          meanFull += s;
+          const B = evalDirichletSineBasis3(x / (dstW - 1));
+          let s0 = 0, s1 = 0;
+          for (let j = 0; j < K; j++) {
+            s0 += B[j] * coeffs[j];
+            s1 += B[j] * coeffs[K + j];
+          }
+          mode0[x] = s0;
+          mode1[x] = s1;
+          const topDisp = Math.abs(s0 - 0.35 * s1);
+          const botDisp = Math.abs(s0 + 0.35 * s1);
+          const localMax = Math.max(topDisp, Math.abs(s0), botDisp);
+          if (localMax > maxSurfaceDisp) maxSurfaceDisp = localMax;
         }
-        meanFull /= dstW;
-        for (let x = 0; x < dstW; x++) waveFull[x] -= meanFull;
-        return waveFull;
+
+        // Flat-Paper Immunity Gate 2: Require max arch >= 5.0 px, with smooth deadzone ramp [5.0px .. 9.0px]
+        if (maxSurfaceDisp < 5.0) return null;
+
+        const shrinkGain = Math.min(1.0, (maxSurfaceDisp - 4.5) / 4.5);
+        for (let x = 0; x < dstW; x++) {
+          mode0[x] *= shrinkGain;
+          mode1[x] *= shrinkGain;
+        }
+
+        return { mode0, mode1, mode2 };
       }
 
-      function dewarpQuad(srcCanvas, quadCorners, paperSizeMode, midOffsets, bookCurvePct, autoLineDewarp) {
+      function createZeroEdgeOffsets() {
+        return [0, 1, 2, 3].map(() =>
+          Array.from({ length: NUM_EDGE_SUBPOINTS }, () => ({ x: 0, y: 0 }))
+        );
+      }
+
+      function cloneEdgeOffsets(edgeOffsets) {
+        if (!edgeOffsets || edgeOffsets.length !== 4) return createZeroEdgeOffsets();
+        return edgeOffsets.map((edge) =>
+          Array.from({ length: NUM_EDGE_SUBPOINTS }, (_, m) => ({
+            x: (edge && edge[m] && edge[m].x) || 0,
+            y: (edge && edge[m] && edge[m].y) || 0
+          }))
+        );
+      }
+
+      // Exact 5-Sine Harmonic (DST-I) Interpolation through the 5 intermediate points
+      // (t = 1/6, 2/6, 3/6, 4/6, 5/6) on an edge.
+      // Guarantees Delta(0)=0, Delta((m+1)/6)=edge5Pts[m] for m=0..4, and Delta(1)=0!
+      function evalEdge3PointOffset(edge5Pts, t) {
+        if (!edge5Pts || edge5Pts.length < NUM_EDGE_SUBPOINTS) return { x: 0, y: 0 };
+        const pi = Math.PI;
+        let outX = 0;
+        let outY = 0;
+        for (let k = 0; k < 5; k++) {
+          const S_k = DST5_MAT[k];
+          let ckX = 0;
+          let ckY = 0;
+          for (let j = 0; j < 5; j++) {
+            const sjk = S_k[j];
+            ckX += edge5Pts[j].x * sjk;
+            ckY += edge5Pts[j].y * sjk;
+          }
+          const sinKt = Math.sin((k + 1) * pi * t);
+          outX += (ckX / 3.0) * sinKt;
+          outY += (ckY / 3.0) * sinKt;
+        }
+        return { x: outX, y: outY };
+      }
+
+      function dewarpQuad(srcCanvas, quadCorners, paperSizeMode, edgeOffsets, bookCurvePct, autoLineDewarp, cachedModesHost) {
         const topW = Math.hypot(quadCorners[1].x - quadCorners[0].x, quadCorners[1].y - quadCorners[0].y);
         const botW = Math.hypot(quadCorners[2].x - quadCorners[3].x, quadCorners[2].y - quadCorners[3].y);
         const leftH = Math.hypot(quadCorners[3].x - quadCorners[0].x, quadCorners[3].y - quadCorners[0].y);
@@ -2849,28 +3362,54 @@
         const sH = srcCanvas.height;
         const sData = srcCanvas.getContext("2d").getImageData(0, 0, sW, sH).data;
 
-        const mOff = midOffsets || [
-          { x: 0, y: 0 },
-          { x: 0, y: 0 },
-          { x: 0, y: 0 },
-          { x: 0, y: 0 }
-        ];
+        const eOff = edgeOffsets && edgeOffsets.length === 4 ? edgeOffsets : createZeroEdgeOffsets();
+        let maxEdgeOff = 0;
+        for (let ei = 0; ei < 4; ei++) {
+          for (let si = 0; si < NUM_EDGE_SUBPOINTS; si++) {
+            const pt = eOff[ei][si];
+            if (pt) {
+              const m = Math.abs(pt.x) + Math.abs(pt.y);
+              if (m > maxEdgeOff) maxEdgeOff = m;
+            }
+          }
+        }
+        const hasEdgeOffsets = maxEdgeOff > 0.4;
 
-        const hasMidOffsets = (
-          Math.abs(mOff[0].x) + Math.abs(mOff[0].y) +
-          Math.abs(mOff[1].x) + Math.abs(mOff[1].y) +
-          Math.abs(mOff[2].x) + Math.abs(mOff[2].y) +
-          Math.abs(mOff[3].x) + Math.abs(mOff[3].y)
-        ) > 0.5;
+        // Precompute 1D Coons Patch edge displacement tables for fast O(1) lookup per pixel
+        const topOffX = new Float32Array(dstW);
+        const topOffY = new Float32Array(dstW);
+        const botOffX = new Float32Array(dstW);
+        const botOffY = new Float32Array(dstW);
+        const leftOffX = new Float32Array(dstH);
+        const leftOffY = new Float32Array(dstH);
+        const rightOffX = new Float32Array(dstH);
+        const rightOffY = new Float32Array(dstH);
 
+        if (hasEdgeOffsets) {
+          for (let u = 0; u < dstW; u++) {
+            const tx = u / (dstW - 1);
+            const tTop = evalEdge3PointOffset(eOff[0], tx);       // Edge 0: TL -> TR (tx: 0 -> 1)
+            const tBot = evalEdge3PointOffset(eOff[2], 1.0 - tx); // Edge 2: BR -> BL (1-tx: 1 -> 0)
+            topOffX[u] = tTop.x; topOffY[u] = tTop.y;
+            botOffX[u] = tBot.x; botOffY[u] = tBot.y;
+          }
+          for (let v = 0; v < dstH; v++) {
+            const ty = v / (dstH - 1);
+            const tRight = evalEdge3PointOffset(eOff[1], ty);       // Edge 1: TR -> BR (ty: 0 -> 1)
+            const tLeft  = evalEdge3PointOffset(eOff[3], 1.0 - ty); // Edge 3: BL -> TL (1-ty: 1 -> 0)
+            rightOffX[v] = tRight.x; rightOffY[v] = tRight.y;
+            leftOffX[v]  = tLeft.x;  leftOffY[v]  = tLeft.y;
+          }
+        }
+
+        // Manual Book Curve slider models BOTH top-half and bottom-half open-book perspective arch
         const bookGain = (bookCurvePct || 0) / 100.0;
-        const manualWaveX = new Float32Array(dstW);
+        const manualArchX = new Float32Array(dstW);
         if (Math.abs(bookGain) > 0.01) {
           const scaleY = dstH / 680.0;
           for (let u = 0; u < dstW; u++) {
             const xn = u / (dstW - 1);
-            // Smooth cylindrical page arch + 2-page spine curve
-            manualWaveX[u] = bookGain * scaleY * (22.0 * Math.sin(Math.PI * xn) + 12.0 * Math.sin(2.0 * Math.PI * xn) - 10.0 * Math.cos(4.0 * Math.PI * xn));
+            manualArchX[u] = bookGain * scaleY * (20.0 * Math.sin(Math.PI * xn) - 14.0 * Math.cos(2.0 * Math.PI * xn) - 8.0 * Math.cos(4.0 * Math.PI * xn));
           }
         }
 
@@ -2878,23 +3417,23 @@
 
         for (let v = 0; v < dstH; v++) {
           const ty = v / (dstH - 1);
-          const parabY = 4.0 * ty * (1.0 - ty);
+          const oneMinusTy = 1.0 - ty;
+          const lOx = leftOffX[v], lOy = leftOffY[v];
+          const rOx = rightOffX[v], rOy = rightOffY[v];
+          const vertPinch = 1.0 - 1.35 * (ty - 0.5);
           for (let u = 0; u < dstW; u++) {
             const denom = H[6] * u + H[7] * v + 1;
             let sx = (H[0] * u + H[1] * v + H[2]) / denom;
             let sy = (H[3] * u + H[4] * v + H[5]) / denom;
 
-            if (hasMidOffsets) {
+            if (hasEdgeOffsets) {
               const tx = u / (dstW - 1);
-              const parabX = 4.0 * tx * (1.0 - tx);
-              sx += (1.0 - ty) * parabX * mOff[0].x + ty * parabX * mOff[2].x +
-                    (1.0 - tx) * parabY * mOff[3].x + tx * parabY * mOff[1].x;
-              sy += (1.0 - ty) * parabX * mOff[0].y + ty * parabX * mOff[2].y +
-                    (1.0 - tx) * parabY * mOff[3].y + tx * parabY * mOff[1].y;
+              sx += oneMinusTy * topOffX[u] + ty * botOffX[u] + (1.0 - tx) * lOx + tx * rOx;
+              sy += oneMinusTy * topOffY[u] + ty * botOffY[u] + (1.0 - tx) * lOy + tx * rOy;
             }
 
             if (Math.abs(bookGain) > 0.01) {
-              sy -= manualWaveX[u];
+              sy -= vertPinch * manualArchX[u];
             }
 
             const di = (v * dstW + u) * 4;
@@ -2934,16 +3473,28 @@
         const outImg = outCtx.createImageData(dstW, dstH);
         const dData = outImg.data;
 
-        // Stage 2: Automatic 2-Stage 1D Profile NCC Harmonic Text-Line & Page Flattening
-        // Straightens curved text lines so all lines are straight and parallel, plus horizontal arc-length unrolling!
+        // Stage 2: 2D Multi-Zone Top/Middle/Bottom Book Surface & Parallel Text-Line Flattening
         if (autoLineDewarp !== false) {
-          const autoWave = estimateTextLineHarmonicWave(tempData, dstW, dstH);
-          if (autoWave) {
-            // Compute horizontal arc-length map xMap[u] to unroll characters compressed along curved slopes
+          let surfModes = (cachedModesHost && cachedModesHost.cachedAutoModes && cachedModesHost.cachedAutoW === dstW && cachedModesHost.cachedAutoH === dstH)
+            ? cachedModesHost.cachedAutoModes
+            : undefined;
+          if (surfModes === undefined) {
+            surfModes = estimate2DBookSurfaceModes(tempData, dstW, dstH);
+            if (cachedModesHost) {
+              cachedModesHost.cachedAutoModes = surfModes;
+              cachedModesHost.cachedAutoW = dstW;
+              cachedModesHost.cachedAutoH = dstH;
+            }
+          }
+          if (surfModes) {
+            const { mode0, mode1, mode2 } = surfModes;
+            // Compute horizontal arc-length unrolling map xMap[u] from RMS slope across top & bottom halves
             const arcCum = new Float32Array(dstW);
             for (let u = 1; u < dstW; u++) {
-              const dw = autoWave[u] - autoWave[u - 1];
-              arcCum[u] = arcCum[u - 1] + Math.sqrt(1.0 + 0.65 * dw * dw);
+              const dw0 = mode0[u] - mode0[u - 1];
+              const dw1 = mode1[u] - mode1[u - 1];
+              const slopeSq = dw0 * dw0 + 0.0833 * dw1 * dw1;
+              arcCum[u] = arcCum[u - 1] + Math.sqrt(1.0 + 0.60 * slopeSq);
             }
             const totalArc = arcCum[dstW - 1] || 1.0;
             const xMap = new Float32Array(dstW);
@@ -2956,12 +3507,22 @@
             }
 
             for (let y = 0; y < dstH; y++) {
+              const ty = y / (dstH - 1);
+              const uVert = ty - 0.5;
+              const v1 = uVert;
+              const v2 = uVert * uVert - (1.0 / 12.0);
+
               for (let x = 0; x < dstW; x++) {
                 const sx = Math.min(dstW - 1.001, Math.max(0.0, xMap[x]));
                 const x0 = sx | 0;
                 const dx = sx - x0;
-                const wVal = autoWave[x0] * (1.0 - dx) + autoWave[x0 + 1] * dx;
-                const sy = Math.min(dstH - 1.001, Math.max(0.0, y - wVal));
+
+                const w0 = mode0[x0] * (1.0 - dx) + mode0[x0 + 1] * dx;
+                const w1 = mode1[x0] * (1.0 - dx) + mode1[x0 + 1] * dx;
+                const w2 = mode2[x0] * (1.0 - dx) + mode2[x0 + 1] * dx;
+                const wVal = w0 + v1 * w1 + v2 * w2;
+
+                const sy = Math.min(dstH - 1.001, Math.max(0.0, y + wVal));
                 const y0 = sy | 0;
                 const dy = sy - y0;
 
@@ -2971,14 +3532,14 @@
                 const i11 = i01 + 4;
                 const di = (y * dstW + x) * 4;
 
-                const w00 = (1.0 - dx) * (1.0 - dy);
-                const w10 = dx * (1.0 - dy);
-                const w01 = (1.0 - dx) * dy;
-                const w11 = dx * dy;
+                const wt00 = (1.0 - dx) * (1.0 - dy);
+                const wt10 = dx * (1.0 - dy);
+                const wt01 = (1.0 - dx) * dy;
+                const wt11 = dx * dy;
 
-                dData[di]     = tempData[i00] * w00 + tempData[i10] * w10 + tempData[i01] * w01 + tempData[i11] * w11;
-                dData[di + 1] = tempData[i00 + 1] * w00 + tempData[i10 + 1] * w10 + tempData[i01 + 1] * w01 + tempData[i11 + 1] * w11;
-                dData[di + 2] = tempData[i00 + 2] * w00 + tempData[i10 + 2] * w10 + tempData[i01 + 2] * w01 + tempData[i11 + 2] * w11;
+                dData[di]     = tempData[i00] * wt00 + tempData[i10] * wt10 + tempData[i01] * wt01 + tempData[i11] * wt11;
+                dData[di + 1] = tempData[i00 + 1] * wt00 + tempData[i10 + 1] * wt10 + tempData[i01 + 1] * wt01 + tempData[i11 + 1] * wt11;
+                dData[di + 2] = tempData[i00 + 2] * wt00 + tempData[i10 + 2] * wt10 + tempData[i01 + 2] * wt01 + tempData[i11 + 2] * wt11;
                 dData[di + 3] = 255;
               }
             }
@@ -3158,7 +3719,10 @@
         const cleanAmt = (settings.bgSuppress ?? 68) / 100.0;
         const contrastAmt = (settings.contrast ?? 55) / 100.0;
 
-        const outImg = outCtx.createImageData(w, h);
+        if (!fc.outImg || fc.outImg.width !== w || fc.outImg.height !== h) {
+          fc.outImg = outCtx.createImageData(w, h);
+        }
+        const outImg = fc.outImg;
         const data = outImg.data;
 
         const rawData = fc.rawData;
@@ -3271,15 +3835,19 @@
         outCtx.putImageData(outImg, 0, 0);
       }
 
-      function updateGeometryAndProcess(page) {
+      function updateGeometryAndProcess(page, keepAutoModesCache) {
         if (!page) return;
+        if (!keepAutoModesCache) {
+          page.cachedAutoModes = undefined;
+        }
         const dewarped = dewarpQuad(
           page.srcCanvas,
           page.corners,
           page.settings.paperSize,
-          page.midOffsets,
+          page.edgeOffsets,
           page.settings.bookCurve || 0,
-          page.settings.autoLineDewarp !== false
+          page.settings.autoLineDewarp !== false,
+          page
         );
         page.dewarpedCanvas = dewarped;
         page.filterCache = null;
@@ -3287,29 +3855,36 @@
       }
 
       // =========================================================================
-      // 7. RENDERING MAIN STAGE & FULL-SCREEN EDITOR STAGE (WITH CROP OVERLAY)
+      // 7. RENDERING MAIN STAGE & FULL-SCREEN EDITOR STAGE ("CĂN 4 GÓC" & "CĂN ĐA ĐIỂM")
       // =========================================================================
-      function getMidHandlePos(page, i) {
+      function getEdgeSubHandlePos(page, edgeIdx, subIdx) {
         const c = page.corners;
-        const p1 = c[i];
-        const p2 = c[(i + 1) % 4];
-        const mOff = (page.midOffsets && page.midOffsets[i]) || { x: 0, y: 0 };
+        const p1 = c[edgeIdx];
+        const p2 = c[(edgeIdx + 1) % 4];
+        const t = (subIdx + 1) / (NUM_EDGE_SUBPOINTS + 1); // t = 1/6, 2/6, 3/6, 4/6, 5/6 (5 intermediate points per edge!)
+        const eOff = (page.edgeOffsets && page.edgeOffsets[edgeIdx] && page.edgeOffsets[edgeIdx][subIdx]) || { x: 0, y: 0 };
         return {
-          x: (p1.x + p2.x) * 0.5 + mOff.x,
-          y: (p1.y + p2.y) * 0.5 + mOff.y
+          x: p1.x * (1.0 - t) + p2.x * t + eOff.x,
+          y: p1.y * (1.0 - t) + p2.y * t + eOff.y
         };
       }
 
       function drawCurvedQuadPath(ctx, page) {
         const c = page.corners;
+        const eOffAll = page.edgeOffsets || createZeroEdgeOffsets();
         ctx.moveTo(c[0].x, c[0].y);
+        const steps = 24;
         for (let i = 0; i < 4; i++) {
           const p1 = c[i];
           const p2 = c[(i + 1) % 4];
-          const mOff = (page.midOffsets && page.midOffsets[i]) || { x: 0, y: 0 };
-          const cpX = (p1.x + p2.x) * 0.5 + mOff.x * 2.0;
-          const cpY = (p1.y + p2.y) * 0.5 + mOff.y * 2.0;
-          ctx.quadraticCurveTo(cpX, cpY, p2.x, p2.y);
+          const e3 = eOffAll[i];
+          for (let s = 1; s <= steps; s++) {
+            const t = s / steps;
+            const d = state.alignPointMode === "multipt" ? evalEdge3PointOffset(e3, t) : { x: 0, y: 0 };
+            const px = p1.x * (1.0 - t) + p2.x * t + d.x;
+            const py = p1.y * (1.0 - t) + p2.y * t + d.y;
+            ctx.lineTo(px, py);
+          }
         }
         ctx.closePath();
       }
@@ -3330,6 +3905,113 @@
         ctx.textBaseline = "middle";
         ctx.fillText(label, x, y);
         ctx.restore();
+      }
+
+      // =========================================================================
+      // INTERACTIVE ON-DOCUMENT NOTE ENGINE (MOVABLE, RESIZABLE, COLORABLE)
+      // - Renders the user's note directly onto the document canvas at (noteX, noteY)
+      //   with customizable font size (noteSize) and ink color (noteColor).
+      // - Computes bounding box & bottom-right resize handle (⤡) so the user can
+      //   drag the note freely or resize it with their finger on the touchscreen!
+      // =========================================================================
+      function drawNoteOverlayOnCanvas(ctx, w, h, page, showInteractiveHandles) {
+        if (!page || !page.note || !page.note.trim()) {
+          page._noteBounds = null;
+          return;
+        }
+        const text = page.note.trim();
+        const nx = typeof page.noteX === "number" ? page.noteX : 0.50;
+        const ny = typeof page.noteY === "number" ? page.noteY : 0.88;
+        const baseSize = page.noteSize || 28;
+        const color = page.noteColor || "#dc2626";
+
+        const scaleFactor = Math.max(0.45, w / 760.0);
+        const fontPx = Math.max(12, Math.round(baseSize * scaleFactor));
+        const padX = Math.round(fontPx * 0.45);
+        const padY = Math.round(fontPx * 0.30);
+
+        ctx.save();
+        ctx.font = `bold ${fontPx}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        const lines = text.split(/\n/);
+        let maxLineW = 0;
+        for (let i = 0; i < lines.length; i++) {
+          const m = ctx.measureText(lines[i]).width;
+          if (m > maxLineW) maxLineW = m;
+        }
+
+        const lineHeight = Math.round(fontPx * 1.24);
+        const boxW = Math.round(maxLineW + padX * 2);
+        const boxH = Math.round(lines.length * lineHeight + padY * 2);
+
+        // Clamp center (cx, cy) so note box stays inside document page
+        const halfW = boxW * 0.5;
+        const halfH = boxH * 0.5;
+        const cx = Math.max(halfW + 6, Math.min(w - halfW - 6, nx * w));
+        const cy = Math.max(halfH + 6, Math.min(h - halfH - 6, ny * h));
+        const boxX = cx - halfW;
+        const boxY = cy - halfH;
+
+        // Subtle semi-transparent paper backing so note is 100% legible over any text
+        ctx.fillStyle = "rgba(255, 255, 255, 0.86)";
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(boxX, boxY, boxW, boxH, Math.max(6, Math.round(fontPx * 0.25)));
+        } else {
+          ctx.rect(boxX, boxY, boxW, boxH);
+        }
+        ctx.fill();
+
+        // Crisp colored border
+        ctx.strokeStyle = color;
+        ctx.lineWidth = Math.max(1.8, fontPx * 0.08);
+        if (showInteractiveHandles) {
+          ctx.setLineDash([Math.max(4, Math.round(fontPx * 0.22)), Math.max(3, Math.round(fontPx * 0.16))]);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw note text lines
+        ctx.fillStyle = color;
+        const startY = cy - ((lines.length - 1) * lineHeight) * 0.5;
+        for (let i = 0; i < lines.length; i++) {
+          ctx.fillText(lines[i], cx, startY + i * lineHeight);
+        }
+
+        const handleR = Math.max(12, Math.round(14 * scaleFactor));
+        const resizeHx = boxX + boxW;
+        const resizeHy = boxY + boxH;
+
+        if (showInteractiveHandles) {
+          // Draw bottom-right corner resize handle (⤡)
+          ctx.fillStyle = color;
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = Math.max(2, handleR * 0.2);
+          ctx.beginPath();
+          ctx.arc(resizeHx, resizeHy, handleR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = "#ffffff";
+          ctx.font = `bold ${Math.max(10, Math.round(handleR * 0.95))}px Arial`;
+          ctx.fillText("⤡", resizeHx, resizeHy);
+        }
+
+        ctx.restore();
+
+        page._noteBounds = {
+          cx,
+          cy,
+          boxX,
+          boxY,
+          boxW,
+          boxH,
+          resizeHx,
+          resizeHy,
+          handleR
+        };
       }
 
       function renderStage() {
@@ -3354,7 +4036,7 @@
 
           ctx.fillStyle = "#cbd5e1";
           ctx.font = "17px Arial";
-          ctx.fillText("Bấm '📸 Chụp ảnh' hoặc '📁 Chọn ảnh' ở trên", 320, 410);
+          ctx.fillText("Bấm '📷 Chụp ảnh' hoặc '📂 Chọn ảnh' ở trên", 320, 410);
           ctx.fillText("để bắt đầu quét tài liệu.", 320, 440);
           el.mainUnderMetaText.textContent = "Chưa có ảnh nào • Hãy chụp hoặc chọn ảnh";
           return;
@@ -3366,10 +4048,17 @@
         el.mainCanvas.height = targetCanvas.height;
         ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
         ctx.drawImage(targetCanvas, 0, 0);
+        drawNoteOverlayOnCanvas(ctx, targetCanvas.width, targetCanvas.height, page, true);
 
         const ratioStr = describeAspectRatio(targetCanvas.width, targetCanvas.height);
         const noteSuffix = page.note && page.note.trim() ? ` • 📝 ${page.note.trim()}` : "";
         el.mainUnderMetaText.textContent = `${ratioStr} • ${targetCanvas.width}×${targetCanvas.height} px • ${getModeLabel(page.settings.colorMode)} • ${page.createdAt || "Hôm nay"}${noteSuffix}`;
+      }
+
+      function syncAlignModeButtons() {
+        const isMulti = state.alignPointMode === "multipt";
+        if (el.btnAlignMode4Pt) el.btnAlignMode4Pt.classList.toggle("active", !isMulti);
+        if (el.btnAlignModeMultiPt) el.btnAlignModeMultiPt.classList.toggle("active", isMulti);
       }
 
       function renderFullScreenEditor() {
@@ -3384,6 +4073,7 @@
         el.btnFsNext.disabled = state.currentPageIndex >= total - 1;
         el.btnFsPrev.style.display = total > 1 ? "inline-flex" : "none";
         el.btnFsNext.style.display = total > 1 ? "inline-flex" : "none";
+        syncAlignModeButtons();
 
         const ctx = el.fsCanvas.getContext("2d");
 
@@ -3398,7 +4088,7 @@
 
           const c = page.corners;
           ctx.save();
-          ctx.fillStyle = "rgba(15, 23, 42, 0.48)";
+          ctx.fillStyle = "rgba(9, 13, 22, 0.50)";
           ctx.beginPath();
           ctx.rect(0, 0, sW, sH);
           drawCurvedQuadPath(ctx, page);
@@ -3413,29 +4103,35 @@
           drawCurvedQuadPath(ctx, page);
           ctx.stroke();
 
-          ctx.strokeStyle = "#0a467d";
+          ctx.strokeStyle = "#2563eb";
           ctx.lineWidth = strokeW;
           ctx.stroke();
           ctx.restore();
 
-          const midR = Math.max(11, sW / 72);
-          for (let i = 0; i < 4; i++) {
-            const mp = getMidHandlePos(page, i);
-            ctx.save();
-            ctx.fillStyle = "#eaf2fb";
-            ctx.strokeStyle = "#0a467d";
-            ctx.lineWidth = Math.max(2.5, sW / 280);
-            ctx.beginPath();
-            ctx.arc(mp.x, mp.y, midR, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
+          // In "❖ Căn đa điểm" mode, draw 5 intermediate points (t = 1/6, 2/6, 3/6, 4/6, 5/6) on each of the 4 edges!
+          if (state.alignPointMode === "multipt") {
+            const subR = Math.max(9.5, sW / 82);
+            for (let edgeIdx = 0; edgeIdx < 4; edgeIdx++) {
+              for (let subIdx = 0; subIdx < NUM_EDGE_SUBPOINTS; subIdx++) {
+                const mp = getEdgeSubHandlePos(page, edgeIdx, subIdx);
+                ctx.save();
+                ctx.fillStyle = subIdx === 2 ? "#38bdf8" : "#eff6ff";
+                ctx.strokeStyle = "#1d4ed8";
+                ctx.lineWidth = Math.max(2.4, sW / 290);
+                ctx.beginPath();
+                ctx.arc(mp.x, mp.y, subR, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+              }
+            }
           }
 
+          // Always draw the 4 primary corner handles (TL, TR, BR, BL)
           const cornerR = Math.max(17, sW / 48);
           const labels = ["TL", "TR", "BR", "BL"];
           for (let i = 0; i < 4; i++) {
-            drawHandle(ctx, c[i].x, c[i].y, cornerR, "#0a467d", labels[i]);
+            drawHandle(ctx, c[i].x, c[i].y, cornerR, "#2563eb", labels[i]);
           }
         } else {
           if (!page.processedCanvas) updateGeometryAndProcess(page);
@@ -3444,15 +4140,15 @@
           el.fsCanvas.height = target.height;
           ctx.clearRect(0, 0, target.width, target.height);
           ctx.drawImage(target, 0, 0);
+          drawNoteOverlayOnCanvas(ctx, target.width, target.height, page, true);
         }
 
         const dispW = page.processedCanvas ? page.processedCanvas.width : page.srcCanvas.width;
         const dispH = page.processedCanvas ? page.processedCanvas.height : page.srcCanvas.height;
-        el.fsMetaRatioAndRes.textContent = `${describeAspectRatio(dispW, dispH)} • ${dispW}×${dispH} px`;
-        el.fsMetaModeAndTime.textContent = `${getModeLabel(page.settings.colorMode)} • ${page.createdAt || "Hôm nay"}`;
+        el.fsMetaSingleLine.textContent = `${describeAspectRatio(dispW, dispH)} • ${dispW}×${dispH} px • ${getModeLabel(page.settings.colorMode)} • ${page.createdAt || "Hôm nay"}`;
 
         if (page.note && page.note.trim()) {
-          el.fsNotePreview.textContent = `📝 Ghi chú: ${page.note.trim()}`;
+          el.fsNotePreview.textContent = `📝 ${page.note.trim()} (Chạm kéo trên ảnh để di chuyển / đổi cỡ)`;
           el.fsNotePreview.classList.add("visible");
         } else {
           el.fsNotePreview.textContent = "";
@@ -3486,7 +4182,7 @@
         const stRect = el.fsStageWrap.getBoundingClientRect();
         const relX = clientX - stRect.left;
         const leftPx = relX < stRect.width * 0.5 ? Math.max(10, stRect.width - 124) : 10;
-        const topPx = 54;
+        const topPx = 12;
 
         el.magnifierLoupe.style.left = `${leftPx}px`;
         el.magnifierLoupe.style.top = `${topPx}px`;
@@ -3511,7 +4207,7 @@
           lh
         );
 
-        lCtx.strokeStyle = "#ffffff";
+        lCtx.strokeStyle = "#38bdf8";
         lCtx.lineWidth = 1.8;
         lCtx.beginPath();
         lCtx.moveTo(lw / 2, 0);
@@ -3534,9 +4230,62 @@
         };
       }
 
+      function findNoteHitHandle(page, pt, targetCanvasName) {
+        if (!page || !page.note || !page.note.trim() || !page._noteBounds) return null;
+        const nb = page._noteBounds;
+        const hitPad = Math.max(24, 30 * (pt.scaleX || 1));
+
+        // 1. Check bottom-right resize handle (⤡) first
+        if (Math.hypot(pt.x - nb.resizeHx, pt.y - nb.resizeHy) <= Math.max(nb.handleR * 2.2, hitPad)) {
+          return {
+            type: "note_resize",
+            targetCanvas: targetCanvasName || "fs",
+            startX: pt.x,
+            startY: pt.y,
+            origSize: page.noteSize || 28,
+            cx: nb.cx,
+            cy: nb.cy,
+            startDist: Math.max(16, Math.hypot(pt.x - nb.cx, pt.y - nb.cy))
+          };
+        }
+
+        // 2. Check inside note bounding box for free movement
+        if (
+          pt.x >= nb.boxX - 12 &&
+          pt.x <= nb.boxX + nb.boxW + 12 &&
+          pt.y >= nb.boxY - 12 &&
+          pt.y <= nb.boxY + nb.boxH + 12
+        ) {
+          return {
+            type: "note_move",
+            targetCanvas: targetCanvasName || "fs",
+            startX: pt.x,
+            startY: pt.y,
+            origNoteX: typeof page.noteX === "number" ? page.noteX : 0.50,
+            origNoteY: typeof page.noteY === "number" ? page.noteY : 0.88
+          };
+        }
+        return null;
+      }
+
+      function getMainCanvasCoords(clientX, clientY) {
+        const rect = el.mainCanvas.getBoundingClientRect();
+        const scaleX = el.mainCanvas.width / Math.max(1, rect.width);
+        const scaleY = el.mainCanvas.height / Math.max(1, rect.height);
+        return {
+          x: (clientX - rect.left) * scaleX,
+          y: (clientY - rect.top) * scaleY,
+          clientX,
+          clientY,
+          scaleX
+        };
+      }
+
       function findHitHandle(page, pt) {
-        if (!state.fsCropMode) return null;
-        const hitRadius = Math.max(32, 44 * (pt.scaleX || 1));
+        if (!state.fsCropMode) {
+          return findNoteHitHandle(page, pt, "fs");
+        }
+        const hitRadius = Math.max(34, 46 * (pt.scaleX || 1));
         const c = page.corners;
 
         let bestCorner = -1;
@@ -3560,18 +4309,33 @@
           };
         }
 
-        for (let i = 0; i < 4; i++) {
-          const mp = getMidHandlePos(page, i);
-          if (Math.hypot(pt.x - mp.x, pt.y - mp.y) <= hitRadius) {
-            const mOff = (page.midOffsets && page.midOffsets[i]) || { x: 0, y: 0 };
+        // Allow hitting all 20 intermediate edge points (5 points per edge) when in "❖ Căn đa điểm" mode!
+        if (state.alignPointMode === "multipt") {
+          const edgeNames = ["Trên", "Phải", "Dưới", "Trái"];
+          let bestEdge = -1, bestSub = -1, bestSubDist = hitRadius;
+          for (let edgeIdx = 0; edgeIdx < 4; edgeIdx++) {
+            for (let subIdx = 0; subIdx < NUM_EDGE_SUBPOINTS; subIdx++) {
+              const mp = getEdgeSubHandlePos(page, edgeIdx, subIdx);
+              const d = Math.hypot(pt.x - mp.x, pt.y - mp.y);
+              if (d <= bestSubDist) {
+                bestSubDist = d;
+                bestEdge = edgeIdx;
+                bestSub = subIdx;
+              }
+            }
+          }
+          if (bestEdge !== -1) {
+            if (!page.edgeOffsets) page.edgeOffsets = createZeroEdgeOffsets();
+            const eOff = page.edgeOffsets[bestEdge][bestSub] || { x: 0, y: 0 };
             return {
-              type: "curve_mid",
-              index: i,
+              type: "edge_sub",
+              edgeIdx: bestEdge,
+              subIdx: bestSub,
               startX: pt.x,
               startY: pt.y,
-              origOffX: mOff.x,
-              origOffY: mOff.y,
-              label: ["Uốn Cạnh Trên", "Uốn Cạnh Phải", "Uốn Cạnh Dưới", "Uốn Cạnh Trái"][i]
+              origOffX: eOff.x,
+              origOffY: eOff.y,
+              label: `${edgeNames[bestEdge]} ${bestSub + 1}/5`
             };
           }
         }
@@ -3598,7 +4362,7 @@
         if (evt.touches && evt.touches.length === 2) {
           if (state.draggingHandle) {
             if (state.preTouchCorners) page.corners = state.preTouchCorners.map((p) => ({ ...p }));
-            if (state.preTouchMidOffsets) page.midOffsets = state.preTouchMidOffsets.map((p) => ({ ...p }));
+            if (state.preTouchMidOffsets) page.edgeOffsets = cloneEdgeOffsets(state.preTouchMidOffsets);
             renderFullScreenEditor();
           }
           state.draggingHandle = null;
@@ -3633,15 +4397,16 @@
           const t0 = evt.touches[0];
           const pt = getFsCanvasCoords(t0.clientX, t0.clientY);
           state.preTouchCorners = page.corners.map((p) => ({ ...p }));
-          state.preTouchMidOffsets = page.midOffsets.map((p) => ({ ...p }));
+          state.preTouchMidOffsets = cloneEdgeOffsets(page.edgeOffsets);
 
           const hit = findHitHandle(page, pt);
           if (hit) {
             state.draggingHandle = hit;
+            el.fsCropBar.classList.add("dragging-fade");
             if (hit.type === "corner") {
               updateMagnifierLoupe(hit.origX, hit.origY, pt.clientX, pt.clientY, hit.label);
-            } else if (hit.type === "curve_mid") {
-              const mp = getMidHandlePos(page, hit.index);
+            } else if (hit.type === "edge_sub") {
+              const mp = getEdgeSubHandlePos(page, hit.edgeIdx, hit.subIdx);
               updateMagnifierLoupe(mp.x, mp.y, pt.clientX, pt.clientY, hit.label);
             }
             evt.preventDefault();
@@ -3693,10 +4458,11 @@
         }
         const pt = getFsCanvasCoords(evt.clientX, evt.clientY);
         state.preTouchCorners = page.corners.map((p) => ({ ...p }));
-        state.preTouchMidOffsets = page.midOffsets.map((p) => ({ ...p }));
+        state.preTouchMidOffsets = cloneEdgeOffsets(page.edgeOffsets);
         const hit = findHitHandle(page, pt);
         if (hit) {
           state.draggingHandle = hit;
+          el.fsCropBar.classList.add("dragging-fade");
           if (hit.type === "corner") {
             updateMagnifierLoupe(hit.origX, hit.origY, pt.clientX, pt.clientY, hit.label);
           } else if (hit.type === "curve_mid") {
@@ -3768,6 +4534,40 @@
           return;
         }
 
+        if (state.draggingHandle.type === "note_move") {
+          const isMain = state.draggingHandle.targetCanvas === "main";
+          const ptNote = isMain ? getMainCanvasCoords(clientX, clientY) : getFsCanvasCoords(clientX, clientY);
+          const cw = isMain ? el.mainCanvas.width : el.fsCanvas.width;
+          const ch = isMain ? el.mainCanvas.height : el.fsCanvas.height;
+          const dxNorm = (ptNote.x - state.draggingHandle.startX) / Math.max(1, cw);
+          const dyNorm = (ptNote.y - state.draggingHandle.startY) / Math.max(1, ch);
+          page.noteX = Math.max(0.05, Math.min(0.95, state.draggingHandle.origNoteX + dxNorm));
+          page.noteY = Math.max(0.04, Math.min(0.96, state.draggingHandle.origNoteY + dyNorm));
+          renderStage();
+          if (el.fullScreenEditorModal.classList.contains("open")) {
+            renderFullScreenEditor();
+          }
+          evt.preventDefault();
+          return;
+        }
+
+        if (state.draggingHandle.type === "note_resize") {
+          const isMain = state.draggingHandle.targetCanvas === "main";
+          const ptNote = isMain ? getMainCanvasCoords(clientX, clientY) : getFsCanvasCoords(clientX, clientY);
+          const currDist = Math.max(12, Math.hypot(ptNote.x - state.draggingHandle.cx, ptNote.y - state.draggingHandle.cy));
+          const ratio = currDist / state.draggingHandle.startDist;
+          const newSize = Math.max(14, Math.min(64, Math.round(state.draggingHandle.origSize * ratio)));
+          page.noteSize = newSize;
+          if (el.ddNoteSizeSlider) el.ddNoteSizeSlider.value = newSize;
+          if (el.ddNoteSizeVal) el.ddNoteSizeVal.textContent = `${newSize}px`;
+          renderStage();
+          if (el.fullScreenEditorModal.classList.contains("open")) {
+            renderFullScreenEditor();
+          }
+          evt.preventDefault();
+          return;
+        }
+
         const pt = getFsCanvasCoords(clientX, clientY);
         const w = el.fsCanvas.width;
         const h = el.fsCanvas.height;
@@ -3782,13 +4582,15 @@
           page.corners[idx].y = ny;
           updateMagnifierLoupe(nx, ny, pt.clientX, pt.clientY, state.draggingHandle.label);
           renderFullScreenEditor();
-        } else if (state.draggingHandle.type === "curve_mid") {
-          const idx = state.draggingHandle.index;
+        } else if (state.draggingHandle.type === "edge_sub") {
+          const eIdx = state.draggingHandle.edgeIdx;
+          const sIdx = state.draggingHandle.subIdx;
           const dx = pt.x - state.draggingHandle.startX;
           const dy = pt.y - state.draggingHandle.startY;
-          page.midOffsets[idx].x = Math.round(state.draggingHandle.origOffX + dx);
-          page.midOffsets[idx].y = Math.round(state.draggingHandle.origOffY + dy);
-          const mp = getMidHandlePos(page, idx);
+          if (!page.edgeOffsets) page.edgeOffsets = createZeroEdgeOffsets();
+          page.edgeOffsets[eIdx][sIdx].x = Math.round(state.draggingHandle.origOffX + dx);
+          page.edgeOffsets[eIdx][sIdx].y = Math.round(state.draggingHandle.origOffY + dy);
+          const mp = getEdgeSubHandlePos(page, eIdx, sIdx);
           updateMagnifierLoupe(mp.x, mp.y, pt.clientX, pt.clientY, state.draggingHandle.label);
           renderFullScreenEditor();
         }
@@ -3805,8 +4607,9 @@
         if (!state.draggingHandle) return;
         const dragType = state.draggingHandle.type;
         state.draggingHandle = null;
+        el.fsCropBar.classList.remove("dragging-fade");
         el.magnifierLoupe.style.display = "none";
-        if (dragType === "corner" || dragType === "curve_mid") {
+        if (dragType === "corner" || dragType === "edge_sub") {
           const page = getCurrentPage();
           if (page) {
             updateGeometryAndProcess(page);
@@ -3821,9 +4624,12 @@
       // =========================================================================
       function addNewPageFromCanvas(srcCanvas, name, customCorners, customMidOffsets, initialBookCurve, initialNote) {
         const detectedCorners = customCorners ? customCorners.map((p) => ({ ...p })) : detectDocumentCorners(srcCanvas);
-        const midOffsets = customMidOffsets
-          ? customMidOffsets.map((p) => ({ ...p }))
-          : [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }];
+        const edgeOffsets = customMidOffsets
+          ? cloneEdgeOffsets(customMidOffsets)
+          : (srcCanvas._detectedEdgeOffsets ? cloneEdgeOffsets(srcCanvas._detectedEdgeOffsets) : createZeroEdgeOffsets());
+        if (srcCanvas._hasCurvedRim) {
+          state.alignPointMode = "multipt";
+        }
 
         const settings = cloneSettings(state.defaultSettings);
         if (typeof initialBookCurve === "number") {
@@ -3835,10 +4641,14 @@
           name: name || `ScanhoahocABC_${state.pages.length + 1}`,
           createdAt: formatTimeStr(new Date()),
           note: initialNote || "",
-          includeNoteOnExport: false,
+          noteX: 0.50,
+          noteY: 0.88,
+          noteSize: 28,
+          noteColor: "#dc2626",
+          includeNoteOnExport: true,
           srcCanvas,
           corners: detectedCorners,
-          midOffsets,
+          edgeOffsets,
           dewarpedCanvas: null,
           filterCache: null,
           processedCanvas: null,
@@ -4060,10 +4870,10 @@
         el.libMultiSelectActions.classList.toggle("visible", isMS);
         if (isMS) {
           const selCount = state.selectedPageIds.size;
-          el.libSelectedCountText.textContent = `Đã chọn ${selCount} / ${total} ảnh`;
-          el.btnBatchPdfSelected.textContent = `📑 Lưu PDF (${selCount})`;
-          el.btnBatchDownloadSelected.textContent = `⬇ Tải (${selCount})`;
+          el.libSelectedCountText.textContent = `Chọn ${selCount}/${total}`;
           el.btnBatchDeleteSelected.textContent = `🗑 Xóa (${selCount})`;
+          el.btnBatchDownloadSelected.textContent = `⬇ Tải (${selCount})`;
+          el.btnBatchPdfSelected.textContent = `📕 PDF (${selCount})`;
           el.btnBatchPdfSelected.disabled = selCount === 0;
           el.btnBatchDownloadSelected.disabled = selCount === 0;
           el.btnBatchDeleteSelected.disabled = selCount === 0;
@@ -4075,7 +4885,7 @@
         if (!hasPages) {
           const emptyDiv = document.createElement("div");
           emptyDiv.className = "lib-empty-box";
-          emptyDiv.innerHTML = "Thư viện đang trống (0 ảnh).<br/>Hãy bấm <b>📸 Chụp ảnh</b> hoặc <b>📁 Chọn ảnh</b> để thêm tài liệu.";
+          emptyDiv.innerHTML = "Thư viện đang trống (0 ảnh).<br/>Hãy bấm <b>📷 Chụp ảnh</b> hoặc <b>📂 Chọn ảnh</b> để thêm tài liệu.";
           el.pageListContainer.appendChild(emptyDiv);
           return;
         }
@@ -4111,7 +4921,7 @@
             title.style.fontSize = "0.74rem";
             title.style.width = "100%";
             title.style.textAlign = "center";
-            title.textContent = `Trang ${idx + 1}/${total}: ${p.name}`;
+            title.textContent = p.name && !/^Scan(hoahocABC)?_\d+$/.test(p.name) ? `Trang ${idx + 1}: ${p.name}` : `Trang ${idx + 1}`;
 
             const btnRow = document.createElement("div");
             btnRow.className = "lib-grid-btn-row";
@@ -4119,7 +4929,7 @@
             const viewBtn = document.createElement("button");
             viewBtn.type = "button";
             viewBtn.className = "btn-item-action btn-sec";
-            viewBtn.textContent = "Xem";
+            viewBtn.textContent = "👁 Xem";
             viewBtn.addEventListener("click", (e) => {
               e.stopPropagation();
               el.libraryModal.classList.remove("open");
@@ -4129,7 +4939,7 @@
             const delBtn = document.createElement("button");
             delBtn.type = "button";
             delBtn.className = "btn-item-action btn-danger-soft";
-            delBtn.textContent = "Xóa";
+            delBtn.textContent = "🗑 Xóa";
             delBtn.addEventListener("click", (e) => {
               e.stopPropagation();
               deletePageAtIndex(idx);
@@ -4184,7 +4994,7 @@
             const viewBtn = document.createElement("button");
             viewBtn.type = "button";
             viewBtn.className = "btn-item-action btn-sec";
-            viewBtn.textContent = "Xem";
+            viewBtn.textContent = "👁 Xem";
             viewBtn.addEventListener("click", (e) => {
               e.stopPropagation();
               el.libraryModal.classList.remove("open");
@@ -4194,7 +5004,7 @@
             const delBtn = document.createElement("button");
             delBtn.type = "button";
             delBtn.className = "btn-item-action btn-danger-soft";
-            delBtn.textContent = "Xóa";
+            delBtn.textContent = "🗑 Xóa";
             delBtn.addEventListener("click", (e) => {
               e.stopPropagation();
               deletePageAtIndex(idx);
@@ -4224,18 +5034,18 @@
         el.exportFilename.value = page.name || `ScanhoahocABC_${state.currentPageIndex + 1}`;
 
         if (state.exportPopupType === "pdf") {
-          el.exportPopupTitle.textContent = "📄 Lưu Tài Liệu PDF";
+          el.exportPopupTitle.textContent = "📕 Lưu PDF";
           el.exportFormatFieldWrap.style.display = "none";
           el.exportPdfScopeFieldWrap.style.display = "block";
-          el.btnConfirmExportNow.textContent = "📄 Lưu PDF ngay";
+          el.btnConfirmExportNow.textContent = "✓ Lưu PDF";
         } else {
-          el.exportPopupTitle.textContent = "⬇ Tải Ảnh Này";
+          el.exportPopupTitle.textContent = "⬇ Tải Ảnh";
           el.exportFormatFieldWrap.style.display = "block";
           el.exportPdfScopeFieldWrap.style.display = "none";
           if (page.settings.transparentBg && el.exportFormat.value === "jpeg") {
             el.exportFormat.value = "png";
           }
-          el.btnConfirmExportNow.textContent = "⬇ Tải về ngay";
+          el.btnConfirmExportNow.textContent = "✓ Tải về";
         }
         el.exportPopupModal.classList.add("open");
       }
@@ -4245,11 +5055,10 @@
         const src = page.processedCanvas;
         const scale = parseFloat(el.exportScale.value) || 1;
         const outW = Math.round(src.width * scale);
-        const hasNoteBanner = page.includeNoteOnExport && page.note && page.note.trim().length > 0;
-        const noteBannerH = hasNoteBanner ? Math.max(44, Math.round(outW * 0.06)) : 0;
-        const outH = Math.round(src.height * scale) + noteBannerH;
+        const outH = Math.round(src.height * scale);
+        const hasNote = page.note && page.note.trim().length > 0;
 
-        if (Math.abs(scale - 1) < 0.01 && !hasNoteBanner) return src;
+        if (Math.abs(scale - 1) < 0.01 && !hasNote) return src;
 
         const out = document.createElement("canvas");
         out.width = outW;
@@ -4257,23 +5066,10 @@
         const ctx = out.getContext("2d");
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
-        ctx.drawImage(src, 0, 0, outW, outH - noteBannerH);
+        ctx.drawImage(src, 0, 0, outW, outH);
 
-        if (hasNoteBanner) {
-          ctx.fillStyle = "#f8fafc";
-          ctx.fillRect(0, outH - noteBannerH, outW, noteBannerH);
-          ctx.strokeStyle = "#cbd5e1";
-          ctx.lineWidth = Math.max(1, Math.round(scale * 1.5));
-          ctx.beginPath();
-          ctx.moveTo(0, outH - noteBannerH);
-          ctx.lineTo(outW, outH - noteBannerH);
-          ctx.stroke();
-
-          ctx.fillStyle = "#0a467d";
-          const fontPx = Math.max(13, Math.round(outW * 0.02));
-          ctx.font = `bold ${fontPx}px Arial`;
-          ctx.textBaseline = "middle";
-          ctx.fillText(`Ghi chú: ${page.note.trim()}`, Math.round(outW * 0.03), outH - noteBannerH / 2);
+        if (hasNote) {
+          drawNoteOverlayOnCanvas(ctx, outW, outH, page, false);
         }
         return out;
       }
@@ -4547,7 +5343,18 @@
 
         el.ddFilenameInput.value = page.name || "";
         el.ddNoteInput.value = page.note || "";
-        el.chkPrintNoteOnExport.checked = !!page.includeNoteOnExport;
+        if (el.btnClearNote) {
+          el.btnClearNote.classList.toggle("visible", !!(page.note && page.note.trim()));
+        }
+        const nSize = page.noteSize || 28;
+        if (el.ddNoteSizeSlider) el.ddNoteSizeSlider.value = nSize;
+        if (el.ddNoteSizeVal) el.ddNoteSizeVal.textContent = `${nSize}px`;
+        const nColor = (page.noteColor || "#dc2626").toLowerCase();
+        if (el.ddNoteColorRow) {
+          el.ddNoteColorRow.querySelectorAll(".note-color-swatch").forEach((sw) => {
+            sw.classList.toggle("active", (sw.getAttribute("data-color") || "").toLowerCase() === nColor);
+          });
+        }
 
         el.ddColorModeGrid.querySelectorAll("[data-mode]").forEach((b) => {
           b.classList.toggle("active", b.getAttribute("data-mode") === s.colorMode);
@@ -4726,7 +5533,7 @@
 
         page.srcCanvas = rot;
         page.corners = detectDocumentCorners(rot);
-        page.midOffsets = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }];
+        page.edgeOffsets = rot._detectedEdgeOffsets ? cloneEdgeOffsets(rot._detectedEdgeOffsets) : createZeroEdgeOffsets();
         updateGeometryAndProcess(page);
         resetStageZoom();
         resetFsZoom();
@@ -4775,7 +5582,15 @@
               centerY: stRect.top + stRect.height * 0.5
             };
             evt.preventDefault();
-          } else if (evt.touches && evt.touches.length === 1 && state.stageZoom > 1.02) {
+          } else if (evt.touches && evt.touches.length === 1) {
+            const ptMain = getMainCanvasCoords(evt.touches[0].clientX, evt.touches[0].clientY);
+            const noteHit = findNoteHitHandle(page, ptMain, "main");
+            if (noteHit) {
+              state.draggingHandle = noteHit;
+              evt.preventDefault();
+              return;
+            }
+            if (state.stageZoom > 1.02) {
             state.draggingHandle = {
               type: "stage_pan",
               startClientX: evt.touches[0].clientX,
@@ -4784,8 +5599,20 @@
               origPanY: state.stagePanY
             };
             evt.preventDefault();
+            }
           }
         }, { passive: false });
+
+        el.stageContainer.addEventListener("mousedown", (evt) => {
+          const page = getCurrentPage();
+          if (!page) return;
+          const ptMain = getMainCanvasCoords(evt.clientX, evt.clientY);
+          const noteHit = findNoteHitHandle(page, ptMain, "main");
+          if (noteHit) {
+            state.draggingHandle = noteHit;
+            evt.preventDefault();
+          }
+        });
 
         // Full-Screen Editor & Corner Hamburger Button (☰) Events
         el.btnFsPrev.addEventListener("click", () => goToAdjacentPage(-1));
@@ -4801,14 +5628,7 @@
           el.fullScreenEditorModal.classList.remove("open");
         });
 
-        // Category Tabs inside Compact Non-Blocking ☰ Drawer
-        el.editDropdownMenu.querySelectorAll(".drawer-tab-btn").forEach((tabBtn) => {
-          tabBtn.addEventListener("click", () => {
-            const targetId = tabBtn.getAttribute("data-tab");
-            el.editDropdownMenu.querySelectorAll(".drawer-tab-btn").forEach((b) => b.classList.toggle("active", b === tabBtn));
-            el.editDropdownMenu.querySelectorAll(".drawer-pane").forEach((p) => p.classList.toggle("active", p.id === targetId));
-          });
-        });
+        // Vertical Semi-Transparent Popup (☰) — all items directly accessible in a single top-to-bottom column
 
         // Clicking anywhere on the bottom area of the Full-Screen Editor also closes the ☰ drawer
         el.fsBottomArea.addEventListener("pointerdown", () => {
@@ -4844,7 +5664,7 @@
           showToast(page.settings.transparentBg ? "Đã bật Tách nền Alpha!" : "Đã tắt Tách nền.");
         });
 
-        // Brightness Slider inside ☰ Drawer
+        // Brightness Slider inside ☰ Vertical Popup (60fps zero-lag rendering)
         el.ddBrightnessSlider.addEventListener("input", () => {
           const page = getCurrentPage();
           if (!page) return;
@@ -4855,12 +5675,12 @@
           state.sliderRafId = requestAnimationFrame(() => {
             state.sliderRafId = null;
             applyCachedFiltersToPage(page);
-            renderStage();
             renderFullScreenEditor();
           });
         });
+        el.ddBrightnessSlider.addEventListener("change", () => renderStage());
 
-        // Background Clean Slider inside ☰ Drawer
+        // Background Clean Slider inside ☰ Vertical Popup (60fps zero-lag rendering)
         el.ddCleanSlider.addEventListener("input", () => {
           const page = getCurrentPage();
           if (!page) return;
@@ -4871,22 +5691,12 @@
           state.sliderRafId = requestAnimationFrame(() => {
             state.sliderRafId = null;
             applyCachedFiltersToPage(page);
-            renderStage();
             renderFullScreenEditor();
           });
         });
+        el.ddCleanSlider.addEventListener("change", () => renderStage());
 
-        // Coupled Page & Parallel Text-Line Flattening Controls inside ☰ Drawer ("📏 Dàn phẳng")
-        el.btnAutoFlattenBookLines.addEventListener("click", () => {
-          const page = getCurrentPage();
-          if (!page) return;
-          page.settings.autoLineDewarp = true;
-          updateGeometryAndProcess(page);
-          renderPageList();
-          renderStage();
-          renderFullScreenEditor();
-          showToast("Đã dàn phẳng trang & nắn các dòng chữ thẳng hàng, song song!");
-        });
+        // Automatic 2D text-line dewarping is mandatory and always active on every page!
 
         el.ddBookCurveSlider.addEventListener("input", () => {
           const page = getCurrentPage();
@@ -4897,24 +5707,35 @@
           if (state.sliderRafId) cancelAnimationFrame(state.sliderRafId);
           state.sliderRafId = requestAnimationFrame(() => {
             state.sliderRafId = null;
-            updateGeometryAndProcess(page);
-            renderStage();
+            updateGeometryAndProcess(page, true);
             renderFullScreenEditor();
           });
         });
+        el.ddBookCurveSlider.addEventListener("change", () => renderStage());
 
-        el.btnResetFlattenBook.addEventListener("click", () => {
+        el.ddBookCurveVal.addEventListener("click", () => {
           const page = getCurrentPage();
           if (!page) return;
           page.settings.bookCurve = 0;
           el.ddBookCurveSlider.value = 0;
           el.ddBookCurveVal.textContent = "0%";
-          updateGeometryAndProcess(page);
+          updateGeometryAndProcess(page, true);
           renderStage();
           renderFullScreenEditor();
         });
 
-        // Crop, Rotate, Split inside ☰ Drawer
+        el.ddBrightnessVal.addEventListener("click", () => {
+          const page = getCurrentPage();
+          if (!page) return;
+          page.settings.brightness = 0;
+          el.ddBrightnessSlider.value = 0;
+          el.ddBrightnessVal.textContent = "0";
+          applyCachedFiltersToPage(page);
+          renderStage();
+          renderFullScreenEditor();
+        });
+
+        // Crop & Rotate inside ☰ Drawer
         el.btnDdStartCrop.addEventListener("click", () => setFsCropMode(true));
         el.btnDdRotate90.addEventListener("click", () => {
           rotateCurrentPage(1);
@@ -4933,26 +5754,68 @@
           const page = getCurrentPage();
           if (!page) return;
           page.note = el.ddNoteInput.value;
+          if (el.btnClearNote) {
+            el.btnClearNote.classList.toggle("visible", !!(page.note && page.note.trim()));
+          }
           renderPageList();
           renderStage();
           renderFullScreenEditor();
         });
 
-        el.chkPrintNoteOnExport.addEventListener("change", () => {
-          const page = getCurrentPage();
-          if (!page) return;
-          page.includeNoteOnExport = el.chkPrintNoteOnExport.checked;
-        });
+        if (el.btnClearNote) {
+          el.btnClearNote.addEventListener("click", () => {
+            const page = getCurrentPage();
+            if (!page) return;
+            page.note = "";
+            el.ddNoteInput.value = "";
+            el.btnClearNote.classList.remove("visible");
+            renderPageList();
+            renderStage();
+            renderFullScreenEditor();
+          });
+        }
 
-        // Full-Screen Crop Bar Actions
+        if (el.ddNoteSizeSlider) {
+          el.ddNoteSizeSlider.addEventListener("input", () => {
+            const page = getCurrentPage();
+            if (!page) return;
+            const sz = parseInt(el.ddNoteSizeSlider.value, 10) || 28;
+            page.noteSize = sz;
+            if (el.ddNoteSizeVal) el.ddNoteSizeVal.textContent = `${sz}px`;
+            renderStage();
+            renderFullScreenEditor();
+          });
+        }
+
+        if (el.ddNoteColorRow) {
+          el.ddNoteColorRow.querySelectorAll(".note-color-swatch").forEach((sw) => {
+            sw.addEventListener("click", () => {
+              const page = getCurrentPage();
+              if (!page) return;
+              const col = sw.getAttribute("data-color") || "#dc2626";
+              page.noteColor = col;
+              el.ddNoteColorRow.querySelectorAll(".note-color-swatch").forEach((b) => b.classList.toggle("active", b === sw));
+              renderStage();
+              renderFullScreenEditor();
+            });
+          });
+        }
+
+        // Full-Screen Crop Bar Actions (Automatically traces curved rim contour!)
         el.btnAutoDetectCorners.addEventListener("click", () => {
           const page = getCurrentPage();
           if (!page) return;
           page.corners = detectDocumentCorners(page.srcCanvas);
-          page.midOffsets = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }];
+          page.edgeOffsets = page.srcCanvas._detectedEdgeOffsets
+            ? cloneEdgeOffsets(page.srcCanvas._detectedEdgeOffsets)
+            : createZeroEdgeOffsets();
+          if (page.srcCanvas._hasCurvedRim) {
+            state.alignPointMode = "multipt";
+          }
+          syncAlignModeButtons();
           updateGeometryAndProcess(page);
           renderFullScreenEditor();
-          showToast("Đã tự bắt chuẩn 4 góc theo rìa tài liệu!");
+          showToast(page.srcCanvas._hasCurvedRim ? "Đã tự động bắt chuẩn đường lượn rìa tài liệu!" : "Đã tự động bắt chuẩn rìa tài liệu!");
         });
 
         el.btnFullFrameCorners.addEventListener("click", () => {
@@ -4966,13 +5829,29 @@
             { x: w - 4, y: h - 4 },
             { x: 4, y: h - 4 }
           ];
-          page.midOffsets = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }];
+          page.edgeOffsets = createZeroEdgeOffsets();
           updateGeometryAndProcess(page);
           renderFullScreenEditor();
           showToast("Đã chọn toàn khung ảnh!");
         });
 
-        el.btnRotateInCrop.addEventListener("click", () => rotateCurrentPage(1));
+        el.btnAlignMode4Pt.addEventListener("click", () => {
+          state.alignPointMode = "4pt";
+          const page = getCurrentPage();
+          if (page) {
+            page.edgeOffsets = createZeroEdgeOffsets();
+          }
+          syncAlignModeButtons();
+          renderFullScreenEditor();
+          showToast("Chế độ Căn 4 góc (4 điểm ở 4 góc)!");
+        });
+
+        el.btnAlignModeMultiPt.addEventListener("click", () => {
+          state.alignPointMode = "multipt";
+          syncAlignModeButtons();
+          renderFullScreenEditor();
+          showToast("Chế độ Căn đa điểm (5 điểm uốn mỗi cạnh)!");
+        });
         el.btnCancelCrop.addEventListener("click", () => setFsCropMode(false));
 
         el.btnApplyCropNow.addEventListener("click", () => {
@@ -5082,14 +5961,27 @@
         });
         el.btnConfirmExportNow.addEventListener("click", executeConfirmedExportFromPopup);
 
+        // Tap outside modal-card on backdrop to close popups naturally on touchscreen
+        [el.libraryModal, el.exportPopupModal].forEach((modalEl) => {
+          modalEl.addEventListener("click", (e) => {
+            if (e.target === modalEl) {
+              if (modalEl === el.libraryModal) exitMultiSelectMode();
+              modalEl.classList.remove("open");
+            }
+          });
+        });
+
         // Camera Modal
         el.btnOpenCamera.addEventListener("click", () => {
           el.cameraModal.classList.add("open");
           startCamera();
         });
-        el.btnCloseCamera.addEventListener("click", () => {
-          el.cameraModal.classList.remove("open");
-          stopCamera();
+        [el.btnCloseCamera, el.btnCancelCameraBottom].forEach((b) => {
+          if (!b) return;
+          b.addEventListener("click", () => {
+            el.cameraModal.classList.remove("open");
+            stopCamera();
+          });
         });
 
         [el.btnZoomMin, el.btnZoom1x, el.btnZoom15x].forEach((zBtn) => {
