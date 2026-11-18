@@ -2129,6 +2129,242 @@
         toastBox: document.getElementById("toastBox")
       };
 
+      // =========================================================================
+      // 1b. INDEXEDDB PERSISTENT LIBRARY ENGINE (SURVIVES RELOADS & GITHUB PAGES)
+      // =========================================================================
+      const IDB_NAME = "ScanhoahocABC_LibraryDB";
+      const IDB_VERSION = 1;
+      let _idbPromise = null;
+      const _pendingPageSaves = new Map();
+      let _saveFlushTimer = null;
+
+      function idbOpen() {
+        if (_idbPromise) return _idbPromise;
+        if (typeof indexedDB === "undefined") return Promise.resolve(null);
+        _idbPromise = new Promise((resolve) => {
+          try {
+            const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+            req.onupgradeneeded = (ev) => {
+              const db = ev.target.result;
+              if (!db.objectStoreNames.contains("pages")) {
+                db.createObjectStore("pages", { keyPath: "id" });
+              }
+              if (!db.objectStoreNames.contains("meta")) {
+                db.createObjectStore("meta", { keyPath: "key" });
+              }
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => resolve(null);
+          } catch (_) {
+            resolve(null);
+          }
+        });
+        return _idbPromise;
+      }
+
+      function canvasToStorageBlob(canvas, quality) {
+        return new Promise((resolve) => {
+          if (!canvas) { resolve(null); return; }
+          try {
+            if (typeof canvas.toBlob === "function") {
+              canvas.toBlob((blob) => {
+                if (blob) { resolve(blob); return; }
+                try { resolve(canvas.toDataURL("image/jpeg", quality || 0.92)); } catch (_) { resolve(null); }
+              }, "image/jpeg", quality || 0.92);
+              return;
+            }
+          } catch (_) {}
+          try { resolve(canvas.toDataURL("image/jpeg", quality || 0.92)); } catch (_) { resolve(null); }
+        });
+      }
+
+      function generateThumbDataUrl(srcCanvas) {
+        if (!srcCanvas || !srcCanvas.width || !srcCanvas.height) return "";
+        try {
+          const tc = document.createElement("canvas");
+          tc.width = 140;
+          tc.height = 180;
+          const tctx = tc.getContext("2d");
+          tctx.fillStyle = "#ffffff";
+          tctx.fillRect(0, 0, 140, 180);
+          const sc = Math.min(140 / srcCanvas.width, 180 / srcCanvas.height);
+          const dw = srcCanvas.width * sc;
+          const dh = srcCanvas.height * sc;
+          tctx.drawImage(srcCanvas, (140 - dw) / 2, (180 - dh) / 2, dw, dh);
+          return tc.toDataURL("image/jpeg", 0.78);
+        } catch (_) {
+          return "";
+        }
+      }
+
+      function decodeBlobToCanvas(blobOrUrl) {
+        return new Promise((resolve) => {
+          if (!blobOrUrl) { resolve(null); return; }
+          const img = new Image();
+          let objUrl = null;
+          img.onload = () => {
+            if (objUrl) { try { URL.revokeObjectURL(objUrl); } catch (_) {} }
+            const c = document.createElement("canvas");
+            c.width = img.naturalWidth || img.width || 720;
+            c.height = img.naturalHeight || img.height || 960;
+            c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+            resolve(c);
+          };
+          img.onerror = () => {
+            if (objUrl) { try { URL.revokeObjectURL(objUrl); } catch (_) {} }
+            resolve(null);
+          };
+          if (typeof blobOrUrl === "string") {
+            img.src = blobOrUrl;
+          } else {
+            objUrl = URL.createObjectURL(blobOrUrl);
+            img.src = objUrl;
+          }
+        });
+      }
+
+      async function idbSaveMeta(key, value) {
+        const db = await idbOpen();
+        if (!db) return;
+        return new Promise((resolve) => {
+          try {
+            const tx = db.transaction("meta", "readwrite");
+            tx.objectStore("meta").put({ key, value });
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => resolve(false);
+          } catch (_) { resolve(false); }
+        });
+      }
+
+      async function idbSavePageRecord(page, orderIdx, includeSrcImage) {
+        if (!page || !page.id) return;
+        const db = await idbOpen();
+        if (!db) return;
+        let srcBlob = page._storedSrcBlob || null;
+        if ((includeSrcImage || !srcBlob) && page.srcCanvas) {
+          srcBlob = await canvasToStorageBlob(page.srcCanvas, 0.92);
+          page._storedSrcBlob = srcBlob;
+        }
+        if (!srcBlob) return;
+        const thumbSrc = page.processedCanvas || page.srcCanvas;
+        if (thumbSrc && !page._thumbDataUrl) {
+          page._thumbDataUrl = generateThumbDataUrl(thumbSrc);
+        }
+        const rec = {
+          id: page.id,
+          order: typeof orderIdx === "number" ? orderIdx : state.pages.indexOf(page),
+          name: page.name,
+          createdAt: page.createdAt,
+          note: page.note || "",
+          noteX: page.noteX,
+          noteY: page.noteY,
+          noteSize: page.noteSize,
+          noteColor: page.noteColor,
+          noteHasBg: page.noteHasBg !== false,
+          noteBgColor: page.noteBgColor || "#ffffff",
+          noteHasBorder: page.noteHasBorder !== false,
+          noteBorderColor: page.noteBorderColor || page.noteColor || "#dc2626",
+          includeNoteOnExport: page.includeNoteOnExport !== false,
+          corners: page.corners ? page.corners.map((p) => ({ x: p.x, y: p.y })) : null,
+          edgeOffsets: page.edgeOffsets ? cloneEdgeOffsets(page.edgeOffsets) : createZeroEdgeOffsets(),
+          settings: cloneSettings(page.settings),
+          srcBlob,
+          thumbDataUrl: page._thumbDataUrl || ""
+        };
+        return new Promise((resolve) => {
+          try {
+            const tx = db.transaction("pages", "readwrite");
+            tx.objectStore("pages").put(rec);
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => resolve(false);
+          } catch (_) { resolve(false); }
+        });
+      }
+
+      async function idbDeletePageIds(ids) {
+        const db = await idbOpen();
+        if (!db || !ids || !ids.length) return;
+        return new Promise((resolve) => {
+          try {
+            const tx = db.transaction("pages", "readwrite");
+            const store = tx.objectStore("pages");
+            ids.forEach((id) => store.delete(id));
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => resolve(false);
+          } catch (_) { resolve(false); }
+        });
+      }
+
+      async function idbLoadAll() {
+        const db = await idbOpen();
+        if (!db) return { pages: [], meta: {} };
+        return new Promise((resolve) => {
+          try {
+            const tx = db.transaction(["pages", "meta"], "readonly");
+            const pagesReq = tx.objectStore("pages").getAll();
+            const metaReq = tx.objectStore("meta").getAll();
+            tx.oncomplete = () => {
+              const pages = (pagesReq.result || []).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+              const meta = {};
+              (metaReq.result || []).forEach((m) => { meta[m.key] = m.value; });
+              resolve({ pages, meta });
+            };
+            tx.onerror = () => resolve({ pages: [], meta: {} });
+          } catch (_) {
+            resolve({ pages: [], meta: {} });
+          }
+        });
+      }
+
+      function scheduleSavePage(page, includeSrcImage) {
+        if (!page || !page.id) return;
+        const prev = _pendingPageSaves.get(page.id);
+        _pendingPageSaves.set(page.id, { page, includeSrc: !!(includeSrcImage || (prev && prev.includeSrc)) });
+        if (_saveFlushTimer) clearTimeout(_saveFlushTimer);
+        _saveFlushTimer = setTimeout(flushPendingSaves, 260);
+      }
+
+      function flushPendingSaves() {
+        if (_saveFlushTimer) {
+          clearTimeout(_saveFlushTimer);
+          _saveFlushTimer = null;
+        }
+        if (_pendingPageSaves.size === 0) return;
+        const entries = Array.from(_pendingPageSaves.values());
+        _pendingPageSaves.clear();
+        entries.forEach(({ page, includeSrc }) => {
+          const idx = state.pages.indexOf(page);
+          if (idx >= 0) idbSavePageRecord(page, idx, includeSrc);
+        });
+        idbSaveMeta("currentPageIndex", state.currentPageIndex);
+      }
+
+      async function ensurePageHydrated(page) {
+        if (!page) return false;
+        if (page.srcCanvas) return true;
+        if (page._hydratingPromise) return page._hydratingPromise;
+        page._hydratingPromise = (async () => {
+          const canvas = await decodeBlobToCanvas(page._storedSrcBlob);
+          if (!canvas) return false;
+          page.srcCanvas = canvas;
+          if (!page.corners || page.corners.length !== 4) {
+            page.corners = detectDocumentCorners(canvas);
+          }
+          updateGeometryAndProcess(page);
+          page._hydratingPromise = null;
+          return true;
+        })();
+        return page._hydratingPromise;
+      }
+
+      function persistAllPageOrders() {
+        state.pages.forEach((p, i) => {
+          scheduleSavePage(p, false);
+        });
+        idbSaveMeta("currentPageIndex", state.currentPageIndex);
+        idbSaveMeta("hasUserClearedAll", state.pages.length === 0);
+      }
+
       let toastTimer = null;
       function showToast(msg) {
         el.toastBox.textContent = msg;
@@ -3483,14 +3719,19 @@
               const sideRoughX = Math.max(0.0, L_surf[ixm5] - L_creaseX[ixm5], L_surf[ixp5] - L_creaseX[ixp5]);
               const dipY = (L_surf[ixp3] < L_surf[ixm3] ? L_surf[ixp3] : L_surf[ixm3]) - minCY - 1.35 * sideRoughX;
               const rawDipX = minLX - rawMinCX_fixed;
-              const dRiX = R[i] - 0.5 * (R_surf[ixp3] + R_surf[ixm3]);
-              const dGiX = G[i] - 0.5 * (G_surf[ixp3] + G_surf[ixm3]);
-              const dBiX = B[i] - 0.5 * (B_surf[ixp3] + B_surf[ixm3]);
-              const cInkX = Math.sqrt(dRiX * dRiX + dGiX * dGiX + dBiX * dBiX);
-
               const isDarkContentInsidePaperL = !allowDarkObjectPolarity && N_out_L > 195.0 && L_out_L > avgBorderL + 25.0 && (L_out_L - L_in_L > 28.0);
               const isDarkContentInsidePaperR = !allowDarkObjectPolarity && N_in_L > 195.0 && L_in_L > avgBorderL + 25.0 && (L_in_L - L_out_L > 28.0);
-              const isInternalInkX = (sameSurfaceX && minLX > 100.0 && (rawDipX > 32.0 || dipY > 30.0 || cInkX > 24.0));
+              let isInternalInkX = false;
+              if (sameSurfaceX && minLX > 100.0) {
+                if (rawDipX > 32.0 || dipY > 30.0) {
+                  isInternalInkX = true;
+                } else {
+                  const dRiX = R[i] - 0.5 * (R_surf[ixp3] + R_surf[ixm3]);
+                  const dGiX = G[i] - 0.5 * (G_surf[ixp3] + G_surf[ixm3]);
+                  const dBiX = B[i] - 0.5 * (B_surf[ixp3] + B_surf[ixm3]);
+                  if (dRiX * dRiX + dGiX * dGiX + dBiX * dBiX > 576.0) isInternalInkX = true;
+                }
+              }
 
               let wwCreaseX = 0.0;
               if (!isInternalInkX && minLX > 80.0 && minNX > 155.0 && absStepX < 30.0 && flatVarX < 5.5) {
@@ -3535,42 +3776,46 @@
                 darkInStepR
               );
 
-              const surfDL1_x = L_surf[i + 1] - L_surf[i - 1];
-              const surfDL2_x = L_surf[i + 2] - L_surf[i - 2];
-              const maxRawAllowX = Math.max(Math.abs(surfDL2_x) * 1.35 + 6.0, absStepX * 1.35 + 6.0, wwCreaseX * 3.0);
-              const rawDL1_x_unclamped = sameSurfaceX ? (L_creaseX[i + 1] - L_creaseX[i - 1]) : (L[i + 1] - L[i - 1]);
-              const rawDL2_x_unclamped = sameSurfaceX ? (L_creaseX[i + 2] - L_creaseX[i - 2]) : (L[i + 2] - L[i - 2]);
-              const rawDL1_x = noiseSigma >= 0.25 ? Math.max(-maxRawAllowX, Math.min(maxRawAllowX, rawDL1_x_unclamped)) : rawDL1_x_unclamped;
-              const rawDL2_x = noiseSigma >= 0.25 ? Math.max(-maxRawAllowX, Math.min(maxRawAllowX, rawDL2_x_unclamped)) : rawDL2_x_unclamped;
-
-              let rawDC1_x = 0.0;
-              if (!sameSurfaceX) {
-                const dr1 = R[i + 1] - R[i - 1], dg1 = G[i + 1] - G[i - 1], db1 = B[i + 1] - B[i - 1];
-                const rdc1x = Math.sqrt(dr1 * dr1 + dg1 * dg1 + db1 * db1); rawDC1_x = noiseSigma >= 0.25 ? Math.min(macDC_x * 1.4 + 8.0, rdc1x) : rdc1x;
-              }
-              const dr2 = R_surf[i + 2] - R_surf[i - 2], dg2 = G_surf[i + 2] - G_surf[i - 2], db2 = B_surf[i + 2] - B_surf[i - 2];
-              const surfDC2_x = Math.sqrt(dr2 * dr2 + dg2 * dg2 + db2 * db2);
-              const dcr2 = Cr_surf[i + 2] - Cr_surf[i - 2], dcb2 = Cb_surf[i + 2] - Cb_surf[i - 2];
-              const oppDC2_x = Math.sqrt(dcr2 * dcr2 + dcb2 * dcb2);
-              const surfDC1_x = 0.45 * rawDC1_x + 0.55 * Math.max(surfDC2_x, oppDC2_x * 0.90);
-              const biPeakX = (flatRimStepX > 0 || darkInStepL > 0 || darkInStepR > 0) ? 0.55 * Math.abs(surfDL2_x) + 0.40 * Math.max(flatRimStepX * illumEqX, darkInStepL, darkInStepR) : 0.0;
-
               if (!isInternalInkX) {
                 const effColorX = Math.max(macDC_x * illumEqX, macDOpp_x * 0.95);
                 const gateL = (Math.max(0.0, macDL_x) + 0.62 * effColorX + 3.2 * wwCreaseX) * woodGrainDampX;
-                if (!isDarkContentInsidePaperL && gateL > minGateThresh) {
-                  const r1L = darkInStepL > 0 ? Math.abs(rawDL1_x) : Math.max(0.0, rawDL1_x);
-                  const r2L = darkInStepL > 0 ? Math.abs(rawDL2_x) : Math.max(0.0, rawDL2_x);
-                  const peakL = (0.45 * Math.max(0.0, surfDL1_x * illumEqX, biPeakX) + 0.35 * r1L * illumEqX + 0.20 * r2L * illumEqX + 0.52 * surfDC1_x + 3.0 * wwCreaseX) * woodGrainDampX;
-                  rawLeft[i] = peakL * Math.min(1.8, gateL / 8.5);
-                }
-
                 const gateR = (Math.max(0.0, macDL_x_R) + 0.62 * effColorX + 3.2 * wwCreaseX) * woodGrainDampX;
-                if (!isDarkContentInsidePaperR && gateR > minGateThresh) {
-                  const r1R = darkInStepR > 0 ? Math.abs(rawDL1_x) : Math.max(0.0, -rawDL1_x);
-                  const r2R = darkInStepR > 0 ? Math.abs(rawDL2_x) : Math.max(0.0, -rawDL2_x);
-                  const peakR = (0.45 * Math.max(0.0, -surfDL1_x * illumEqX, biPeakX) + 0.35 * r1R * illumEqX + 0.20 * r2R * illumEqX + 0.52 * surfDC1_x + 3.0 * wwCreaseX) * woodGrainDampX;
-                  rawRight[i] = peakR * Math.min(1.8, gateR / 8.5);
+                const passL = !isDarkContentInsidePaperL && gateL > minGateThresh;
+                const passR = !isDarkContentInsidePaperR && gateR > minGateThresh;
+                if (passL || passR) {
+                  const surfDL1_x = L_surf[i + 1] - L_surf[i - 1];
+                  const surfDL2_x = L_surf[i + 2] - L_surf[i - 2];
+                  const maxRawAllowX = Math.max(Math.abs(surfDL2_x) * 1.35 + 6.0, absStepX * 1.35 + 6.0, wwCreaseX * 3.0);
+                  const rawDL1_x_unclamped = sameSurfaceX ? (L_creaseX[i + 1] - L_creaseX[i - 1]) : (L[i + 1] - L[i - 1]);
+                  const rawDL2_x_unclamped = sameSurfaceX ? (L_creaseX[i + 2] - L_creaseX[i - 2]) : (L[i + 2] - L[i - 2]);
+                  const rawDL1_x = noiseSigma >= 0.25 ? Math.max(-maxRawAllowX, Math.min(maxRawAllowX, rawDL1_x_unclamped)) : rawDL1_x_unclamped;
+                  const rawDL2_x = noiseSigma >= 0.25 ? Math.max(-maxRawAllowX, Math.min(maxRawAllowX, rawDL2_x_unclamped)) : rawDL2_x_unclamped;
+
+                  let rawDC1_x = 0.0;
+                  if (!sameSurfaceX) {
+                    const dr1 = R[i + 1] - R[i - 1], dg1 = G[i + 1] - G[i - 1], db1 = B[i + 1] - B[i - 1];
+                    const rdc1x = Math.sqrt(dr1 * dr1 + dg1 * dg1 + db1 * db1);
+                    rawDC1_x = noiseSigma >= 0.25 ? Math.min(macDC_x * 1.4 + 8.0, rdc1x) : rdc1x;
+                  }
+                  const dr2 = R_surf[i + 2] - R_surf[i - 2], dg2 = G_surf[i + 2] - G_surf[i - 2], db2 = B_surf[i + 2] - B_surf[i - 2];
+                  const surfDC2_x = Math.sqrt(dr2 * dr2 + dg2 * dg2 + db2 * db2);
+                  const dcr2 = Cr_surf[i + 2] - Cr_surf[i - 2], dcb2 = Cb_surf[i + 2] - Cb_surf[i - 2];
+                  const oppDC2_x = Math.sqrt(dcr2 * dcr2 + dcb2 * dcb2);
+                  const surfDC1_x = 0.45 * rawDC1_x + 0.55 * Math.max(surfDC2_x, oppDC2_x * 0.90);
+                  const biPeakX = (flatRimStepX > 0 || darkInStepL > 0 || darkInStepR > 0) ? 0.55 * Math.abs(surfDL2_x) + 0.40 * Math.max(flatRimStepX * illumEqX, darkInStepL, darkInStepR) : 0.0;
+
+                  if (passL) {
+                    const r1L = darkInStepL > 0 ? Math.abs(rawDL1_x) : Math.max(0.0, rawDL1_x);
+                    const r2L = darkInStepL > 0 ? Math.abs(rawDL2_x) : Math.max(0.0, rawDL2_x);
+                    const peakL = (0.45 * Math.max(0.0, surfDL1_x * illumEqX, biPeakX) + 0.35 * r1L * illumEqX + 0.20 * r2L * illumEqX + 0.52 * surfDC1_x + 3.0 * wwCreaseX) * woodGrainDampX;
+                    rawLeft[i] = peakL * Math.min(1.8, gateL / 8.5);
+                  }
+                  if (passR) {
+                    const r1R = darkInStepR > 0 ? Math.abs(rawDL1_x) : Math.max(0.0, -rawDL1_x);
+                    const r2R = darkInStepR > 0 ? Math.abs(rawDL2_x) : Math.max(0.0, -rawDL2_x);
+                    const peakR = (0.45 * Math.max(0.0, -surfDL1_x * illumEqX, biPeakX) + 0.35 * r1R * illumEqX + 0.20 * r2R * illumEqX + 0.52 * surfDC1_x + 3.0 * wwCreaseX) * woodGrainDampX;
+                    rawRight[i] = peakR * Math.min(1.8, gateR / 8.5);
+                  }
                 }
               }
 
@@ -3615,14 +3860,19 @@
               const sideRoughY = Math.max(0.0, L_surf[iym5] - L_creaseY[iym5], L_surf[iyp5] - L_creaseY[iyp5]);
               const dipX = (L_surf[iyp3] < L_surf[iym3] ? L_surf[iyp3] : L_surf[iym3]) - minCX - 1.35 * sideRoughY;
               const rawDipY = minLY - rawMinCY;
-              const dRiY = R[i] - 0.5 * (R_surf[iyp3] + R_surf[iym3]);
-              const dGiY = G[i] - 0.5 * (G_surf[iyp3] + G_surf[iym3]);
-              const dBiY = B[i] - 0.5 * (B_surf[iyp3] + B_surf[iym3]);
-              const cInkY = Math.sqrt(dRiY * dRiY + dGiY * dGiY + dBiY * dBiY);
-
               const isDarkContentInsidePaperT = !allowDarkObjectPolarity && N_out_T > 195.0 && L_out_T > avgBorderL + 25.0 && (L_out_T - L_in_T > 28.0);
               const isDarkContentInsidePaperB = !allowDarkObjectPolarity && N_in_T > 195.0 && L_in_T > avgBorderL + 25.0 && (L_in_T - L_out_T > 28.0);
-              const isInternalInkY = (sameSurfaceY && minLY > 100.0 && (rawDipY > 32.0 || dipX > 30.0 || cInkY > 24.0));
+              let isInternalInkY = false;
+              if (sameSurfaceY && minLY > 100.0) {
+                if (rawDipY > 32.0 || dipX > 30.0) {
+                  isInternalInkY = true;
+                } else {
+                  const dRiY = R[i] - 0.5 * (R_surf[iyp3] + R_surf[iym3]);
+                  const dGiY = G[i] - 0.5 * (G_surf[iyp3] + G_surf[iym3]);
+                  const dBiY = B[i] - 0.5 * (B_surf[iyp3] + B_surf[iym3]);
+                  if (dRiY * dRiY + dGiY * dGiY + dBiY * dBiY > 576.0) isInternalInkY = true;
+                }
+              }
 
               let wwCreaseY = 0.0;
               if (!isInternalInkY && minLY > 80.0 && minNY > 155.0 && absStepY < 30.0 && flatVarY < 5.5) {
@@ -3666,42 +3916,46 @@
                 darkInStepB
               );
 
-              const surfDL1_y = L_surf[i + w] - L_surf[i - w];
-              const surfDL2_y = L_surf[i + w2] - L_surf[i - w2];
-              const maxRawAllowY = Math.max(Math.abs(surfDL2_y) * 1.35 + 6.0, absStepY * 1.35 + 6.0, wwCreaseY * 3.0);
-              const rawDL1_y_unclamped = sameSurfaceY ? (L_creaseY[i + w] - L_creaseY[i - w]) : (L[i + w] - L[i - w]);
-              const rawDL2_y_unclamped = sameSurfaceY ? (L_creaseY[i + w2] - L_creaseY[i - w2]) : (L[i + w2] - L[i - w2]);
-              const rawDL1_y = noiseSigma >= 0.25 ? Math.max(-maxRawAllowY, Math.min(maxRawAllowY, rawDL1_y_unclamped)) : rawDL1_y_unclamped;
-              const rawDL2_y = noiseSigma >= 0.25 ? Math.max(-maxRawAllowY, Math.min(maxRawAllowY, rawDL2_y_unclamped)) : rawDL2_y_unclamped;
-
-              let rawDC1_y = 0.0;
-              if (!sameSurfaceY) {
-                const dr1y = R[i + w] - R[i - w], dg1y = G[i + w] - G[i - w], db1y = B[i + w] - B[i - w];
-                const rdc1y = Math.sqrt(dr1y * dr1y + dg1y * dg1y + db1y * db1y); rawDC1_y = noiseSigma >= 0.25 ? Math.min(macDC_y * 1.4 + 8.0, rdc1y) : rdc1y;
-              }
-              const dr2y = R_surf[i + w2] - R_surf[i - w2], dg2y = G_surf[i + w2] - G_surf[i - w2], db2y = B_surf[i + w2] - B_surf[i - w2];
-              const surfDC2_y = Math.sqrt(dr2y * dr2y + dg2y * dg2y + db2y * db2y);
-              const dcr2y = Cr_surf[i + w2] - Cr_surf[i - w2], dcb2y = Cb_surf[i + w2] - Cb_surf[i - w2];
-              const oppDC2_y = Math.sqrt(dcr2y * dcr2y + dcb2y * dcb2y);
-              const surfDC1_y = 0.45 * rawDC1_y + 0.55 * Math.max(surfDC2_y, oppDC2_y * 0.90);
-              const biPeakY = (flatRimStepY > 0 || darkInStepT > 0 || darkInStepB > 0) ? 0.55 * Math.abs(surfDL2_y) + 0.40 * Math.max(flatRimStepY * illumEqY, darkInStepT, darkInStepB) : 0.0;
-
               if (!isInternalInkY) {
                 const effColorY = Math.max(macDC_y * illumEqY, macDOpp_y * 0.95);
                 const gateT = (Math.max(0.0, macDL_y) + 0.62 * effColorY + 3.2 * wwCreaseY) * woodGrainDampY;
-                if (!isDarkContentInsidePaperT && gateT > minGateThresh) {
-                  const r1T = darkInStepT > 0 ? Math.abs(rawDL1_y) : Math.max(0.0, rawDL1_y);
-                  const r2T = darkInStepT > 0 ? Math.abs(rawDL2_y) : Math.max(0.0, rawDL2_y);
-                  const peakT = (0.45 * Math.max(0.0, surfDL1_y * illumEqY, biPeakY) + 0.35 * r1T * illumEqY + 0.20 * r2T * illumEqY + 0.52 * surfDC1_y + 3.0 * wwCreaseY) * woodGrainDampY;
-                  rawTop[i] = peakT * Math.min(1.8, gateT / 8.5);
-                }
-
                 const gateB = (Math.max(0.0, macDL_y_B) + 0.62 * effColorY + 3.2 * wwCreaseY) * woodGrainDampY;
-                if (!isDarkContentInsidePaperB && gateB > minGateThresh) {
-                  const r1B = darkInStepB > 0 ? Math.abs(rawDL1_y) : Math.max(0.0, -rawDL1_y);
-                  const r2B = darkInStepB > 0 ? Math.abs(rawDL2_y) : Math.max(0.0, -rawDL2_y);
-                  const peakB = (0.45 * Math.max(0.0, -surfDL1_y * illumEqY, biPeakY) + 0.35 * r1B * illumEqY + 0.20 * r2B * illumEqY + 0.52 * surfDC1_y + 3.0 * wwCreaseY) * woodGrainDampY;
-                  rawBot[i] = peakB * Math.min(1.8, gateB / 8.5);
+                const passT = !isDarkContentInsidePaperT && gateT > minGateThresh;
+                const passB = !isDarkContentInsidePaperB && gateB > minGateThresh;
+                if (passT || passB) {
+                  const surfDL1_y = L_surf[i + w] - L_surf[i - w];
+                  const surfDL2_y = L_surf[i + w2] - L_surf[i - w2];
+                  const maxRawAllowY = Math.max(Math.abs(surfDL2_y) * 1.35 + 6.0, absStepY * 1.35 + 6.0, wwCreaseY * 3.0);
+                  const rawDL1_y_unclamped = sameSurfaceY ? (L_creaseY[i + w] - L_creaseY[i - w]) : (L[i + w] - L[i - w]);
+                  const rawDL2_y_unclamped = sameSurfaceY ? (L_creaseY[i + w2] - L_creaseY[i - w2]) : (L[i + w2] - L[i - w2]);
+                  const rawDL1_y = noiseSigma >= 0.25 ? Math.max(-maxRawAllowY, Math.min(maxRawAllowY, rawDL1_y_unclamped)) : rawDL1_y_unclamped;
+                  const rawDL2_y = noiseSigma >= 0.25 ? Math.max(-maxRawAllowY, Math.min(maxRawAllowY, rawDL2_y_unclamped)) : rawDL2_y_unclamped;
+
+                  let rawDC1_y = 0.0;
+                  if (!sameSurfaceY) {
+                    const dr1y = R[i + w] - R[i - w], dg1y = G[i + w] - G[i - w], db1y = B[i + w] - B[i - w];
+                    const rdc1y = Math.sqrt(dr1y * dr1y + dg1y * dg1y + db1y * db1y);
+                    rawDC1_y = noiseSigma >= 0.25 ? Math.min(macDC_y * 1.4 + 8.0, rdc1y) : rdc1y;
+                  }
+                  const dr2y = R_surf[i + w2] - R_surf[i - w2], dg2y = G_surf[i + w2] - G_surf[i - w2], db2y = B_surf[i + w2] - B_surf[i - w2];
+                  const surfDC2_y = Math.sqrt(dr2y * dr2y + dg2y * dg2y + db2y * db2y);
+                  const dcr2y = Cr_surf[i + w2] - Cr_surf[i - w2], dcb2y = Cb_surf[i + w2] - Cb_surf[i - w2];
+                  const oppDC2_y = Math.sqrt(dcr2y * dcr2y + dcb2y * dcb2y);
+                  const surfDC1_y = 0.45 * rawDC1_y + 0.55 * Math.max(surfDC2_y, oppDC2_y * 0.90);
+                  const biPeakY = (flatRimStepY > 0 || darkInStepT > 0 || darkInStepB > 0) ? 0.55 * Math.abs(surfDL2_y) + 0.40 * Math.max(flatRimStepY * illumEqY, darkInStepT, darkInStepB) : 0.0;
+
+                  if (passT) {
+                    const r1T = darkInStepT > 0 ? Math.abs(rawDL1_y) : Math.max(0.0, rawDL1_y);
+                    const r2T = darkInStepT > 0 ? Math.abs(rawDL2_y) : Math.max(0.0, rawDL2_y);
+                    const peakT = (0.45 * Math.max(0.0, surfDL1_y * illumEqY, biPeakY) + 0.35 * r1T * illumEqY + 0.20 * r2T * illumEqY + 0.52 * surfDC1_y + 3.0 * wwCreaseY) * woodGrainDampY;
+                    rawTop[i] = peakT * Math.min(1.8, gateT / 8.5);
+                  }
+                  if (passB) {
+                    const r1B = darkInStepB > 0 ? Math.abs(rawDL1_y) : Math.max(0.0, -rawDL1_y);
+                    const r2B = darkInStepB > 0 ? Math.abs(rawDL2_y) : Math.max(0.0, -rawDL2_y);
+                    const peakB = (0.45 * Math.max(0.0, -surfDL1_y * illumEqY, biPeakY) + 0.35 * r1B * illumEqY + 0.20 * r2B * illumEqY + 0.52 * surfDC1_y + 3.0 * wwCreaseY) * woodGrainDampY;
+                    rawBot[i] = peakB * Math.min(1.8, gateB / 8.5);
+                  }
                 }
               }
             }
@@ -3784,6 +4038,7 @@
                   sharedVArr[k] = v;
                   sumV += v;
                   if (v > 0.26) hits++;
+                  else if (hits + (N - 1 - k) < 8) break;
                 }
                 if (hits > 12) {
                   const meanSc = sumV / N;
@@ -3859,6 +4114,7 @@
                   sharedVArr[k] = v;
                   sumV += v;
                   if (v > 0.26) hits++;
+                  else if (hits + (N - 1 - k) < 8) break;
                 }
                 if (hits > 12) {
                   const meanSc = sumV / N;
@@ -5116,7 +5372,8 @@
         return { x: outX, y: outY };
       }
 
-      function dewarpQuad(srcCanvas, quadCorners, paperSizeMode, edgeOffsets, bookCurvePct, autoLineDewarp, cachedModesHost) {
+      let _dewarpTempPool = null;
+      function dewarpQuad(srcCanvas, quadCorners, paperSizeMode, edgeOffsets, bookCurvePct, autoLineDewarp, cachedModesHost, previewMaxSide) {
         const topW = Math.hypot(quadCorners[1].x - quadCorners[0].x, quadCorners[1].y - quadCorners[0].y);
         const botW = Math.hypot(quadCorners[2].x - quadCorners[3].x, quadCorners[2].y - quadCorners[3].y);
         const leftH = Math.hypot(quadCorners[3].x - quadCorners[0].x, quadCorners[3].y - quadCorners[0].y);
@@ -5148,7 +5405,7 @@
         let dstW = Math.round(Math.max(topW, botW, 760));
         let dstH = Math.round(dstW * ratioHW);
 
-        const maxSide = 1120;
+        const maxSide = previewMaxSide || 1120;
         if (Math.max(dstW, dstH) > maxSide) {
           const sc = maxSide / Math.max(dstW, dstH);
           dstW = Math.round(dstW * sc);
@@ -5233,7 +5490,11 @@
           }
         }
 
-        const tempData = new Uint8ClampedArray(dstW * dstH * 4);
+        const needBytes = dstW * dstH * 4;
+        if (!_dewarpTempPool || _dewarpTempPool.length < needBytes) {
+          _dewarpTempPool = new Uint8ClampedArray(needBytes);
+        }
+        const tempData = _dewarpTempPool.subarray(0, needBytes);
 
         for (let v = 0; v < dstH; v++) {
           const ty = v * invDstH1;
@@ -5289,11 +5550,14 @@
           }
         }
 
-        const outCanvas = document.createElement("canvas");
-        outCanvas.width = dstW;
-        outCanvas.height = dstH;
+        let outCanvas = (cachedModesHost && cachedModesHost.dewarpedCanvas) ? cachedModesHost.dewarpedCanvas : document.createElement("canvas");
+        if (outCanvas.width !== dstW) outCanvas.width = dstW;
+        if (outCanvas.height !== dstH) outCanvas.height = dstH;
         const outCtx = outCanvas.getContext("2d");
-        const outImg = outCtx.createImageData(dstW, dstH);
+        if (!outCanvas._reusableOutImg || outCanvas._reusableOutImg.width !== dstW || outCanvas._reusableOutImg.height !== dstH) {
+          outCanvas._reusableOutImg = outCtx.createImageData(dstW, dstH);
+        }
+        const outImg = outCanvas._reusableOutImg;
         const dData = outImg.data;
 
         // Stage 2: 2D Multi-Zone Top/Middle/Bottom Book Surface & Parallel Text-Line Flattening
@@ -5309,9 +5573,8 @@
               cachedModesHost.cachedAutoH = dstH;
             }
           }
-          if (surfModes) {
+          if (surfModes && (surfModes.maxDisp === undefined || surfModes.maxDisp >= 0.35)) {
             const { mode0, mode1, mode2, horizShiftY } = surfModes;
-            // Compute horizontal arc-length unrolling map xMap[u] from harmonic curve slopes (excluding rigid linear tilt)
             const arcCum = new Float32Array(dstW);
             const avgSlope0 = (mode0[dstW - 1] - mode0[0]) / Math.max(1, dstW - 1);
             for (let u = 1; u < dstW; u++) {
@@ -5322,16 +5585,21 @@
             }
             const totalArc = arcCum[dstW - 1] || 1.0;
             const xMap = new Float32Array(dstW);
+            const uTaperArr = new Float32Array(dstW);
             let pIdx = 0;
             for (let u = 0; u < dstW; u++) {
-              const targetArc = (u / (dstW - 1)) * totalArc;
+              const tx = u * invDstW1;
+              uTaperArr[u] = Math.min(1.0, tx / 0.035, (1.0 - tx) / 0.035);
+              const targetArc = tx * totalArc;
               while (pIdx < dstW - 2 && arcCum[pIdx + 1] < targetArc) pIdx++;
               const span = (arcCum[pIdx + 1] - arcCum[pIdx]) || 1e-6;
               xMap[u] = pIdx + Math.max(0.0, Math.min(1.0, (targetArc - arcCum[pIdx]) / span));
             }
 
+            const maxSx = dstW - 1.001;
+            const maxSy = dstH - 1.001;
             for (let y = 0; y < dstH; y++) {
-              const ty = y / (dstH - 1);
+              const ty = y * invDstH1;
               const uVert = ty - 0.5;
               const v1 = uVert;
               const v2 = uVert * uVert - (1.0 / 12.0);
@@ -5339,9 +5607,8 @@
               const hShift = horizShiftY ? horizShiftY[y] : 0.0;
 
               for (let x = 0; x < dstW; x++) {
-                const tx = x / (dstW - 1);
-                const uTaper = Math.min(1.0, tx / 0.035, (1.0 - tx) / 0.035);
-                const sx = Math.min(dstW - 1.001, Math.max(0.0, xMap[x] + uTaper * hShift));
+                const sxRaw = xMap[x] + uTaperArr[x] * hShift;
+                const sx = sxRaw < 0.0 ? 0.0 : (sxRaw > maxSx ? maxSx : sxRaw);
                 const x0 = sx | 0;
                 const dx = sx - x0;
 
@@ -5384,44 +5651,61 @@
       // =========================================================================
       // 6. LAZY HALO-FREE PAPER WHITENING, BRIGHTNESS & SAUVOLA B&W ENGINE
       // =========================================================================
-      function computeFinePaperSurfaceGrid(chArray, w, h) {
-        const scale = 4;
-        const sw = Math.max(8, Math.floor(w / scale));
-        const sh = Math.max(8, Math.floor(h / scale));
-        const sub = new Float32Array(sw * sh);
-
-        for (let sy = 0; sy < sh; sy++) {
-          const y0 = sy * scale;
-          const rOff = y0 * w;
-          for (let sx = 0; sx < sw; sx++) {
-            sub[sy * sw + sx] = chArray[rOff + sx * scale];
+      // Row-major unrolled 7x7 Max Filter (rad=3) for uint8 dMaxLocal (~5x faster than sepMaxFilter)
+      function fastMaxRad3ToU8(src, w, h, tmp, dstU8) {
+        const wm1 = w - 1, hm1 = h - 1;
+        for (let y = 0; y < h; y++) {
+          const rOff = y * w;
+          for (let x = 0; x < 3; x++) {
+            let m = 0;
+            const k1 = x + 3 > wm1 ? wm1 : x + 3;
+            for (let k = 0; k <= k1; k++) { const v = src[rOff + k]; if (v > m) m = v; }
+            tmp[rOff + x] = m;
+          }
+          for (let x = 3; x < w - 3; x++) {
+            const i = rOff + x;
+            let m = src[i - 3];
+            const v1 = src[i - 2]; if (v1 > m) m = v1;
+            const v2 = src[i - 1]; if (v2 > m) m = v2;
+            const v3 = src[i];     if (v3 > m) m = v3;
+            const v4 = src[i + 1]; if (v4 > m) m = v4;
+            const v5 = src[i + 2]; if (v5 > m) m = v5;
+            const v6 = src[i + 3]; if (v6 > m) m = v6;
+            tmp[i] = m;
+          }
+          for (let x = w - 3; x < w; x++) {
+            let m = 0;
+            const k0 = x - 3 < 0 ? 0 : x - 3;
+            for (let k = k0; k <= wm1; k++) { const v = src[rOff + k]; if (v > m) m = v; }
+            tmp[rOff + x] = m;
           }
         }
-
-        const dil = sepMaxFilter(sub, sw, sh, 2);
-        const clo = sepMinFilter(dil, sw, sh, 1);
-        const sm1 = sepBoxBlur(clo, sw, sh, 2);
-
-        return { grid: sm1, sw, sh, scale };
+        for (let y = 0; y < h; y++) {
+          const r0 = (y - 3 < 0 ? 0 : y - 3) * w;
+          const r1 = (y - 2 < 0 ? 0 : y - 2) * w;
+          const r2 = (y - 1 < 0 ? 0 : y - 1) * w;
+          const r3 = y * w;
+          const r4 = (y + 1 > hm1 ? hm1 : y + 1) * w;
+          const r5 = (y + 2 > hm1 ? hm1 : y + 2) * w;
+          const r6 = (y + 3 > hm1 ? hm1 : y + 3) * w;
+          for (let x = 0; x < w; x++) {
+            let m = tmp[r0 + x];
+            const v1 = tmp[r1 + x]; if (v1 > m) m = v1;
+            const v2 = tmp[r2 + x]; if (v2 > m) m = v2;
+            const v3 = tmp[r3 + x]; if (v3 > m) m = v3;
+            const v4 = tmp[r4 + x]; if (v4 > m) m = v4;
+            const v5 = tmp[r5 + x]; if (v5 > m) m = v5;
+            const v6 = tmp[r6 + x]; if (v6 > m) m = v6;
+            const iv = (m + 0.5) | 0;
+            dstU8[r3 + x] = iv > 255 ? 255 : (iv < 0 ? 0 : iv);
+          }
+        }
       }
 
-      function sampleEnvelopeGrid(envObj, x, y) {
-        const gx = Math.min(envObj.sw - 1.001, Math.max(0, x / envObj.scale));
-        const gy = Math.min(envObj.sh - 1.001, Math.max(0, y / envObj.scale));
-        const x0 = gx | 0;
-        const y0 = gy | 0;
-        const dx = gx - x0;
-        const dy = gy - y0;
-        const g = envObj.grid;
-        const sw = envObj.sw;
-        const r0 = y0 * sw + x0;
-        const r1 = (y0 + 1) * sw + x0;
-        return (
-          g[r0] * (1 - dx) * (1 - dy) +
-          g[r0 + 1] * dx * (1 - dy) +
-          g[r1] * (1 - dx) * dy +
-          g[r1 + 1] * dx * dy
-        );
+      function computeFinePaperSurfaceGridFromSub(sub, sw, sh, tmp1, tmp2, dst, colSum) {
+        const dil = sepMaxFilter(sub, sw, sh, 2);
+        const clo = sepMinFilter(dil, sw, sh, 1);
+        fastBoxBlurInPlace(clo, sw, sh, 2, tmp1, dst, colSum);
       }
 
       function buildPageFilterCache(dewarpedCanvas) {
@@ -5430,26 +5714,40 @@
         const nPixels = w * h;
         const rawData = dewarpedCanvas.getContext("2d").getImageData(0, 0, w, h).data;
 
-        const chR = new Float32Array(nPixels);
-        const chG = new Float32Array(nPixels);
-        const chB = new Float32Array(nPixels);
-        const lum = new Float32Array(nPixels);
+        const scale = 4;
+        const sw = Math.max(8, Math.floor(w / scale));
+        const sh = Math.max(8, Math.floor(h / scale));
+        const nSub = sw * sh;
+        const subL = new Float32Array(nSub);
+        const subR = new Float32Array(nSub);
+        const subG = new Float32Array(nSub);
+        const subB = new Float32Array(nSub);
 
-        for (let i = 0; i < nPixels; i++) {
-          const idx = i * 4;
-          const r = rawData[idx];
-          const g = rawData[idx + 1];
-          const b = rawData[idx + 2];
-          chR[i] = r;
-          chG[i] = g;
-          chB[i] = b;
-          lum[i] = 0.299 * r + 0.587 * g + 0.114 * b;
+        // Downsample directly from rawData (eliminates 4 full-res Float32Array allocations!)
+        for (let sy = 0; sy < sh; sy++) {
+          const rOff = (sy * scale) * w;
+          const sOff = sy * sw;
+          for (let sx = 0; sx < sw; sx++) {
+            const idx4 = (rOff + sx * scale) << 2;
+            const r = rawData[idx4], g = rawData[idx4 + 1], b = rawData[idx4 + 2];
+            subR[sOff + sx] = r;
+            subG[sOff + sx] = g;
+            subB[sOff + sx] = b;
+            subL[sOff + sx] = 0.299 * r + 0.587 * g + 0.114 * b;
+          }
         }
 
-        const gridL = computeFinePaperSurfaceGrid(lum, w, h);
-        const gridR = computeFinePaperSurfaceGrid(chR, w, h);
-        const gridG = computeFinePaperSurfaceGrid(chG, w, h);
-        const gridB = computeFinePaperSurfaceGrid(chB, w, h);
+        const subTmp = new Float32Array(nSub);
+        const subCol = new Float32Array(sw);
+        const gL = new Float32Array(nSub);
+        const gR = new Float32Array(nSub);
+        const gG = new Float32Array(nSub);
+        const gB = new Float32Array(nSub);
+
+        computeFinePaperSurfaceGridFromSub(subL, sw, sh, subTmp, null, gL, subCol);
+        computeFinePaperSurfaceGridFromSub(subR, sw, sh, subTmp, null, gR, subCol);
+        computeFinePaperSurfaceGridFromSub(subG, sw, sh, subTmp, null, gG, subCol);
+        computeFinePaperSurfaceGridFromSub(subB, sw, sh, subTmp, null, gB, subCol);
 
         const uR = new Uint8Array(nPixels);
         const uG = new Uint8Array(nPixels);
@@ -5457,33 +5755,70 @@
         const uL = new Float32Array(nPixels);
         const dL = new Float32Array(nPixels);
 
+        const invScale = 1.0 / scale;
+        const maxGx = sw - 1.001;
+        const maxGy = sh - 1.001;
+        const x0Arr = new Int32Array(w);
+        const dxArr = new Float32Array(w);
+        for (let x = 0; x < w; x++) {
+          const gx = x * invScale;
+          const cgx = gx > maxGx ? maxGx : gx;
+          const x0 = cgx | 0;
+          x0Arr[x] = x0;
+          dxArr[x] = cgx - x0;
+        }
+
+        // Single-pass shared bilinear envelope evaluation across all 4 channels (eliminates 3.6M function calls!)
         for (let y = 0; y < h; y++) {
+          const gy = y * invScale;
+          const cgy = gy > maxGy ? maxGy : gy;
+          const y0 = cgy | 0;
+          const dy = cgy - y0;
+          const omdy = 1.0 - dy;
+          const r0Base = y0 * sw;
+          const r1Base = (y0 + 1) * sw;
           const rOff = y * w;
           for (let x = 0; x < w; x++) {
+            const x0 = x0Arr[x];
+            const dx = dxArr[x];
+            const omdx = 1.0 - dx;
+            const w00 = omdx * omdy;
+            const w10 = dx * omdy;
+            const w01 = omdx * dy;
+            const w11 = dx * dy;
+            const p00 = r0Base + x0, p10 = p00 + 1, p01 = r1Base + x0, p11 = p01 + 1;
+
+            let eL = gL[p00] * w00 + gL[p10] * w10 + gL[p01] * w01 + gL[p11] * w11;
+            let eR = gR[p00] * w00 + gR[p10] * w10 + gR[p01] * w01 + gR[p11] * w11;
+            let eG = gG[p00] * w00 + gG[p10] * w10 + gG[p01] * w01 + gG[p11] * w11;
+            let eB = gB[p00] * w00 + gB[p10] * w10 + gB[p01] * w01 + gB[p11] * w11;
+            if (eL < 22.0) eL = 22.0;
+            if (eR < 22.0) eR = 22.0;
+            if (eG < 22.0) eG = 22.0;
+            if (eB < 22.0) eB = 22.0;
+
             const i = rOff + x;
-            const eL = Math.max(22.0, sampleEnvelopeGrid(gridL, x, y));
-            const eR = Math.max(22.0, sampleEnvelopeGrid(gridR, x, y));
-            const eG = Math.max(22.0, sampleEnvelopeGrid(gridG, x, y));
-            const eB = Math.max(22.0, sampleEnvelopeGrid(gridB, x, y));
+            const idx4 = i << 2;
+            const r = rawData[idx4], g = rawData[idx4 + 1], b = rawData[idx4 + 2];
+            const lum = 0.299 * r + 0.587 * g + 0.114 * b;
 
-            const nr = Math.min(255, Math.max(0, Math.round((255.0 * chR[i]) / eR)));
-            const ng = Math.min(255, Math.max(0, Math.round((255.0 * chG[i]) / eG)));
-            const nb = Math.min(255, Math.max(0, Math.round((255.0 * chB[i]) / eB)));
-            const nl = Math.min(255.0, Math.max(0.0, (255.0 * lum[i]) / eL));
+            const nr = (255.0 * r / eR + 0.5) | 0;
+            const ng = (255.0 * g / eG + 0.5) | 0;
+            const nb = (255.0 * b / eB + 0.5) | 0;
+            let nl = (255.0 * lum) / eL;
+            if (nl > 255.0) nl = 255.0; else if (nl < 0.0) nl = 0.0;
 
-            uR[i] = nr;
-            uG[i] = ng;
-            uB[i] = nb;
+            uR[i] = nr > 255 ? 255 : (nr < 0 ? 0 : nr);
+            uG[i] = ng > 255 ? 255 : (ng < 0 ? 0 : ng);
+            uB[i] = nb > 255 ? 255 : (nb < 0 ? 0 : nb);
             uL[i] = nl;
             dL[i] = 255.0 - nl;
           }
         }
 
-        const dMaxLocalF = sepMaxFilter(dL, w, h, 3);
         const dMaxLocal = new Uint8Array(nPixels);
-        for (let i = 0; i < nPixels; i++) {
-          dMaxLocal[i] = Math.min(255, Math.round(dMaxLocalF[i]));
-        }
+        const tmpMax = new Float32Array(nPixels);
+        fastMaxRad3ToU8(dL, w, h, tmpMax, dMaxLocal);
 
         return {
           w,
@@ -5505,11 +5840,16 @@
         const uL = fc.uL;
         const uLSq = new Float32Array(nPixels);
         for (let i = 0; i < nPixels; i++) uLSq[i] = uL[i] * uL[i];
-        const meanL = sepBoxBlur(uL, w, h, 14);
-        const meanSqL = sepBoxBlur(uLSq, w, h, 14);
+        const tmp = new Float32Array(nPixels);
+        const colSum = new Float32Array(w);
+        const meanL = new Float32Array(nPixels);
+        const meanSqL = new Float32Array(nPixels);
+        fastBoxBlurInPlace(uL, w, h, 14, tmp, meanL, colSum);
+        fastBoxBlurInPlace(uLSq, w, h, 14, tmp, meanSqL, colSum);
         const stdL = new Float32Array(nPixels);
         for (let i = 0; i < nPixels; i++) {
-          stdL[i] = Math.sqrt(Math.max(0.0, meanSqL[i] - meanL[i] * meanL[i]));
+          const v = meanSqL[i] - meanL[i] * meanL[i];
+          stdL[i] = v > 0.0 ? Math.sqrt(v) : 0.0;
         }
         fc.meanL = meanL;
         fc.stdL = stdL;
@@ -5661,10 +6001,11 @@
         }
 
         outCtx.putImageData(outImg, 0, 0);
+        page._thumbDataUrl = "";
       }
 
-      function updateGeometryAndProcess(page, keepAutoModesCache) {
-        if (!page) return;
+      function updateGeometryAndProcess(page, keepAutoModesCache, previewMaxSide) {
+        if (!page || !page.srcCanvas) return;
         if (!keepAutoModesCache) {
           page.cachedAutoModes = undefined;
         }
@@ -5675,10 +6016,12 @@
           page.edgeOffsets,
           page.settings.bookCurve || 0,
           page.settings.autoLineDewarp !== false,
-          page
+          page,
+          previewMaxSide
         );
         page.dewarpedCanvas = dewarped;
         page.filterCache = null;
+        page._thumbDataUrl = "";
         applyCachedFiltersToPage(page);
       }
 
@@ -5873,13 +6216,18 @@
         };
       }
 
-      function renderStage() {
+      function renderStage(forceRender) {
+        if (!forceRender && el.fullScreenEditorModal.classList.contains("open")) {
+          state.stageDirty = true;
+          return;
+        }
+        state.stageDirty = false;
         const page = getCurrentPage();
         const ctx = el.mainCanvas.getContext("2d");
 
         if (!page) {
-          el.mainCanvas.width = 640;
-          el.mainCanvas.height = 820;
+          if (el.mainCanvas.width !== 640) el.mainCanvas.width = 640;
+          if (el.mainCanvas.height !== 820) el.mainCanvas.height = 820;
           ctx.fillStyle = "#1e293b";
           ctx.fillRect(0, 0, 640, 820);
           ctx.strokeStyle = "rgba(255,255,255,0.22)";
@@ -5901,10 +6249,14 @@
           return;
         }
 
+        if (!page.srcCanvas) {
+          ensurePageHydrated(page).then((ok) => { if (ok) renderStage(true); });
+          return;
+        }
         if (!page.processedCanvas) updateGeometryAndProcess(page);
         const targetCanvas = page.processedCanvas;
-        el.mainCanvas.width = targetCanvas.width;
-        el.mainCanvas.height = targetCanvas.height;
+        if (el.mainCanvas.width !== targetCanvas.width) el.mainCanvas.width = targetCanvas.width;
+        if (el.mainCanvas.height !== targetCanvas.height) el.mainCanvas.height = targetCanvas.height;
         ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
         ctx.drawImage(targetCanvas, 0, 0);
         drawNoteOverlayOnCanvas(ctx, targetCanvas.width, targetCanvas.height, page, true);
@@ -6015,10 +6367,14 @@
         const ctx = el.fsCanvas.getContext("2d");
 
         if (state.fsCropMode) {
+          if (!page.srcCanvas) {
+            ensurePageHydrated(page).then((ok) => { if (ok) renderFullScreenEditor(); });
+            return;
+          }
           const sW = page.srcCanvas.width;
           const sH = page.srcCanvas.height;
-          el.fsCanvas.width = sW;
-          el.fsCanvas.height = sH;
+          if (el.fsCanvas.width !== sW) el.fsCanvas.width = sW;
+          if (el.fsCanvas.height !== sH) el.fsCanvas.height = sH;
 
           ctx.clearRect(0, 0, sW, sH);
           ctx.drawImage(page.srcCanvas, 0, 0);
@@ -6114,10 +6470,14 @@
             drawHandle(ctx, c[i].x, c[i].y, cornerR, "#2563eb", labels[i]);
           }
         } else {
+          if (!page.srcCanvas) {
+            ensurePageHydrated(page).then((ok) => { if (ok) renderFullScreenEditor(); });
+            return;
+          }
           if (!page.processedCanvas) updateGeometryAndProcess(page);
           const target = page.processedCanvas;
-          el.fsCanvas.width = target.width;
-          el.fsCanvas.height = target.height;
+          if (el.fsCanvas.width !== target.width) el.fsCanvas.width = target.width;
+          if (el.fsCanvas.height !== target.height) el.fsCanvas.height = target.height;
           ctx.clearRect(0, 0, target.width, target.height);
           ctx.drawImage(target, 0, 0);
           drawNoteOverlayOnCanvas(ctx, target.width, target.height, page, true);
@@ -6886,6 +7246,9 @@
         syncControlsFromPage(pageObj);
         renderPageList();
         renderStage();
+        idbSavePageRecord(pageObj, state.currentPageIndex, true);
+        idbSaveMeta("currentPageIndex", state.currentPageIndex);
+        idbSaveMeta("hasUserClearedAll", false);
       }
 
       function deletePageAtIndex(idx) {
@@ -6894,6 +7257,8 @@
         const removedName = removedPage.name;
         state.selectedPageIds.delete(removedPage.id);
         state.pages.splice(idx, 1);
+        idbDeletePageIds([removedPage.id]);
+        persistAllPageOrders();
 
         if (state.pages.length === 0) {
           state.currentPageIndex = -1;
@@ -6957,8 +7322,11 @@
       function deleteSelectedPagesInLibrary() {
         const count = state.selectedPageIds.size;
         if (!count) return;
+        const removedIds = Array.from(state.selectedPageIds);
         state.pages = state.pages.filter((p) => !state.selectedPageIds.has(p.id));
         state.selectedPageIds.clear();
+        idbDeletePageIds(removedIds);
+        persistAllPageOrders();
         state.libMultiSelect = false;
 
         if (state.pages.length === 0) {
@@ -6978,6 +7346,7 @@
         const nextIdx = state.currentPageIndex + delta;
         if (nextIdx < 0 || nextIdx >= state.pages.length) return;
         state.currentPageIndex = nextIdx;
+        idbSaveMeta("currentPageIndex", nextIdx);
         resetStageZoom();
         resetFsZoom();
         syncControlsFromPage(getCurrentPage());
@@ -7072,6 +7441,7 @@
             return;
           }
           state.currentPageIndex = idx;
+          idbSaveMeta("currentPageIndex", idx);
           resetStageZoom();
           syncControlsFromPage(getCurrentPage());
           renderPageList();
@@ -7079,7 +7449,7 @@
         });
       }
 
-      function renderPageList() {
+      function renderPageList(forceBuild) {
         const total = state.pages.length;
         const hasPages = total > 0 && state.currentPageIndex >= 0;
         const curr = hasPages ? state.currentPageIndex + 1 : 0;
@@ -7089,6 +7459,13 @@
         el.btnOpenFullEditor.disabled = !hasPages;
         el.btnOpenImgExport.disabled = !hasPages;
         el.btnOpenPdfExport.disabled = !hasPages;
+
+        // Skip expensive thumbnail DOM rebuilds when Library modal is closed!
+        if (!forceBuild && !el.libraryModal.classList.contains("open")) {
+          state.libDirty = true;
+          return;
+        }
+        state.libDirty = false;
 
         const isMS = state.libMultiSelect && hasPages;
         el.libMultiSelectBar.classList.toggle("visible", isMS);
@@ -7129,17 +7506,29 @@
             checkBadge.className = "lib-select-check" + (isMS ? " visible" : "") + (isSelected ? " checked" : "");
             checkBadge.textContent = "✓";
 
-            const thumb = document.createElement("canvas");
-            thumb.className = "lib-thumb-grid";
-            thumb.width = 140;
-            thumb.height = 180;
-            const tctx = thumb.getContext("2d");
-            tctx.fillStyle = "#ffffff";
-            tctx.fillRect(0, 0, thumb.width, thumb.height);
-            const sc = Math.min(thumb.width / src.width, thumb.height / src.height);
-            const dw = src.width * sc;
-            const dh = src.height * sc;
-            tctx.drawImage(src, (thumb.width - dw) / 2, (thumb.height - dh) / 2, dw, dh);
+            let thumb;
+            if (!p._thumbDataUrl && src) {
+              p._thumbDataUrl = generateThumbDataUrl(src);
+            }
+            if (p._thumbDataUrl) {
+              thumb = document.createElement("img");
+              thumb.className = "lib-thumb-grid";
+              thumb.src = p._thumbDataUrl;
+              thumb.alt = p.name || "";
+            } else {
+              thumb = document.createElement("canvas");
+              thumb.className = "lib-thumb-grid";
+              thumb.width = 140;
+              thumb.height = 180;
+              if (src) {
+                const tctx = thumb.getContext("2d");
+                tctx.fillStyle = "#ffffff";
+                tctx.fillRect(0, 0, 140, 180);
+                const sc = Math.min(140 / src.width, 180 / src.height);
+                const dw = src.width * sc, dh = src.height * sc;
+                tctx.drawImage(src, (140 - dw) / 2, (180 - dh) / 2, dw, dh);
+              }
+            }
 
             const title = document.createElement("div");
             title.className = "lib-meta-title";
@@ -7190,17 +7579,29 @@
             checkBadge.className = "lib-select-check" + (isMS ? " visible" : "") + (isSelected ? " checked" : "");
             checkBadge.textContent = "✓";
 
-            const thumb = document.createElement("canvas");
-            thumb.className = "lib-thumb-list";
-            thumb.width = 72;
-            thumb.height = 96;
-            const tctx = thumb.getContext("2d");
-            tctx.fillStyle = "#ffffff";
-            tctx.fillRect(0, 0, thumb.width, thumb.height);
-            const sc = Math.min(thumb.width / src.width, thumb.height / src.height);
-            const dw = src.width * sc;
-            const dh = src.height * sc;
-            tctx.drawImage(src, (thumb.width - dw) / 2, (thumb.height - dh) / 2, dw, dh);
+            let thumb;
+            if (!p._thumbDataUrl && src) {
+              p._thumbDataUrl = generateThumbDataUrl(src);
+            }
+            if (p._thumbDataUrl) {
+              thumb = document.createElement("img");
+              thumb.className = "lib-thumb-list";
+              thumb.src = p._thumbDataUrl;
+              thumb.alt = p.name || "";
+            } else {
+              thumb = document.createElement("canvas");
+              thumb.className = "lib-thumb-list";
+              thumb.width = 72;
+              thumb.height = 96;
+              if (src) {
+                const tctx = thumb.getContext("2d");
+                tctx.fillStyle = "#ffffff";
+                tctx.fillRect(0, 0, 72, 96);
+                const sc = Math.min(72 / src.width, 96 / src.height);
+                const dw = src.width * sc, dh = src.height * sc;
+                tctx.drawImage(src, (72 - dw) / 2, (96 - dh) / 2, dw, dh);
+              }
+            }
 
             const meta = document.createElement("div");
             meta.className = "lib-meta-list";
@@ -7526,7 +7927,12 @@
         }, mime, q);
       }
 
-      function executeConfirmedExportFromPopup() {
+      async function executeConfirmedExportFromPopup() {
+        if (state.exportModalMode === "pdf" && el.exportPdfScope.value === "all") {
+          for (const _p of state.pages) await ensurePageHydrated(_p);
+        } else {
+          await ensurePageHydrated(getCurrentPage());
+        }
         const page = getCurrentPage();
         if (!page) return;
         const baseName = (el.exportFilename.value || page.name || "ScanhoahocABC").trim();
@@ -8058,6 +8464,8 @@
           el.fsCropBar.classList.remove("visible");
           toggleEditDropdown(false);
           el.fullScreenEditorModal.classList.remove("open");
+          if (state.stageDirty) renderStage(true);
+          flushPendingSaves();
         });
 
         // Vertical Semi-Transparent Popup (☰) — all items directly accessible in a single top-to-bottom column
@@ -8077,6 +8485,7 @@
             page.settings.colorMode = btn.getAttribute("data-mode");
             syncControlsFromPage(page);
             applyCachedFiltersToPage(page);
+            scheduleSavePage(page, false);
             renderPageList();
             renderStage();
             renderFullScreenEditor();
@@ -8091,6 +8500,7 @@
             page.settings.autoLineDewarp = !(page.settings.autoLineDewarp !== false);
             syncControlsFromPage(page);
             updateGeometryAndProcess(page, true);
+            scheduleSavePage(page, false);
             renderStage();
             renderFullScreenEditor();
             showToast(
@@ -8127,7 +8537,7 @@
             renderFullScreenEditor();
           });
         });
-        el.ddBrightnessSlider.addEventListener("change", () => renderStage());
+        el.ddBrightnessSlider.addEventListener("change", () => { renderStage(); scheduleSavePage(getCurrentPage(), false); });
 
         // Background Clean Slider inside ☰ Vertical Popup (60fps zero-lag rendering)
         el.ddCleanSlider.addEventListener("input", () => {
@@ -8143,7 +8553,7 @@
             renderFullScreenEditor();
           });
         });
-        el.ddCleanSlider.addEventListener("change", () => renderStage());
+        el.ddCleanSlider.addEventListener("change", () => { renderStage(); scheduleSavePage(getCurrentPage(), false); });
 
         // Automatic 2D text-line dewarping is mandatory and always active on every page!
 
@@ -8156,11 +8566,19 @@
           if (state.sliderRafId) cancelAnimationFrame(state.sliderRafId);
           state.sliderRafId = requestAnimationFrame(() => {
             state.sliderRafId = null;
-            updateGeometryAndProcess(page, true);
+            updateGeometryAndProcess(page, true, 560);
             renderFullScreenEditor();
           });
         });
-        el.ddBookCurveSlider.addEventListener("change", () => renderStage());
+        el.ddBookCurveSlider.addEventListener("change", () => {
+          const page = getCurrentPage();
+          if (page) {
+            updateGeometryAndProcess(page, true);
+            renderFullScreenEditor();
+            scheduleSavePage(page, false);
+          }
+          renderStage();
+        });
 
         el.ddBookCurveVal.addEventListener("click", () => {
           const page = getCurrentPage();
@@ -8188,6 +8606,7 @@
         el.btnDdStartCrop.addEventListener("click", () => setFsCropMode(true));
         el.btnDdRotate90.addEventListener("click", () => {
           rotateCurrentPage(1);
+          scheduleSavePage(getCurrentPage(), true);
           showToast("Đã xoay ảnh 90°!");
         });
 
@@ -8197,12 +8616,14 @@
           if (!page) return;
           page.name = el.ddFilenameInput.value.trim() || `ScanhoahocABC_${state.currentPageIndex + 1}`;
           renderPageList();
+          scheduleSavePage(page, false);
         });
 
         el.ddNoteInput.addEventListener("input", () => {
           const page = getCurrentPage();
           if (!page) return;
           page.note = el.ddNoteInput.value;
+          scheduleSavePage(page, false);
           if (el.btnClearNote) {
             el.btnClearNote.classList.toggle("visible", !!(page.note && page.note.trim()));
           }
@@ -8421,6 +8842,7 @@
           const page = getCurrentPage();
           if (!page) return;
           updateGeometryAndProcess(page);
+          scheduleSavePage(page, false);
           setFsCropMode(false);
           renderPageList();
           renderStage();
@@ -8444,6 +8866,8 @@
         window.addEventListener("touchcancel", onGlobalPointerUp);
         window.addEventListener("mousemove", onGlobalPointerMove);
         window.addEventListener("mouseup", onGlobalPointerUp);
+        window.addEventListener("pagehide", flushPendingSaves);
+        document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushPendingSaves(); });
 
         // Full-Screen Bottom Buttons
         el.btnFsTriggerImgExport.addEventListener("click", () => openExportPopup("image"));
@@ -8465,8 +8889,8 @@
 
         // Clean "Thư viện" (Library) Modal Controls
         el.btnOpenLibrary.addEventListener("click", () => {
-          renderPageList();
           el.libraryModal.classList.add("open");
+          renderPageList(true);
         });
         el.btnCloseLibrary.addEventListener("click", () => {
           exitMultiSelectMode();
@@ -8498,7 +8922,9 @@
 
         el.btnExitMultiSelect.addEventListener("click", exitMultiSelectMode);
 
-        el.btnBatchPdfSelected.addEventListener("click", () => {
+        el.btnBatchPdfSelected.addEventListener("click", async () => {
+          const _sel = getSelectedPagesList();
+          for (const _p of _sel) await ensurePageHydrated(_p);
           const selPages = getSelectedPagesList();
           if (!selPages.length) return;
           const blob = generatePdfBlobFromPages(selPages, 0.94);
@@ -8506,7 +8932,9 @@
           showToast(`Đã lưu PDF (${selPages.length} ảnh đã chọn)!`);
         });
 
-        el.btnBatchDownloadSelected.addEventListener("click", () => {
+        el.btnBatchDownloadSelected.addEventListener("click", async () => {
+          const _sel = getSelectedPagesList();
+          for (const _p of _sel) await ensurePageHydrated(_p);
           const selPages = getSelectedPagesList();
           if (!selPages.length) return;
           selPages.forEach((p, i) => {
@@ -8914,8 +9342,53 @@
       // =========================================================================
       // 11. INITIALIZATION
       // =========================================================================
-      function initApp() {
+      async function initApp() {
         initEvents();
+        const saved = await idbLoadAll();
+        if (saved && saved.pages && saved.pages.length > 0) {
+          state.pages = saved.pages.map((rec) => ({
+            id: rec.id,
+            name: rec.name || "ScanhoahocABC",
+            createdAt: rec.createdAt || formatTimeStr(new Date()),
+            note: rec.note || "",
+            noteX: typeof rec.noteX === "number" ? rec.noteX : 0.50,
+            noteY: typeof rec.noteY === "number" ? rec.noteY : 0.88,
+            noteSize: rec.noteSize || 28,
+            noteColor: rec.noteColor || "#dc2626",
+            noteHasBg: rec.noteHasBg !== false,
+            noteBgColor: rec.noteBgColor || "#ffffff",
+            noteHasBorder: rec.noteHasBorder !== false,
+            noteBorderColor: rec.noteBorderColor || rec.noteColor || "#dc2626",
+            includeNoteOnExport: rec.includeNoteOnExport !== false,
+            srcCanvas: null,
+            _storedSrcBlob: rec.srcBlob,
+            _thumbDataUrl: rec.thumbDataUrl || "",
+            corners: rec.corners ? rec.corners.map((p) => ({ x: p.x, y: p.y })) : null,
+            edgeOffsets: rec.edgeOffsets ? cloneEdgeOffsets(rec.edgeOffsets) : createZeroEdgeOffsets(),
+            dewarpedCanvas: null,
+            filterCache: null,
+            processedCanvas: null,
+            settings: cloneSettings(rec.settings || state.defaultSettings)
+          }));
+          const savedIdx = typeof saved.meta.currentPageIndex === "number" ? saved.meta.currentPageIndex : (state.pages.length - 1);
+          state.currentPageIndex = Math.max(0, Math.min(state.pages.length - 1, savedIdx));
+          const activePage = getCurrentPage();
+          await ensurePageHydrated(activePage);
+          resetStageZoom();
+          syncControlsFromPage(activePage);
+          renderPageList();
+          renderStage(true);
+          showToast(`Đã khôi phục ${state.pages.length} ảnh từ lần làm việc trước!`);
+          return;
+        }
+        if (saved && saved.meta && saved.meta.hasUserClearedAll) {
+          state.pages = [];
+          state.currentPageIndex = -1;
+          syncControlsFromPage(null);
+          renderPageList();
+          renderStage(true);
+          return;
+        }
         const c = createInitialSampleCanvas();
         addNewPageFromCanvas(c, "ScanhoahocABC_1", null, null, 0, "");
       }
