@@ -3418,7 +3418,7 @@
           }));
         } else {
           // 360px working resolution for crisp rim localization on all object sizes
-          const maxDim = skipFullResRefine ? 288 : 360;
+          const maxDim = skipFullResRefine ? 180 : 320;
           const scale = Math.min(1, maxDim / Math.max(origW, origH));
           const w = Math.max(72, Math.round(origW * scale));
           const h = Math.max(72, Math.round(origH * scale));
@@ -3640,7 +3640,7 @@
           }
           avgBorderL = sumBorderL / (cntBorder || 1);
           const avgCenterL = sumCenterL / (cntCenter || 1);
-          allowDarkObjectPolarity = (avgBorderL > avgCenterL + 4.0) && (avgBorderL > p85InteriorL - 6.0);
+          allowDarkObjectPolarity = (avgBorderL > avgCenterL + 10.0) && (avgBorderL > p85InteriorL + 3.0);
           const isFullBleedWhitePage = (brightBorderHits / (cntBorder || 1) > 0.94) && (Math.abs(avgBorderL - p85InteriorL) < 8.0) && (avgBorderL > 240.0);
 
           // 1b. Tilt-Tolerant 3-Point Directional Crease Maps
@@ -3750,8 +3750,8 @@
               const sideRoughX = Math.max(0.0, L_surf[ixm5] - L_creaseX[ixm5], L_surf[ixp5] - L_creaseX[ixp5]);
               const dipY = (L_surf[ixp3] < L_surf[ixm3] ? L_surf[ixp3] : L_surf[ixm3]) - minCY - 1.35 * sideRoughX;
               const rawDipX = minLX - rawMinCX_fixed;
-              const isDarkContentInsidePaperL = !allowDarkObjectPolarity && N_out_L > 195.0 && L_out_L > avgBorderL + 25.0 && (L_out_L - L_in_L > 28.0);
-              const isDarkContentInsidePaperR = !allowDarkObjectPolarity && N_in_L > 195.0 && L_in_L > avgBorderL + 25.0 && (L_in_L - L_out_L > 28.0);
+              const isDarkContentInsidePaperL = !allowDarkObjectPolarity && N_out_L > 195.0 && (L_out_L > avgBorderL + 25.0 || L_out_L >= p85InteriorL - 18.0) && (L_out_L - L_in_L > 22.0);
+              const isDarkContentInsidePaperR = !allowDarkObjectPolarity && N_in_L > 195.0 && (L_in_L > avgBorderL + 25.0 || L_in_L >= p85InteriorL - 18.0) && (L_in_L - L_out_L > 22.0);
               let isInternalInkX = false;
               if (sameSurfaceX && minLX > 100.0) {
                 if (rawDipX > 32.0 || dipY > 30.0) {
@@ -3891,8 +3891,8 @@
               const sideRoughY = Math.max(0.0, L_surf[iym5] - L_creaseY[iym5], L_surf[iyp5] - L_creaseY[iyp5]);
               const dipX = (L_surf[iyp3] < L_surf[iym3] ? L_surf[iyp3] : L_surf[iym3]) - minCX - 1.35 * sideRoughY;
               const rawDipY = minLY - rawMinCY;
-              const isDarkContentInsidePaperT = !allowDarkObjectPolarity && N_out_T > 195.0 && L_out_T > avgBorderL + 25.0 && (L_out_T - L_in_T > 28.0);
-              const isDarkContentInsidePaperB = !allowDarkObjectPolarity && N_in_T > 195.0 && L_in_T > avgBorderL + 25.0 && (L_in_T - L_out_T > 28.0);
+              const isDarkContentInsidePaperT = !allowDarkObjectPolarity && N_out_T > 195.0 && (L_out_T > avgBorderL + 25.0 || L_out_T >= p85InteriorL - 18.0) && (L_out_T - L_in_T > 22.0);
+              const isDarkContentInsidePaperB = !allowDarkObjectPolarity && N_in_T > 195.0 && (L_in_T > avgBorderL + 25.0 || L_in_T >= p85InteriorL - 18.0) && (L_in_T - L_out_T > 22.0);
               let isInternalInkY = false;
               if (sameSurfaceY && minLY > 100.0) {
                 if (rawDipY > 32.0 || dipX > 30.0) {
@@ -4052,10 +4052,13 @@
             const om25 = oneMinusTArr[25], t25 = tLineArr[25];
             const om35 = oneMinusTArr[35], t35 = tLineArr[35];
 
-            for (let xt = x0Min; xt < x0Max; xt += 2) {
+            const vStep = 2;
+            const maxKeptFull = skipFullResRefine ? 6 : 8;
+            const maxKeptTot = skipFullResRefine ? 7 : 10;
+            for (let xt = x0Min; xt < x0Max; xt += vStep) {
               const xbMin = Math.max(x0Min, xt - maxTiltX);
               const xbMax = Math.min(x0Max, xt + maxTiltX);
-              for (let xb = xbMin; xb < xbMax; xb += 2) {
+              for (let xb = xbMin; xb < xbMax; xb += vStep) {
                 if (
                   bmap[r4 + ((xt * om4 + xb * t4 + 0.5) | 0)] <= 0.26 &&
                   bmap[r14 + ((xt * om14 + xb * t14 + 0.5) | 0)] <= 0.26 &&
@@ -4095,12 +4098,20 @@
             fullCands.sort((a, b) => b.sc - a.sc);
             winCands.sort((a, b) => b.sc - a.sc);
             const kept = [];
+            // v45.0: Reserve up to 2 slots for the outermost strong edge candidates (prevents internal boxes from evicting outer page rim!)
+            const outerStrongV = fullCands.filter((c) => c.sc >= 0.55);
+            outerStrongV.sort((a, b) => isLeft ? ((a.xt + a.xb) - (b.xt + b.xb)) : ((b.xt + b.xb) - (a.xt + a.xb)));
+            for (let i = 0; i < outerStrongV.length && kept.length < 2; i++) {
+              const c = outerStrongV[i];
+              const cMid = 0.5 * (c.xt + c.xb);
+              if (kept.every((k) => Math.abs(cMid - 0.5 * (k.xt + k.xb)) > 3.5)) kept.push(c);
+            }
             for (let i = 0; i < fullCands.length; i++) {
               const c = fullCands[i];
               const cMid = 0.5 * (c.xt + c.xb);
               if (kept.every((k) => Math.abs(cMid - 0.5 * (k.xt + k.xb)) > 3.5 && Math.abs(c.xt - k.xt) + Math.abs(c.xb - k.xb) > 6)) {
                 kept.push(c);
-                if (kept.length >= 10) break;
+                if (kept.length >= maxKeptFull) break;
               }
             }
             for (let i = 0; i < winCands.length; i++) {
@@ -4108,14 +4119,14 @@
               const cMidX = 0.5 * (c.xt + c.xb);
               if (kept.every((k) => Math.abs(cMidX - 0.5 * (k.xt + k.xb)) > 3.5 && Math.abs(c.xt - k.xt) + Math.abs(c.xb - k.xb) > 6)) {
                 kept.push(c);
-                if (kept.length >= 13) break;
+                if (kept.length >= maxKeptTot) break;
               }
             }
             return kept;
           }
 
           function findBestHLines(bmap, yMinR, yMaxR, isTop) {
-            const y0Min = Math.max(2, Math.floor(h * yMinR) & ~1), y0Max = Math.floor(h * yMaxR);
+            const y0Min = Math.max(1, Math.floor(h * yMinR) & ~1), y0Max = Math.floor(h * yMaxR);
             const fullCands = [];
             const winCands = [];
             const N = N_LINE;
@@ -4128,10 +4139,13 @@
             const om25 = oneMinusTArr[25], t25 = tLineArr[25];
             const om35 = oneMinusTArr[35], t35 = tLineArr[35];
 
-            for (let yl = y0Min; yl < y0Max; yl += 2) {
+            const hStep = 2;
+            const maxKeptFull = skipFullResRefine ? 6 : 8;
+            const maxKeptTot = skipFullResRefine ? 7 : 10;
+            for (let yl = y0Min; yl < y0Max; yl += hStep) {
               const yrMin = Math.max(y0Min, yl - maxTiltY);
               const yrMax = Math.min(y0Max, yl + maxTiltY);
-              for (let yr = yrMin; yr < yrMax; yr += 2) {
+              for (let yr = yrMin; yr < yrMax; yr += hStep) {
                 if (
                   bmap[((yl * om4 + yr * t4 + 0.5) | 0) * w + c4] <= 0.26 &&
                   bmap[((yl * om14 + yr * t14 + 0.5) | 0) * w + c14] <= 0.26 &&
@@ -4171,12 +4185,20 @@
             fullCands.sort((a, b) => b.sc - a.sc);
             winCands.sort((a, b) => b.sc - a.sc);
             const kept = [];
+            // v45.0: Reserve up to 2 slots for the outermost strong edge candidates (prevents internal banners/boxes from evicting curved book top/bottom rim!)
+            const outerStrongH = fullCands.filter((c) => c.sc >= 0.55);
+            outerStrongH.sort((a, b) => isTop ? ((a.yl + a.yr) - (b.yl + b.yr)) : ((b.yl + b.yr) - (a.yl + a.yr)));
+            for (let i = 0; i < outerStrongH.length && kept.length < 2; i++) {
+              const c = outerStrongH[i];
+              const cMid = 0.5 * (c.yl + c.yr);
+              if (kept.every((k) => Math.abs(cMid - 0.5 * (k.yl + k.yr)) > 3.5)) kept.push(c);
+            }
             for (let i = 0; i < fullCands.length; i++) {
               const c = fullCands[i];
               const cMid = 0.5 * (c.yl + c.yr);
               if (kept.every((k) => Math.abs(cMid - 0.5 * (k.yl + k.yr)) > 3.5 && Math.abs(c.yl - k.yl) + Math.abs(c.yr - k.yr) > 6)) {
                 kept.push(c);
-                if (kept.length >= 10) break;
+                if (kept.length >= maxKeptFull) break;
               }
             }
             for (let i = 0; i < winCands.length; i++) {
@@ -4184,7 +4206,7 @@
               const cMid = 0.5 * (c.yl + c.yr);
               if (kept.every((k) => Math.abs(cMid - 0.5 * (k.yl + k.yr)) > 3.5 && Math.abs(c.yl - k.yl) + Math.abs(c.yr - k.yr) > 6)) {
                 kept.push(c);
-                if (kept.length >= 13) break;
+                if (kept.length >= maxKeptTot) break;
               }
             }
             return kept;
@@ -4194,6 +4216,49 @@
           const rightCands = findBestVLines(bRight, 0.44, 0.995, false);
           const topCands = findBestHLines(bTop, 0.005, 0.56, true);
           const botCands = findBestHLines(bBot, 0.44, 0.995, false);
+
+          // v45.0: Close-up / Open-Book Partial-Bleed Guard
+          // When a book page fills the frame flush against 1-3 image borders (bright paper touching frame edge),
+          // add that frame border as a candidate so internal colored boxes/text never hijack the page boundary!
+          if (!allowDarkObjectPolarity && p85InteriorL >= 150.0) {
+            const paperEdgeFloor = p85InteriorL - 26.0;
+            let lBright = 0, rBright = 0, tBright = 0, bBright = 0;
+            let vCnt = 0, hCnt = 0;
+            for (let y = Math.floor(h * 0.12); y < Math.floor(h * 0.88); y += 2) {
+              vCnt++;
+              if (L_surf[y * w + 2] >= paperEdgeFloor) lBright++;
+              if (L_surf[y * w + (w - 3)] >= paperEdgeFloor) rBright++;
+            }
+            for (let x = Math.floor(w * 0.12); x < Math.floor(w * 0.88); x += 2) {
+              hCnt++;
+              if (L_surf[2 * w + x] >= paperEdgeFloor) tBright++;
+              if (L_surf[(h - 3) * w + x] >= paperEdgeFloor) bBright++;
+            }
+            const isBleedL = (lBright / (vCnt || 1)) >= 0.78;
+            const isBleedR = (rBright / (vCnt || 1)) >= 0.78;
+            const isBleedT = (tBright / (hCnt || 1)) >= 0.78;
+            const isBleedB = (bBright / (hCnt || 1)) >= 0.78;
+            const hasOuterL = leftCands.some((c) => c.sc >= 0.70 && 0.5 * (c.xt + c.xb) <= w * 0.05);
+            const hasOuterR = rightCands.some((c) => c.sc >= 0.65 && 0.5 * (c.xt + c.xb) >= w * 0.86);
+            const hasOuterT = topCands.some((c) => c.sc >= 0.70 && 0.5 * (c.yl + c.yr) <= h * 0.05);
+            const hasOuterB = botCands.some((c) => c.sc >= 0.70 && 0.5 * (c.yl + c.yr) >= h * 0.95);
+            if (isBleedL && !hasOuterL) {
+              for (let y = 0; y < h; y++) { bLeft[y * w + 1] = Math.max(bLeft[y * w + 1], 0.88); bLeft[y * w + 2] = Math.max(bLeft[y * w + 2], 0.88); }
+              leftCands.push({ sc: 0.92, xt: 1, xb: 1 });
+            }
+            if (isBleedR && !hasOuterR) {
+              for (let y = 0; y < h; y++) { bRight[y * w + (w - 2)] = Math.max(bRight[y * w + (w - 2)], 0.88); bRight[y * w + (w - 3)] = Math.max(bRight[y * w + (w - 3)], 0.88); }
+              rightCands.push({ sc: 0.92, xt: w - 2, xb: w - 2 });
+            }
+            if (isBleedT && !hasOuterT) {
+              for (let x = 0; x < w; x++) { bTop[1 * w + x] = Math.max(bTop[1 * w + x], 0.88); bTop[2 * w + x] = Math.max(bTop[2 * w + x], 0.88); }
+              topCands.push({ sc: 0.92, yl: 1, yr: 1 });
+            }
+            if (isBleedB && !hasOuterB) {
+              for (let x = 0; x < w; x++) { bBot[(h - 2) * w + x] = Math.max(bBot[(h - 2) * w + x], 0.88); bBot[(h - 3) * w + x] = Math.max(bBot[(h - 3) * w + x], 0.88); }
+              botCands.push({ sc: 0.92, yl: h - 2, yr: h - 2 });
+            }
+          }
 
           function vlineToAbc(xt, xb) {
             const p1x = xt, p1y = h * 0.14, p2x = xb, p2y = h * 0.86;
@@ -4274,7 +4339,7 @@
                 if (dR * dR + dG * dG + dB * dB > 4.0 || dCr * dCr + dCb * dCb > 3.24) crossRimHits++;
               }
 
-              const isWhiteMarginOverDarkContent = !allowDarkObjectPolarity && (li1 > avgBorderL + 28.0) && (ni1 > 200.0) && (li1 > lo1 + 20.0);
+              const isWhiteMarginOverDarkContent = !allowDarkObjectPolarity && (ni1 > 195.0) && ((li1 > avgBorderL + 28.0 && li1 > lo1 + 14.0) || (li1 >= p85InteriorL - 18.0));
               const jumpL = Math.max(
                 Math.min(ni2 - ni1, li2 - li1),
                 isWhiteMarginOverDarkContent ? 0.0 : ((li1 - li2) - 18.0)
@@ -4427,7 +4492,8 @@
                   const minTip = Math.min(eT.minTipSup, eR.minTipSup, eB.minTipSup, eL.minTipSup);
                   const minRimContrast = Math.min(eT.rimContrastFrac, eR.rimContrastFrac, eB.rimContrastFrac, eL.rimContrastFrac);
 
-                  const allRimBonus = minThird * 1.05 + minTip * 0.85 + minRimContrast * 0.55 - Math.max(0.0, 0.45 - minThird) * 2.0 - Math.max(0.0, 0.42 - minTip) * 2.4;
+                  const areaBonus = (minSup >= 0.55 && minThird >= 0.40) ? 0.65 * Math.sqrt((spanW * spanH) / (w * h)) : 0.0;
+                  const allRimBonus = minThird * 1.05 + minTip * 0.48 + minRimContrast * 0.55 + areaBonus - Math.max(0.0, 0.45 - minThird) * 2.0 - Math.max(0.0, 0.38 - minTip) * 0.90;
 
                   const aspect = Math.min(spanW, spanH) / (Math.max(spanW, spanH) || 1.0);
                   const isDocSized = spanW >= w * 0.34 && spanH >= h * 0.34 && aspect >= 0.48;
@@ -4776,6 +4842,21 @@
         for (let k = 0; k < 4; k++) {
           const p1 = stage1Corners[k];
           const p2 = stage1Corners[(k + 1) % 4];
+          const isFlushBottom = (k === 2 && p1.y >= origH - 12 && p2.y >= origH - 12);
+          const isFlushLeft = (k === 3 && p1.x <= 12 && p2.x <= 12);
+          if (isFlushBottom || isFlushLeft) {
+            const seamPts = [];
+            const wArr = new Float64Array(nProf);
+            for (let i = 0; i < nProf; i++) {
+              const t = 0.02 + (i / (nProf - 1)) * 0.96;
+              seamPts.push({ x: p1.x * (1.0 - t) + p2.x * t, y: p1.y * (1.0 - t) + p2.y * t, t });
+              wArr[i] = 1.0;
+            }
+            allSeamPts.push(seamPts);
+            allSeamWeights.push(wArr);
+            chordLines.push(fitChordLineWithArchGuard(seamPts, p1, p2, 3.2));
+            continue;
+          }
           const vx = p2.x - p1.x;
           const vy = p2.y - p1.y;
           const segLen = Math.sqrt(vx * vx + vy * vy) || 1.0;
@@ -4895,7 +4976,7 @@
               const minC = cp0 < cp1 ? (cp0 < cp2 ? cp0 : cp2) : (cp1 < cp2 ? cp1 : cp2);
               const dip = minSideL - minC;
               const sameSurfS2 = absStep < 9.0 && macDC < 9.0 && flatVar < 5.5;
-              const isDarkInPaperS2 = !allowDarkObjectPolarity && L_out > avgBorderL + 25.0 && L_out > 175.0 && (L_out - L_in > 28.0);
+              const isDarkInPaperS2 = !allowDarkObjectPolarity && L_out > 170.0 && (L_out - L_in > 22.0);
               const isInkS2 = isDarkInPaperS2 || (sameSurfS2 && minSideL > 100.0 && dip > 32.0);
 
               let flatRimStepS2 = 0.0;
@@ -8623,9 +8704,9 @@
             if (overlay.height !== vh) overlay.height = vh;
             frameCount++;
             const now = Date.now();
-            if (frameCount % 2 === 1 && (now - lastDetectTs >= 60)) {
+            if (now - lastDetectTs >= 40) {
               lastDetectTs = now;
-              const maxSide = 288;
+              const maxSide = 180;
               const sc = Math.min(1, maxSide / Math.max(vw, vh));
               const targetW = Math.max(72, Math.round(vw * sc));
               const targetH = Math.max(72, Math.round(vh * sc));
@@ -8652,7 +8733,7 @@
                 }
                 const diag = Math.hypot(vw, vh) || 1000;
                 relJump = maxJump / diag;
-                const alpha = relJump < 0.008 ? 0.18 : relJump < 0.035 ? 0.50 : 0.82;
+                const alpha = relJump < 0.008 ? 0.42 : relJump < 0.035 ? 0.72 : 0.92;
                 state.lastCameraCorners = state.lastCameraCorners.map((prev, idx) => ({
                   x: Math.round(prev.x * (1.0 - alpha) + nextCorners[idx].x * alpha),
                   y: Math.round(prev.y * (1.0 - alpha) + nextCorners[idx].y * alpha)
