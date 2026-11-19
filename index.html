@@ -4446,8 +4446,8 @@
             }
           }
 
-          // v42.0 Pillar 2: Bright-Paper-on-Dark-Background Connected-Component Convex-Hull Quad Proposal
-          // Completely immune to internal printed text lines, ruled lines, steep tilts, and perspective trapezoids!
+          // v43.0 Pillar 2: Shadow-Invariant Bright-Paper Connected-Component Convex-Hull Quad Proposal
+          // Handles phone shadows, open-book dark spines, steep tilts & trapezoids, and verifies via true 4-edge score!
           if (!allowDarkObjectPolarity && !isFullBleedWhitePage && (p85InteriorL - avgBorderL >= 26.0)) {
             const hist64 = new Int32Array(64);
             let histTotal = 0;
@@ -4472,15 +4472,19 @@
             const otsuT = otsuBin * 4.0 + 2.0;
             const midT = avgBorderL + (p85InteriorL - avgBorderL) * 0.46;
             const fgThresh = Math.max(avgBorderL + 16.0, Math.min(p85InteriorL - 12.0, 0.65 * otsuT + 0.35 * midT));
+            // Shadow-tolerant lower threshold paired with illumination-normalized N_surf so phone/hand shadows never chop off paper!
+            const shadowLowT = avgBorderL + Math.max(14.0, (fgThresh - avgBorderL) * 0.36);
 
             const fgMask = new Uint8Array(nPix);
             for (let i = 0; i < nPix; i++) {
-              if (L_surf[i] >= fgThresh) fgMask[i] = 1;
+              const lv = L_surf[i];
+              if (lv >= fgThresh || (lv >= shadowLowT && N_surf[i] >= 158.0)) fgMask[i] = 1;
             }
 
             const compId = new Int32Array(nPix);
             const bfsQ = new Int32Array(nPix);
-            let curId = 0, bestCompId = 0, bestCompScore = 0;
+            let curId = 0;
+            const validComps = [];
             const minCompArea = Math.floor(nPix * 0.06);
             const maxCompArea = Math.floor(nPix * 0.94);
 
@@ -4494,6 +4498,7 @@
                 bfsQ[qTail++] = startIdx;
                 compId[startIdx] = curId;
                 let area = 0, sumX = 0, sumY = 0;
+                let minBx = w, maxBx = 0, minBy = h, maxBy = 0;
                 let touchL = 0, touchR = 0, touchT = 0, touchB = 0;
                 while (qHead < qTail) {
                   const idx = bfsQ[qHead++];
@@ -4502,6 +4507,10 @@
                   area++;
                   sumX += px;
                   sumY += py;
+                  if (px < minBx) minBx = px;
+                  if (px > maxBx) maxBx = px;
+                  if (py < minBy) minBy = py;
+                  if (py > maxBy) maxBy = py;
                   if (px <= 1) touchL++;
                   if (px >= w - 2) touchR++;
                   if (py <= 1) touchT++;
@@ -4517,35 +4526,49 @@
                     const cx = sumX / area, cy = sumY / area;
                     const distCenter = Math.hypot((cx - w * 0.5) / w, (cy - h * 0.5) / h);
                     const cScore = area * Math.max(0.45, 1.15 - distCenter);
-                    if (cScore > bestCompScore) {
-                      bestCompScore = cScore;
-                      bestCompId = curId;
-                    }
+                    validComps.push({ id: curId, area, cScore, minBx, maxBx, minBy, maxBy });
                   }
                 }
               }
             }
 
-            if (bestCompId > 0) {
+            if (validComps.length > 0) {
+              validComps.sort((a, b) => b.cScore - a.cScore);
+              const keepIds = new Set([validComps[0].id]);
+              let compArea = validComps[0].area;
+              // Merge paired open-book pages split by a dark center spine
+              if (validComps.length >= 2) {
+                const c0 = validComps[0], c1 = validComps[1];
+                const h0 = c0.maxBy - c0.minBy + 1, h1 = c1.maxBy - c1.minBy + 1;
+                const w0 = c0.maxBx - c0.minBx + 1, w1 = c1.maxBx - c1.minBx + 1;
+                const yOverlap = Math.min(c0.maxBy, c1.maxBy) - Math.max(c0.minBy, c1.minBy);
+                const xGap = Math.max(0, Math.max(c0.minBx, c1.minBx) - Math.min(c0.maxBx, c1.maxBx));
+                const xOverlap = Math.min(c0.maxBx, c1.maxBx) - Math.max(c0.minBx, c1.minBx);
+                const yGap = Math.max(0, Math.max(c0.minBy, c1.minBy) - Math.min(c0.maxBy, c1.maxBy));
+                const isSideBySideBook = c1.area >= c0.area * 0.45 && yOverlap > Math.min(h0, h1) * 0.72 && xGap <= w * 0.10;
+                const isTopBottomBook = c1.area >= c0.area * 0.45 && xOverlap > Math.min(w0, w1) * 0.72 && yGap <= h * 0.10;
+                if (isSideBySideBook || isTopBottomBook) {
+                  keepIds.add(c1.id);
+                  compArea += c1.area;
+                }
+              }
+
               const bPts = [];
-              let compArea = 0;
               for (let y = 0; y < h; y++) {
                 const rOff = y * w;
                 for (let x = 0; x < w; x++) {
                   const idx = rOff + x;
-                  if (compId[idx] !== bestCompId) continue;
-                  compArea++;
+                  if (!keepIds.has(compId[idx])) continue;
                   if (
                     x === 0 || x === w - 1 || y === 0 || y === h - 1 ||
-                    compId[idx - 1] !== bestCompId || compId[idx + 1] !== bestCompId ||
-                    compId[idx - w] !== bestCompId || compId[idx + w] !== bestCompId
+                    !keepIds.has(compId[idx - 1]) || !keepIds.has(compId[idx + 1]) ||
+                    !keepIds.has(compId[idx - w]) || !keepIds.has(compId[idx + w])
                   ) {
                     bPts.push({ x, y });
                   }
                 }
               }
               if (bPts.length >= 16) {
-                // Monotone Chain Convex Hull
                 bPts.sort((a, b) => a.x !== b.x ? a.x - b.x : a.y - b.y);
                 const lower = [];
                 for (let i = 0; i < bPts.length; i++) {
@@ -4571,7 +4594,6 @@
                 upper.pop();
                 const hull = lower.concat(upper);
 
-                // Reduce convex hull to 4 corners by iteratively removing minimum-triangle-area vertex
                 while (hull.length > 4) {
                   let minA = 1e18, minIdx = 0;
                   const hl = hull.length;
@@ -4586,7 +4608,6 @@
                 }
 
                 if (hull.length === 4) {
-                  // Order clockwise starting from Top-Left (screen coords: +x right, +y down -> cross > 0 is clockwise)
                   let area2 = 0;
                   for (let i = 0; i < 4; i++) {
                     const a = hull[i], b = hull[(i + 1) % 4];
@@ -4600,7 +4621,6 @@
                   }
                   const hQuad = [hull[tlIdx], hull[(tlIdx + 1) % 4], hull[(tlIdx + 2) % 4], hull[(tlIdx + 3) % 4]];
 
-                  // Compute exact quad area and foreground IoU against bestCompId
                   const qArea = Math.abs(area2) * 0.5;
                   const minSideQ = Math.min(
                     Math.hypot(hQuad[1].x - hQuad[0].x, hQuad[1].y - hQuad[0].y),
@@ -4610,7 +4630,19 @@
                   );
                   if (minSideQ >= minSideLen && qArea >= minCompArea) {
                     const fillRatio = Math.min(compArea, qArea) / Math.max(compArea, qArea, 1);
-                    // Also check IoU of existing bestQuad (if any) vs hQuad on the foreground component
+                    // Evaluate hQuad on the TRUE 4-edge boundary maps (non-circular!) so shadow-clipped hulls cannot beat Stage 1
+                    const hET = evalEdgeAndMargin(hQuad[0], hQuad[1], bTop, bandPopY, h * 0.65);
+                    const hER = evalEdgeAndMargin(hQuad[1], hQuad[2], bRight, bandPopX, w * 0.65);
+                    const hEB = evalEdgeAndMargin(hQuad[2], hQuad[3], bBot, bandPopY, h * 0.65);
+                    const hEL = evalEdgeAndMargin(hQuad[3], hQuad[0], bLeft, bandPopX, w * 0.65);
+                    const hMinSup = Math.min(hET.edgeSup, hER.edgeSup, hEB.edgeSup, hEL.edgeSup);
+                    const hMinThird = Math.min(hET.minThirdSup, hER.minThirdSup, hEB.minThirdSup, hEL.minThirdSup);
+                    const hMinTip = Math.min(hET.minTipSup, hER.minTipSup, hEB.minTipSup, hEL.minTipSup);
+                    const hMinRimC = Math.min(hET.rimContrastFrac, hER.rimContrastFrac, hEB.rimContrastFrac, hEL.rimContrastFrac);
+                    const hAllRim = hMinThird * 1.05 + hMinTip * 0.85 + hMinRimC * 0.55 - Math.max(0.0, 0.45 - hMinThird) * 2.0 - Math.max(0.0, 0.42 - hMinTip) * 2.4;
+                    const hMarginPen = hET.marginPenalty + hER.marginPenalty + hEB.marginPenalty + hEL.marginPenalty;
+                    const hEdgeScore = (hET.edgeSup + hER.edgeSup + hEB.edgeSup + hEL.edgeSup) + hMinSup * 1.4 + hAllRim - hMarginPen * 1.45;
+
                     const evalFgIoU = (q) => {
                       let hitFg = 0, inQ = 0;
                       const step = 3;
@@ -4624,7 +4656,7 @@
                           }
                           if (inside) {
                             inQ++;
-                            if (compId[rOff + x] === bestCompId) hitFg++;
+                            if (keepIds.has(compId[rOff + x])) hitFg++;
                           }
                         }
                       }
@@ -4634,11 +4666,13 @@
 
                     const hullIoU = evalFgIoU(hQuad);
                     const bestIoU = bestQuad ? evalFgIoU(bestQuad) : 0.0;
-                    // If the connected-component hull quad cleanly wraps the bright paper (IoU >= 0.78)
-                    // AND clearly outperforms bestQuad on foreground coverage (or bestQuad missed it), adopt hQuad!
-                    if (fillRatio >= 0.72 && hullIoU >= 0.78 && (!bestQuad || hullIoU > bestIoU + 0.06)) {
+                    const hullTotalScore = hEdgeScore + (hullIoU >= 0.78 ? 1.35 * (hullIoU - 0.60) : 0.0);
+                    if (
+                      fillRatio >= 0.72 && hullIoU >= 0.76 && hMinSup >= 0.32 &&
+                      (!bestQuad || hullTotalScore > bestQScore + 0.15 || (hullIoU > bestIoU + 0.16 && hEdgeScore >= bestQScore - 0.55))
+                    ) {
                       bestQuad = hQuad;
-                      bestQScore = Math.max(bestQScore, 9.5 + hullIoU);
+                      bestQScore = Math.max(bestQScore, hullTotalScore);
                     }
                   }
                 }
@@ -5648,7 +5682,7 @@
         let dstW = Math.round(Math.max(topW, botW, 760));
         let dstH = Math.round(dstW * ratioHW);
 
-        const maxSide = previewMaxSide || 1180;
+        const maxSide = previewMaxSide || 1800;
         if (Math.max(dstW, dstH) > maxSide) {
           const sc = maxSide / Math.max(dstW, dstH);
           dstW = Math.round(dstW * sc);
@@ -8501,8 +8535,8 @@
             stream = await navigator.mediaDevices.getUserMedia({
               video: {
                 facingMode: { ideal: "environment" },
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
+                width: { ideal: 3840 },
+                height: { ideal: 2160 }
               },
               audio: false
             });
@@ -8532,7 +8566,7 @@
               }
             }
           } catch (_) {}
-          await applyCameraZoom("min");
+          await applyCameraZoom("1");
           runCameraLiveOverlay();
         } catch (err) {
           el.cameraModal.classList.remove("open");
@@ -9624,7 +9658,7 @@
           }
         }, { passive: false });
 
-        function triggerInstantCameraCapture(evt) {
+        async function triggerInstantCameraCapture(evt) {
           if (state.cameraCaptureLocked) {
             if (evt && evt.cancelable) evt.preventDefault();
             return;
@@ -9644,18 +9678,16 @@
 
           const vw = video.videoWidth;
           const vh = video.videoHeight;
-          const c = document.createElement("canvas");
-          c.width = vw;
-          c.height = vh;
+          const fallbackCanvas = document.createElement("canvas");
+          fallbackCanvas.width = vw;
+          fallbackCanvas.height = vh;
 
-          // Select the synchronized full-res frame matching the exact aligned overlay the user saw on screen!
           let chosenSlot = null;
           if (state.cameraSyncSlots && state.cameraSyncSlots.length === 2) {
             const latest = state.cameraSyncSlots[state.cameraSyncActiveIdx];
             const prev = state.cameraSyncSlots[1 - state.cameraSyncActiveIdx];
             const now = Date.now();
             if (latest && latest.corners && (now - latest.ts < 350)) {
-              // If the user's thumb jolted the phone on the very last frame, prefer the steadier pre-jolt frame!
               if (prev && prev.corners && (now - prev.ts < 350) && latest.relJump > 0.022 && prev.relJump < 0.012) {
                 chosenSlot = prev;
               } else {
@@ -9666,24 +9698,72 @@
 
           let seedCorners = null;
           if (chosenSlot && chosenSlot.canvas.width === vw && chosenSlot.canvas.height === vh) {
-            c.getContext("2d").drawImage(chosenSlot.canvas, 0, 0);
+            fallbackCanvas.getContext("2d").drawImage(chosenSlot.canvas, 0, 0);
             seedCorners = chosenSlot.corners.map((p) => ({ x: p.x, y: p.y }));
           } else {
-            c.getContext("2d").drawImage(video, 0, 0);
+            fallbackCanvas.getContext("2d").drawImage(video, 0, 0);
             if (state.lastCameraCorners) {
               seedCorners = state.lastCameraCorners.map((p) => ({ x: p.x, y: p.y }));
             }
           }
 
-          // Close camera viewfinder IMMEDIATELY at t=0ms so the user never sees a frozen shutter screen!
+          // v43.0 HD Still Capture: Prefer native ImageCapture.takePhoto() (full sensor ISP, HDR, sharp optics)
+          // raced with a 900ms guard so it never hangs, falling back seamlessly to the 4K/full-res video frame.
+          let finalCanvas = fallbackCanvas;
+          const vTrack = state.cameraStream ? state.cameraStream.getVideoTracks()[0] : null;
+          if (vTrack && vTrack.readyState === "live" && typeof window.ImageCapture === "function") {
+            showToast("📸 Đang chụp ảnh độ nét cao...");
+            try {
+              const ic = new window.ImageCapture(vTrack);
+              const photoBlob = await Promise.race([
+                ic.takePhoto(),
+                new Promise((_, rej) => setTimeout(() => rej(new Error("takePhoto_timeout")), 900))
+              ]);
+              if (photoBlob && photoBlob.size > 0) {
+                let bmp = null;
+                if (typeof createImageBitmap === "function") {
+                  bmp = await createImageBitmap(photoBlob);
+                }
+                const srcW = bmp ? bmp.width : 0;
+                const srcH = bmp ? bmp.height : 0;
+                if (bmp && srcW >= Math.min(vw, vh)) {
+                  const maxCapSide = 2200;
+                  let tw = srcW, th = srcH;
+                  if (Math.max(tw, th) > maxCapSide) {
+                    const sc = maxCapSide / Math.max(tw, th);
+                    tw = Math.round(tw * sc);
+                    th = Math.round(th * sc);
+                  }
+                  const hdCanvas = document.createElement("canvas");
+                  hdCanvas.width = tw;
+                  hdCanvas.height = th;
+                  hdCanvas.getContext("2d").drawImage(bmp, 0, 0, tw, th);
+                  if (typeof bmp.close === "function") bmp.close();
+                  // Only keep seedCorners if photo aspect ratio matches video stream orientation
+                  if (seedCorners && Math.abs((tw / th) - (vw / vh)) < 0.18) {
+                    const sx = tw / vw, sy = th / vh;
+                    seedCorners = seedCorners.map((p) => ({ x: p.x * sx, y: p.y * sy }));
+                  } else {
+                    seedCorners = null;
+                  }
+                  finalCanvas = hdCanvas;
+                } else if (bmp && typeof bmp.close === "function") {
+                  bmp.close();
+                }
+              }
+            } catch (_) {
+              finalCanvas = fallbackCanvas;
+            }
+          }
+
           el.cameraModal.classList.remove("open");
           stopCamera();
-          showToast("⚡ Đang dàn phẳng & làm nét tài liệu...");
+          showToast("⚡ Đang dàn phẳng & làm nét tài liệu HD...");
           const nextScanName = `Scan_${state.pages.length + 1}`;
           setTimeout(() => {
-            const capturedCorners = detectDocumentCorners(c, false, seedCorners);
-            addNewPageFromCanvas(c, nextScanName, capturedCorners, null, 0, "");
-            showToast("Đã chụp đúng khoảnh khắc căn chuẩn và lưu vào Thư viện!");
+            const capturedCorners = detectDocumentCorners(finalCanvas, false, seedCorners);
+            addNewPageFromCanvas(finalCanvas, nextScanName, capturedCorners, null, 0, "");
+            showToast("Đã chụp ảnh HD, làm nét và lưu vào Thư viện!");
           }, 16);
         }
 
