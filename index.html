@@ -4473,7 +4473,7 @@
             const midT = avgBorderL + (p85InteriorL - avgBorderL) * 0.46;
             const fgThresh = Math.max(avgBorderL + 16.0, Math.min(p85InteriorL - 12.0, 0.65 * otsuT + 0.35 * midT));
             // Shadow-tolerant lower threshold paired with illumination-normalized N_surf so phone/hand shadows never chop off paper!
-            const shadowLowT = avgBorderL + Math.max(14.0, (fgThresh - avgBorderL) * 0.36);
+            const shadowLowT = Math.max(avgBorderL + 26.0, fgThresh * 0.72);
 
             const fgMask = new Uint8Array(nPix);
             for (let i = 0; i < nPix; i++) {
@@ -9739,13 +9739,8 @@
                   hdCanvas.height = th;
                   hdCanvas.getContext("2d").drawImage(bmp, 0, 0, tw, th);
                   if (typeof bmp.close === "function") bmp.close();
-                  // Only keep seedCorners if photo aspect ratio matches video stream orientation
-                  if (seedCorners && Math.abs((tw / th) - (vw / vh)) < 0.18) {
-                    const sx = tw / vw, sy = th / vh;
-                    seedCorners = seedCorners.map((p) => ({ x: p.x * sx, y: p.y * sy }));
-                  } else {
-                    seedCorners = null;
-                  }
+                  // v44.0: Always run full Stage 1 + Stage 2 on takePhoto() HD still because camera still-photo FOV/EIS crop differs from live video preview!
+                  seedCorners = null;
                   finalCanvas = hdCanvas;
                 } else if (bmp && typeof bmp.close === "function") {
                   bmp.close();
