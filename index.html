@@ -172,27 +172,6 @@
       box-shadow: 0 3px 10px rgba(37, 99, 235, 0.32);
     }
 
-    .btn-refine {
-      background: linear-gradient(135deg, #0ea5e9 0%, #10b981 100%);
-      color: #ffffff;
-      border-color: rgba(110, 231, 183, 0.55);
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.32);
-      font-weight: 800;
-    }
-
-    .btn-refine.is-refined {
-      background: rgba(16, 185, 129, 0.18);
-      color: #6ee7b7;
-      border-color: rgba(52, 211, 153, 0.42);
-      box-shadow: none;
-      font-weight: 700;
-    }
-
-    .btn-refine.is-busy {
-      opacity: 0.72;
-      pointer-events: none;
-    }
-
     .btn-hdr-primary {
       background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
       color: #1d4ed8;
@@ -348,35 +327,6 @@
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 7px;
       width: 100%;
-    }
-
-    .grid-4 {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 6px;
-      width: 100%;
-    }
-
-    .grid-4 .btn {
-      padding: 0 4px;
-      font-size: 0.72rem;
-    }
-
-    .cam-fast-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      height: 32px;
-      padding: 0 10px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.72);
-      border: 1px solid rgba(56, 189, 248, 0.45);
-      color: #7dd3fc;
-      font-size: 0.72rem;
-      font-weight: 700;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      pointer-events: none;
     }
 
     /* ========================================================================= */
@@ -1656,13 +1606,10 @@
         </div>
       </section>
 
-      <!-- 3. MAIN BOTTOM BAR: Tinh chỉnh, Sửa, Tải ảnh, Lưu PDF -->
+      <!-- 3. MAIN BOTTOM BAR: Col 1 = Sửa, Col 2 = Tải ảnh, Col 3 = Lưu PDF -->
       <section class="bottom-dock" id="panelControls" aria-label="Điều khiển">
         <div class="dock-inner">
-          <div class="grid-4">
-            <button type="button" class="btn btn-refine" id="btnRefineCurrentPage" title="Dò rìa cẩn thận ở độ phân giải cao và căn thẳng dòng chữ chính xác">
-              ✨ Tinh chỉnh
-            </button>
+          <div class="grid-3">
             <button type="button" class="btn btn-sec" id="btnOpenFullEditor">
               🛠 Sửa
             </button>
@@ -1706,11 +1653,8 @@
 
     <!-- POPUP 1: SEMI-TRANSPARENT VERTICAL HAMBURGER MENU (No redundant section headers!) -->
     <div class="edit-vertical-popup" id="editDropdownMenu">
-      <button type="button" class="vpop-action-btn primary-item" id="btnDdRefinePage" title="Dò rìa cẩn thận độ phân giải cao và căn chỉnh chính xác">
-        ✨ Tinh chỉnh
-      </button>
-      <button type="button" class="vpop-action-btn" id="btnDdStartCrop">
-        📐 Căn chỉnh thủ công
+      <button type="button" class="vpop-action-btn primary-item" id="btnDdStartCrop">
+        📐 Căn chỉnh
       </button>
       <button type="button" class="vpop-action-btn" id="btnDdRotate90">
         ↻ Xoay 90°
@@ -1991,7 +1935,6 @@
           <canvas id="cameraOverlay"></canvas>
           <div class="screen-flash-assist" id="screenFlashAssist" aria-hidden="true"></div>
           <div class="cam-top-bar">
-            <span class="cam-fast-badge">⚡ Chụp nhanh</span>
             <button type="button" class="cam-floating-pill" id="btnCamTorchFloating" title="Bật / Tắt đèn Flash khi chụp">
               🔦 Đèn: Tắt
             </button>
@@ -2056,7 +1999,6 @@
         cameraTorchOn: false,
         cameraScreenFlashAssist: false,
         lastCameraCorners: null,
-        isRefining: false,
         defaultSettings: {
           colorMode: "original",
           brightness: 0,
@@ -2079,8 +2021,6 @@
         mainCanvas: document.getElementById("mainCanvas"),
         mainUnderMetaText: document.getElementById("mainUnderMetaText"),
         btnZoomReset: document.getElementById("btnZoomReset"),
-        btnRefineCurrentPage: document.getElementById("btnRefineCurrentPage"),
-        btnDdRefinePage: document.getElementById("btnDdRefinePage"),
         btnOpenFullEditor: document.getElementById("btnOpenFullEditor"),
         btnOpenImgExport: document.getElementById("btnOpenImgExport"),
         btnOpenPdfExport: document.getElementById("btnOpenPdfExport"),
@@ -2325,7 +2265,6 @@
           noteHasBorder: page.noteHasBorder !== false,
           noteBorderColor: page.noteBorderColor || page.noteColor || "#dc2626",
           includeNoteOnExport: page.includeNoteOnExport !== false,
-          isRefined: page.isRefined !== false,
           corners: page.corners ? page.corners.map((p) => ({ x: p.x, y: p.y })) : null,
           edgeOffsets: page.edgeOffsets ? cloneEdgeOffsets(page.edgeOffsets) : createZeroEdgeOffsets(),
           settings: cloneSettings(page.settings),
@@ -6769,7 +6708,6 @@
           ctx.fillText("Bấm '📷 Chụp ảnh' hoặc '📂 Chọn ảnh' ở trên", 320, 410);
           ctx.fillText("để bắt đầu quét tài liệu.", 320, 440);
           el.mainUnderMetaText.textContent = "Chưa có ảnh nào • Hãy chụp hoặc chọn ảnh";
-          syncRefineButtonUI(null);
           return;
         }
 
@@ -6786,10 +6724,8 @@
         drawNoteOverlayOnCanvas(ctx, targetCanvas.width, targetCanvas.height, page, true);
 
         const ratioStr = describeAspectRatio(targetCanvas.width, targetCanvas.height);
-        const refineTag = page.isRefined === false ? "⚡ Chụp nhanh" : "✨ Đã tinh chỉnh";
         const noteSuffix = page.note && page.note.trim() ? ` • 📝 ${page.note.trim()}` : "";
-        el.mainUnderMetaText.textContent = `${ratioStr} • ${targetCanvas.width}×${targetCanvas.height} px • ${refineTag} • ${getModeLabel(page.settings.colorMode)}${noteSuffix}`;
-        syncRefineButtonUI(page);
+        el.mainUnderMetaText.textContent = `${ratioStr} • ${targetCanvas.width}×${targetCanvas.height} px • ${getModeLabel(page.settings.colorMode)} • ${page.createdAt || "Hôm nay"}${noteSuffix}`;
       }
 
       function syncAlignModeButtons() {
@@ -7725,26 +7661,16 @@
       // =========================================================================
       // 8. CLEAN "THƯ VIỆN" (LIBRARY): "TRANG X / Y" BADGE + "XEM" & "XÓA" + MULTI-SELECT
       // =========================================================================
-      function addNewPageFromCanvas(srcCanvas, name, customCorners, customMidOffsets, initialBookCurve, initialNote, options) {
-        const isFastCapture = !!(options && options.fastCapture);
-        const detectedCorners = customCorners
-          ? customCorners.map((p) => ({ ...p }))
-          : detectDocumentCorners(srcCanvas, isFastCapture);
-        const edgeOffsets = isFastCapture
-          ? createZeroEdgeOffsets()
-          : (customMidOffsets
-            ? cloneEdgeOffsets(customMidOffsets)
-            : (srcCanvas._detectedEdgeOffsets ? cloneEdgeOffsets(srcCanvas._detectedEdgeOffsets) : createZeroEdgeOffsets()));
-        state.alignPointMode = (!isFastCapture && srcCanvas._hasCurvedRim) ? "multipt" : "4pt";
+      function addNewPageFromCanvas(srcCanvas, name, customCorners, customMidOffsets, initialBookCurve, initialNote) {
+        const detectedCorners = customCorners ? customCorners.map((p) => ({ ...p })) : detectDocumentCorners(srcCanvas);
+        const edgeOffsets = customMidOffsets
+          ? cloneEdgeOffsets(customMidOffsets)
+          : (srcCanvas._detectedEdgeOffsets ? cloneEdgeOffsets(srcCanvas._detectedEdgeOffsets) : createZeroEdgeOffsets());
+        state.alignPointMode = srcCanvas._hasCurvedRim ? "multipt" : "4pt";
 
         const settings = cloneSettings(state.defaultSettings);
         if (typeof initialBookCurve === "number") {
           settings.bookCurve = initialBookCurve;
-        }
-        if (isFastCapture) {
-          settings.autoLineDewarp = false;
-          settings.colorMode = "original";
-          settings.bookCurve = 0;
         }
 
         const pageObj = {
@@ -7761,7 +7687,6 @@
           noteHasBorder: true,
           noteBorderColor: "#dc2626",
           includeNoteOnExport: true,
-          isRefined: !isFastCapture,
           srcCanvas,
           corners: detectedCorners,
           edgeOffsets,
@@ -8491,96 +8416,7 @@
       // =========================================================================
       // 10. UI SYNC & CAMERA CONTROLLER
       // =========================================================================
-      function syncRefineButtonUI(page) {
-        const btn = el.btnRefineCurrentPage;
-        const ddBtn = el.btnDdRefinePage;
-        if (!btn) return;
-        if (state.isRefining) {
-          btn.classList.add("is-busy");
-          btn.disabled = true;
-          btn.textContent = "⏳ Đang dò...";
-          if (ddBtn) {
-            ddBtn.disabled = true;
-            ddBtn.textContent = "⏳ Đang tinh chỉnh...";
-          }
-          return;
-        }
-        btn.classList.remove("is-busy");
-        if (!page) {
-          btn.disabled = true;
-          btn.classList.remove("is-refined");
-          btn.textContent = "✨ Tinh chỉnh";
-          if (ddBtn) {
-            ddBtn.disabled = true;
-            ddBtn.textContent = "✨ Tinh chỉnh";
-          }
-          return;
-        }
-        btn.disabled = false;
-        const refined = page.isRefined !== false;
-        btn.classList.toggle("is-refined", refined);
-        btn.textContent = refined ? "✓ Tinh chỉnh" : "✨ Tinh chỉnh";
-        if (ddBtn) {
-          ddBtn.disabled = false;
-          ddBtn.textContent = refined ? "✓ Tinh chỉnh lại" : "✨ Tinh chỉnh";
-        }
-      }
-
-      async function refineCurrentPage() {
-        const page = getCurrentPage();
-        if (!page || state.isRefining) return;
-        if (!page.srcCanvas) {
-          const ok = await ensurePageHydrated(page);
-          if (!ok || !page.srcCanvas) return;
-        }
-        state.isRefining = true;
-        syncRefineButtonUI(page);
-        if (el.editDropdownMenu) el.editDropdownMenu.classList.remove("open");
-        showToast("🔍 Đang dò rìa cẩn thận & căn chỉnh chính xác...");
-
-        setTimeout(() => {
-          try {
-            // Bước 1: Dò rìa toàn diện từ đầu ở độ phân giải đầy đủ (Stage 1 320px + Stage 2 Viterbi & đường rìa cong)
-            page.srcCanvas._cachedImgData = null;
-            const refinedCorners = detectDocumentCorners(page.srcCanvas, false, null);
-            page.corners = refinedCorners;
-            page.edgeOffsets = page.srcCanvas._detectedEdgeOffsets
-              ? cloneEdgeOffsets(page.srcCanvas._detectedEdgeOffsets)
-              : createZeroEdgeOffsets();
-            state.alignPointMode = page.srcCanvas._hasCurvedRim ? "multipt" : "4pt";
-
-            // Bước 2: Nhận diện dòng chữ & đường kẻ bên trong, căn thẳng đồng bộ với khung trang
-            page.settings.autoLineDewarp = true;
-            const alignRes = alignQuadWithInternalLines(page);
-
-            // Bước 3: Dàn phẳng lại chính xác ở độ phân giải cao
-            page.isRefined = true;
-            updateGeometryAndProcess(page, false);
-            syncAlignModeButtons();
-            syncControlsFromPage(page);
-            renderStage(true);
-            renderPageList();
-            if (el.fullScreenEditorModal && el.fullScreenEditorModal.classList.contains("open")) {
-              renderFullScreenEditor();
-            }
-            scheduleSavePage(page, false);
-
-            if (alignRes && alignRes.aligned && alignRes.maxDisp >= 0.65) {
-              showToast(`✨ Đã tinh chỉnh xong: bắt rìa chuẩn xác & căn thẳng dòng (${alignRes.maxDisp.toFixed(1)} px)!`);
-            } else if (page.srcCanvas._hasCurvedRim) {
-              showToast("✨ Đã tinh chỉnh xong: dò rìa cong chính xác & dàn phẳng toàn trang!");
-            } else {
-              showToast("✨ Đã tinh chỉnh xong: dò rìa độ nét cao & căn chỉnh chính xác!");
-            }
-          } finally {
-            state.isRefining = false;
-            syncRefineButtonUI(getCurrentPage());
-          }
-        }, 20);
-      }
-
       function syncControlsFromPage(page) {
-        syncRefineButtonUI(page);
         if (!page) return;
         const s = page.settings;
         el.ddBrightnessSlider.value = s.brightness || 0;
@@ -9954,23 +9790,59 @@
             }
           }
 
-          // Chế độ chụp nhanh: Lấy ngay khung hình khớp viền rìa đã căn trên camera, xuất ảnh lập tức chưa tinh chỉnh
-          const finalCanvas = fallbackCanvas;
+          // v43.0 HD Still Capture: Prefer native ImageCapture.takePhoto() (full sensor ISP, HDR, sharp optics)
+          // raced with a 900ms guard so it never hangs, falling back seamlessly to the 4K/full-res video frame.
+          let finalCanvas = fallbackCanvas;
+          const vTrack = state.cameraStream ? state.cameraStream.getVideoTracks()[0] : null;
+          if (vTrack && vTrack.readyState === "live" && typeof window.ImageCapture === "function") {
+            showToast("📸 Đang chụp ảnh độ nét cao...");
+            try {
+              const ic = new window.ImageCapture(vTrack);
+              const photoBlob = await Promise.race([
+                ic.takePhoto(),
+                new Promise((_, rej) => setTimeout(() => rej(new Error("takePhoto_timeout")), 900))
+              ]);
+              if (photoBlob && photoBlob.size > 0) {
+                let bmp = null;
+                if (typeof createImageBitmap === "function") {
+                  bmp = await createImageBitmap(photoBlob);
+                }
+                const srcW = bmp ? bmp.width : 0;
+                const srcH = bmp ? bmp.height : 0;
+                if (bmp && srcW >= Math.min(vw, vh)) {
+                  const maxCapSide = 2200;
+                  let tw = srcW, th = srcH;
+                  if (Math.max(tw, th) > maxCapSide) {
+                    const sc = maxCapSide / Math.max(tw, th);
+                    tw = Math.round(tw * sc);
+                    th = Math.round(th * sc);
+                  }
+                  const hdCanvas = document.createElement("canvas");
+                  hdCanvas.width = tw;
+                  hdCanvas.height = th;
+                  hdCanvas.getContext("2d").drawImage(bmp, 0, 0, tw, th);
+                  if (typeof bmp.close === "function") bmp.close();
+                  // v44.0: Always run full Stage 1 + Stage 2 on takePhoto() HD still because camera still-photo FOV/EIS crop differs from live video preview!
+                  seedCorners = null;
+                  finalCanvas = hdCanvas;
+                } else if (bmp && typeof bmp.close === "function") {
+                  bmp.close();
+                }
+              }
+            } catch (_) {
+              finalCanvas = fallbackCanvas;
+            }
+          }
+
           el.cameraModal.classList.remove("open");
           stopCamera();
+          showToast("⚡ Đang dàn phẳng & làm nét tài liệu HD...");
           const nextScanName = `Scan_${state.pages.length + 1}`;
-          const fastCorners = (seedCorners && seedCorners.length === 4)
-            ? seedCorners
-            : detectDocumentCorners(finalCanvas, true);
-          addNewPageFromCanvas(finalCanvas, nextScanName, fastCorners, null, 0, "", { fastCapture: true });
-          showToast("⚡ Đã chụp nhanh! Bấm '✨ Tinh chỉnh' nếu muốn dò rìa & căn chuẩn chính xác.");
-        }
-
-        if (el.btnRefineCurrentPage) {
-          el.btnRefineCurrentPage.addEventListener("click", refineCurrentPage);
-        }
-        if (el.btnDdRefinePage) {
-          el.btnDdRefinePage.addEventListener("click", refineCurrentPage);
+          setTimeout(() => {
+            const capturedCorners = detectDocumentCorners(finalCanvas, false, seedCorners);
+            addNewPageFromCanvas(finalCanvas, nextScanName, capturedCorners, null, 0, "");
+            showToast("Đã chụp ảnh HD, làm nét và lưu vào Thư viện!");
+          }, 16);
         }
 
         el.btnCapturePhoto.addEventListener("touchstart", triggerInstantCameraCapture, { passive: false });
@@ -10002,7 +9874,6 @@
             noteHasBorder: rec.noteHasBorder !== false,
             noteBorderColor: rec.noteBorderColor || rec.noteColor || "#dc2626",
             includeNoteOnExport: rec.includeNoteOnExport !== false,
-            isRefined: rec.isRefined !== false,
             srcCanvas: null,
             _storedSrcBlob: rec.srcBlob,
             _thumbDataUrl: rec.thumbDataUrl || "",
