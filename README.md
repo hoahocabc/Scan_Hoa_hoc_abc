@@ -1,9 +1,14 @@
-# ScanhoahocABC (v35.0 — Hướng Dẫn Sử Dụng Nhanh)
+# ScanhoahocABC (v47.0 — Hướng Dẫn Sử Dụng Nhanh)
 
-## Các nâng cấp trọng tâm trên ScanhoahocABC (v35.0)
-1. **Thuật toán Bắt đối tượng theo Toàn bộ 4 Rìa chu vi (`Full-Perimeter 4-Rim Contrast v35.0`)**:
-   - Khôi phục độ phân giải làm việc `360px` và phạm vi quét toàn khung từ bản gốc, loại bỏ hoàn toàn bộ lọc màu tâm trang từng gây mất cạnh khi tài liệu có tiêu đề màu, ảnh chụp sát mép hoặc ánh sáng không đều.
-   - Đo trực tiếp độ tương phản đa kênh (độ sáng, độ phản xạ chuẩn hóa, màu sắc RGB, sắc độ đối kháng và khe bóng rìa) giữa hai phía trong/ngoài dọc theo cả 4 rìa (`Top`, `Right`, `Bottom`, `Left`) và 8 đầu mút góc của đối tượng.
-2. **Nhận diện Dòng chữ & Đường kẻ ngang/dọc — Căn thẳng đồng bộ với Toàn trang giấy**:
-   - Tự động kích hoạt qua nút **📏 Căn thẳng dòng & kẻ** (trong **🛠 Sửa → ☰**) hoặc đồng bộ khung đa điểm qua nút **📏 Căn theo dòng** (trong **📐 Căn chỉnh**).
-3. **Tùy chỉnh Ghi chú (Có/Không nền, Có/Không viền, Màu chữ/nền/viền), Bật đèn Flash & Giữ 1 ngón di chuyển ảnh**.
+## Các nâng cấp chính trên bản Siêu Nét Ánh Sáng Yếu / Đèn Neon (v47.0)
+1. **Chế độ ⚡ Siêu nét (Đèn yếu) mặc định**:
+   - Tự động khử nhiễu hạt, loại bỏ ám màu xanh/vàng của đèn neon và làm rõ nét từng nét chữ mà không gây viền sáng quanh chữ.
+   - Độ phân giải xử lý được nâng lên mức siêu nét để chữ nhỏ, chỉ số hóa học và bảng biểu vẫn rõ khi phóng to hoặc in ấn.
+2. **Thanh trượt 🔍 Độ nét (0% – 100%)**:
+   - Mở **🛠 Sửa → ☰** để điều chỉnh mức độ sắc nét theo ý muốn cho mọi chế độ màu (kể cả **🖼 Ảnh gốc**).
+3. **Chụp ảnh tối ưu cho phòng thiếu sáng / đèn neon**:
+   - Bấm **📷 Chụp ảnh**, giữ chắc tay khoảng nửa giây khi bấm **📷 Chụp** để ứng dụng tự chọn và ghép khung nét nhất, giảm rung và chống sọc nhấp nháy đèn neon.
+   - Có thể bật thêm **🔦 Bật đèn** trực tiếp trong màn hình máy ảnh khi phòng quá tối.
+4. **Chạy Offline trên máy tính & điện thoại**:
+   - Trên Windows: giải nén và mở tệp `Chay_DocScan_Offline.bat` (hoặc mở trực tiếp `index.html`).
+   - Trên GitHub Pages / điện thoại: tải đủ 5 tệp lên kho lưu trữ và mở bằng trình duyệt.

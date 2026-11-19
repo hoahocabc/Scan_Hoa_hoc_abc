@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v33.0) — Ứng dụng quét tài liệu chuyên nghiệp: Bắt đối tượng theo toàn bộ 4 rìa chu vi (tương phản đa kênh giữa rìa đối tượng và nền), căn thẳng dòng chữ & đường kẻ khớp khung trang.",
+  "description": "ScanhoahocABC (v47.0) — Ứng dụng quét tài liệu siêu nét, tối ưu cho ánh sáng yếu và đèn neon: Khử nhiễu giữ biên, khử ám màu, làm nét đa tầng và chụp liên thanh chống nhấp nháy.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
