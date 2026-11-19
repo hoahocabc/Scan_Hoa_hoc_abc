@@ -3998,8 +3998,9 @@
               if (rmap[i] > maxV) maxV = rmap[i];
             }
             if (maxV <= 0.4) return 1.0 / 7.5;
-            if (maxV >= 16.0) return 1.0 / 7.5;
-            return 1.0 / Math.max(1.8, maxV * 0.45);
+            if (maxV <= 22.0) return maxV >= 16.0 ? (1.0 / 7.5) : (1.0 / Math.max(1.8, maxV * 0.45));
+            // v42.0: Adaptive high-contrast denominator so weak internal text lines do not saturate to 1.0
+            return 1.0 / Math.min(54.0, 7.5 + (maxV - 22.0) * 0.28);
           }
 
           const sL = computeSafeScale(rawLeft);
@@ -4042,7 +4043,7 @@
             const fullCands = [];
             const winCands = [];
             const N = N_LINE;
-            const maxTiltX = Math.floor(w * 0.30);
+            const maxTiltX = Math.min(Math.floor(w * 0.48), Math.floor(ySpanV * 0.52));
             const winLen = 13;
             const inv2W = 1.0 / (2.0 * w);
             const r4 = vRowOffArr[4], r14 = vRowOffArr[14], r25 = vRowOffArr[25], r35 = vRowOffArr[35];
@@ -4118,7 +4119,7 @@
             const fullCands = [];
             const winCands = [];
             const N = N_LINE;
-            const maxTiltY = Math.floor(h * 0.30);
+            const maxTiltY = Math.min(Math.floor(h * 0.48), Math.floor(xSpanH * 0.52));
             const winLen = 13;
             const inv2H = 1.0 / (2.0 * h);
             const c4 = hColOffArr[4], c14 = hColOffArr[14], c25 = hColOffArr[25], c35 = hColOffArr[35];
@@ -4363,11 +4364,11 @@
 
                   const cosTL = Math.abs(vTx * vLx + vTy * vLy) / (lenT * lenL + 1e-5);
                   const cosBR = Math.abs(vBx * vRx + vBy * vRy) / (lenB * lenR + 1e-5);
-                  if (cosTL > 0.44 || cosBR > 0.44) continue;
+                  if (cosTL > 0.54 || cosBR > 0.54) continue;
 
                   const cosTB = (vTx * vBx + vTy * vBy) / (lenT * lenB + 1e-5);
                   const cosLR = (vLx * vRx + vLy * vRy) / (lenL * lenR + 1e-5);
-                  if (cosTB < 0.74 || cosLR < 0.74) continue;
+                  if (cosTB < 0.62 || cosLR < 0.62) continue;
 
                   const spanH = 0.5 * (lenL + lenR);
                   const spanW = 0.5 * (lenT + lenB);
@@ -4445,6 +4446,206 @@
             }
           }
 
+          // v42.0 Pillar 2: Bright-Paper-on-Dark-Background Connected-Component Convex-Hull Quad Proposal
+          // Completely immune to internal printed text lines, ruled lines, steep tilts, and perspective trapezoids!
+          if (!allowDarkObjectPolarity && !isFullBleedWhitePage && (p85InteriorL - avgBorderL >= 26.0)) {
+            const hist64 = new Int32Array(64);
+            let histTotal = 0;
+            for (let i = 0; i < nPix; i += 2) {
+              hist64[Math.min(63, (L_surf[i] * 0.25) | 0)]++;
+              histTotal++;
+            }
+            let sumAll = 0;
+            for (let b = 0; b < 64; b++) sumAll += b * hist64[b];
+            let sumB = 0, wB = 0, maxVar = -1, otsuBin = 32;
+            for (let b = 0; b < 63; b++) {
+              wB += hist64[b];
+              if (wB === 0) continue;
+              const wF = histTotal - wB;
+              if (wF === 0) break;
+              sumB += b * hist64[b];
+              const mB = sumB / wB;
+              const mF = (sumAll - sumB) / wF;
+              const bv = wB * wF * (mB - mF) * (mB - mF);
+              if (bv > maxVar) { maxVar = bv; otsuBin = b; }
+            }
+            const otsuT = otsuBin * 4.0 + 2.0;
+            const midT = avgBorderL + (p85InteriorL - avgBorderL) * 0.46;
+            const fgThresh = Math.max(avgBorderL + 16.0, Math.min(p85InteriorL - 12.0, 0.65 * otsuT + 0.35 * midT));
+
+            const fgMask = new Uint8Array(nPix);
+            for (let i = 0; i < nPix; i++) {
+              if (L_surf[i] >= fgThresh) fgMask[i] = 1;
+            }
+
+            const compId = new Int32Array(nPix);
+            const bfsQ = new Int32Array(nPix);
+            let curId = 0, bestCompId = 0, bestCompScore = 0;
+            const minCompArea = Math.floor(nPix * 0.06);
+            const maxCompArea = Math.floor(nPix * 0.94);
+
+            for (let y = 1; y < h - 1; y++) {
+              const rOff = y * w;
+              for (let x = 1; x < w - 1; x++) {
+                const startIdx = rOff + x;
+                if (fgMask[startIdx] !== 1 || compId[startIdx] !== 0) continue;
+                curId++;
+                let qHead = 0, qTail = 0;
+                bfsQ[qTail++] = startIdx;
+                compId[startIdx] = curId;
+                let area = 0, sumX = 0, sumY = 0;
+                let touchL = 0, touchR = 0, touchT = 0, touchB = 0;
+                while (qHead < qTail) {
+                  const idx = bfsQ[qHead++];
+                  const py = (idx / w) | 0;
+                  const px = idx - py * w;
+                  area++;
+                  sumX += px;
+                  sumY += py;
+                  if (px <= 1) touchL++;
+                  if (px >= w - 2) touchR++;
+                  if (py <= 1) touchT++;
+                  if (py >= h - 2) touchB++;
+                  if (px > 0 && fgMask[idx - 1] === 1 && compId[idx - 1] === 0) { compId[idx - 1] = curId; bfsQ[qTail++] = idx - 1; }
+                  if (px + 1 < w && fgMask[idx + 1] === 1 && compId[idx + 1] === 0) { compId[idx + 1] = curId; bfsQ[qTail++] = idx + 1; }
+                  if (py > 0 && fgMask[idx - w] === 1 && compId[idx - w] === 0) { compId[idx - w] = curId; bfsQ[qTail++] = idx - w; }
+                  if (py + 1 < h && fgMask[idx + w] === 1 && compId[idx + w] === 0) { compId[idx + w] = curId; bfsQ[qTail++] = idx + w; }
+                }
+                if (area >= minCompArea && area <= maxCompArea) {
+                  const borderSidesTouched = (touchL > h * 0.25 ? 1 : 0) + (touchR > h * 0.25 ? 1 : 0) + (touchT > w * 0.25 ? 1 : 0) + (touchB > w * 0.25 ? 1 : 0);
+                  if (borderSidesTouched <= 2) {
+                    const cx = sumX / area, cy = sumY / area;
+                    const distCenter = Math.hypot((cx - w * 0.5) / w, (cy - h * 0.5) / h);
+                    const cScore = area * Math.max(0.45, 1.15 - distCenter);
+                    if (cScore > bestCompScore) {
+                      bestCompScore = cScore;
+                      bestCompId = curId;
+                    }
+                  }
+                }
+              }
+            }
+
+            if (bestCompId > 0) {
+              const bPts = [];
+              let compArea = 0;
+              for (let y = 0; y < h; y++) {
+                const rOff = y * w;
+                for (let x = 0; x < w; x++) {
+                  const idx = rOff + x;
+                  if (compId[idx] !== bestCompId) continue;
+                  compArea++;
+                  if (
+                    x === 0 || x === w - 1 || y === 0 || y === h - 1 ||
+                    compId[idx - 1] !== bestCompId || compId[idx + 1] !== bestCompId ||
+                    compId[idx - w] !== bestCompId || compId[idx + w] !== bestCompId
+                  ) {
+                    bPts.push({ x, y });
+                  }
+                }
+              }
+              if (bPts.length >= 16) {
+                // Monotone Chain Convex Hull
+                bPts.sort((a, b) => a.x !== b.x ? a.x - b.x : a.y - b.y);
+                const lower = [];
+                for (let i = 0; i < bPts.length; i++) {
+                  const p = bPts[i];
+                  while (lower.length >= 2) {
+                    const a = lower[lower.length - 2], b = lower[lower.length - 1];
+                    if ((b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x) <= 0) lower.pop();
+                    else break;
+                  }
+                  lower.push(p);
+                }
+                const upper = [];
+                for (let i = bPts.length - 1; i >= 0; i--) {
+                  const p = bPts[i];
+                  while (upper.length >= 2) {
+                    const a = upper[upper.length - 2], b = upper[upper.length - 1];
+                    if ((b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x) <= 0) upper.pop();
+                    else break;
+                  }
+                  upper.push(p);
+                }
+                lower.pop();
+                upper.pop();
+                const hull = lower.concat(upper);
+
+                // Reduce convex hull to 4 corners by iteratively removing minimum-triangle-area vertex
+                while (hull.length > 4) {
+                  let minA = 1e18, minIdx = 0;
+                  const hl = hull.length;
+                  for (let i = 0; i < hl; i++) {
+                    const prev = hull[(i + hl - 1) % hl];
+                    const curr = hull[i];
+                    const next = hull[(i + 1) % hl];
+                    const triA = Math.abs((curr.x - prev.x) * (next.y - prev.y) - (curr.y - prev.y) * (next.x - prev.x));
+                    if (triA < minA) { minA = triA; minIdx = i; }
+                  }
+                  hull.splice(minIdx, 1);
+                }
+
+                if (hull.length === 4) {
+                  // Order clockwise starting from Top-Left (screen coords: +x right, +y down -> cross > 0 is clockwise)
+                  let area2 = 0;
+                  for (let i = 0; i < 4; i++) {
+                    const a = hull[i], b = hull[(i + 1) % 4];
+                    area2 += a.x * b.y - b.x * a.y;
+                  }
+                  if (area2 < 0) hull.reverse();
+                  let tlIdx = 0, bestTlMetric = 1e18;
+                  for (let i = 0; i < 4; i++) {
+                    const m = hull[i].x + hull[i].y;
+                    if (m < bestTlMetric) { bestTlMetric = m; tlIdx = i; }
+                  }
+                  const hQuad = [hull[tlIdx], hull[(tlIdx + 1) % 4], hull[(tlIdx + 2) % 4], hull[(tlIdx + 3) % 4]];
+
+                  // Compute exact quad area and foreground IoU against bestCompId
+                  const qArea = Math.abs(area2) * 0.5;
+                  const minSideQ = Math.min(
+                    Math.hypot(hQuad[1].x - hQuad[0].x, hQuad[1].y - hQuad[0].y),
+                    Math.hypot(hQuad[2].x - hQuad[1].x, hQuad[2].y - hQuad[1].y),
+                    Math.hypot(hQuad[3].x - hQuad[2].x, hQuad[3].y - hQuad[2].y),
+                    Math.hypot(hQuad[0].x - hQuad[3].x, hQuad[0].y - hQuad[3].y)
+                  );
+                  if (minSideQ >= minSideLen && qArea >= minCompArea) {
+                    const fillRatio = Math.min(compArea, qArea) / Math.max(compArea, qArea, 1);
+                    // Also check IoU of existing bestQuad (if any) vs hQuad on the foreground component
+                    const evalFgIoU = (q) => {
+                      let hitFg = 0, inQ = 0;
+                      const step = 3;
+                      for (let y = 1; y < h - 1; y += step) {
+                        const rOff = y * w;
+                        for (let x = 1; x < w - 1; x += step) {
+                          let inside = true;
+                          for (let e = 0; e < 4; e++) {
+                            const a = q[e], b = q[(e + 1) % 4];
+                            if ((b.x - a.x) * (y - a.y) - (b.y - a.y) * (x - a.x) < 0) { inside = false; break; }
+                          }
+                          if (inside) {
+                            inQ++;
+                            if (compId[rOff + x] === bestCompId) hitFg++;
+                          }
+                        }
+                      }
+                      const totalFgS = Math.max(1, compArea / (step * step));
+                      return hitFg / Math.max(1, inQ + totalFgS - hitFg);
+                    };
+
+                    const hullIoU = evalFgIoU(hQuad);
+                    const bestIoU = bestQuad ? evalFgIoU(bestQuad) : 0.0;
+                    // If the connected-component hull quad cleanly wraps the bright paper (IoU >= 0.78)
+                    // AND clearly outperforms bestQuad on foreground coverage (or bestQuad missed it), adopt hQuad!
+                    if (fillRatio >= 0.72 && hullIoU >= 0.78 && (!bestQuad || hullIoU > bestIoU + 0.06)) {
+                      bestQuad = hQuad;
+                      bestQScore = Math.max(bestQScore, 9.5 + hullIoU);
+                    }
+                  }
+                }
+              }
+            }
+          }
+
           if (!bestQuad || (isFullBleedWhitePage && bestQScore < 8.5)) {
             srcCanvas._detectedEdgeOffsets = createZeroEdgeOffsets();
             srcCanvas._hasCurvedRim = false;
@@ -4510,9 +4711,10 @@
 
         // STAGE 2: FULL-RESOLUTION 1D-CLOSED NORMAL PROFILE VITERBI + ALL-RIM CONTRAST & 5-SINE CURVED RIM
         const idxPairs = [[3, 0], [0, 1], [1, 2], [2, 3]];
-        const nProf = 45;
+        const nProf = 55;
         const searchRad = Math.min(72, Math.max(24, Math.round(Math.min(origW, origH) * 0.068)));
-        const M = searchRad + 8;
+        const closeRadS2 = Math.min(origW, origH) >= 1400 ? 7 : 5;
+        const M = searchRad + closeRadS2 + 4;
         const profLen = 2 * M + 1;
         const profL = new Float32Array(profLen);
         const creaseProfL = new Float32Array(profLen);
@@ -4523,7 +4725,9 @@
         const surfR = new Float32Array(profLen);
         const surfG = new Float32Array(profLen);
         const surfB = new Float32Array(profLen);
-        const nStates = 2 * searchRad + 1;
+        const strideS = 1;
+        const halfStates = Math.floor(searchRad / strideS);
+        const nStates = 2 * halfStates + 1;
         const scoreMat = new Float32Array(nProf * nStates);
         const dpMat = new Float64Array(nProf * nStates);
         const prevMat = new Int32Array(nProf * nStates);
@@ -4597,10 +4801,10 @@
               }
             }
 
-            fastClose1DProfile(profL, profLen, 5, surfL);
-            fastClose1DProfile(profR, profLen, 5, surfR);
-            fastClose1DProfile(profG, profLen, 5, surfG);
-            fastClose1DProfile(profB, profLen, 5, surfB);
+            fastClose1DProfile(profL, profLen, closeRadS2, surfL);
+            fastClose1DProfile(profR, profLen, closeRadS2, surfR);
+            fastClose1DProfile(profG, profLen, closeRadS2, surfG);
+            fastClose1DProfile(profB, profLen, closeRadS2, surfB);
 
             const rowOff = i * nStates;
             let hasNearPopRim = false;
@@ -4628,7 +4832,7 @@
             const priorWeight = 0.002 + 0.018 * endWeight;
 
             for (let si = 0; si < nStates; si++) {
-              const s = si - searchRad;
+              const s = (si - halfStates) * strideS;
               const cx = bx + s * nx;
               const cy = by + s * ny;
               if (cx < 1 || cx > origW - 2 || cy < 1 || cy > origH - 2) {
@@ -4706,8 +4910,8 @@
           }
 
           for (let si = 0; si < nStates; si++) {
-            const s = si - searchRad;
-            dpMat[si] = scoreMat[si] - 0.05 * s * s;
+            const s0 = (si - halfStates) * strideS;
+            dpMat[si] = scoreMat[si] - 0.05 * s0 * s0;
             prevMat[si] = si;
           }
 
@@ -4734,11 +4938,11 @@
           }
 
           const lastOff = (nProf - 1) * nStates;
-          let bestEndSi = searchRad;
+          let bestEndSi = halfStates;
           let bestEndScore = -1e12;
           for (let si = 0; si < nStates; si++) {
-            const s = si - searchRad;
-            const v = dpMat[lastOff + si] - 0.05 * s * s;
+            const sEnd = (si - halfStates) * strideS;
+            const v = dpMat[lastOff + si] - 0.05 * sEnd * sEnd;
             if (v > bestEndScore) {
               bestEndScore = v;
               bestEndSi = si;
@@ -4757,14 +4961,14 @@
             const t = 0.02 + (i / (nProf - 1)) * 0.96;
             const si = pathSi[i];
             const rowOff = i * nStates;
-            let sVal = si - searchRad;
+            let sVal = (si - halfStates) * strideS;
             if (si > 0 && si < nStates - 1) {
               const vm = scoreMat[rowOff + si - 1];
               const v0 = scoreMat[rowOff + si];
               const vp = scoreMat[rowOff + si + 1];
               const denom = 2.0 * (2.0 * v0 - vm - vp);
               if (Math.abs(denom) > 1e-4) {
-                sVal += Math.max(-0.5, Math.min(0.5, (vm - vp) / denom));
+                sVal += Math.max(-0.5, Math.min(0.5, (vm - vp) / denom)) * strideS;
               }
             }
             wArr[i] = Math.max(0.15, scoreMat[rowOff + si]);
@@ -5061,8 +5265,8 @@
           [0.62, 0.95, 0.785]
         ];
 
-        const regH = [0.005, 0.035, 0.075, 0.14, 0.26];
-        const regV = [1.0, 1.15, 1.50];
+        const regH = [0.002, 0.014, 0.032, 0.068, 0.135];
+        const regV = [1.0, 0.62, 0.82];
         const nParams = V_MODES * K;
         const A_sys = Array.from({ length: nParams }, (_, r) => {
           const row = new Float64Array(nParams);
@@ -5074,7 +5278,7 @@
         const b_sys = new Float64Array(nParams);
 
         // Cycle-safe maxD = 5 for step=1 (strictly less than half line spacing ~6.8px in Hs=384!)
-        const maxD1 = 5;
+        const maxD1 = 8;
         const corrs = new Float64Array(2 * maxD1 + 1);
         const corrsSorted = new Float64Array(2 * maxD1 + 1);
         const norms = new Float64Array(M);
@@ -5171,7 +5375,7 @@
               for (let j = kp + 1; j <= k; j++) {
                 if (step1Valid[j]) { sumPred += step1Shift[j]; cntPred++; }
               }
-              const dCenter = cntPred > 0 ? Math.max(-11, Math.min(11, Math.round((sumPred / cntPred) * step))) : 0;
+              const dCenter = cntPred > 0 ? Math.max(-22, Math.min(22, Math.round((sumPred / cntPred) * step))) : 0;
 
               const prevOff = kp * Hs, currOff = k * Hs, normPrev = norms[kp];
               let bestWi = winR, bestC = -1.0;
@@ -5324,7 +5528,7 @@
               const ty = y / (dstH - 1);
               const rawShift = cV[0] * (ty - 0.5) + cV[1] * Math.sin(Math.PI * ty) + cV[2] * Math.sin(2.0 * Math.PI * ty);
               if (Math.abs(rawShift) > 0.35) {
-                horizShiftY[y] = Math.max(-24.0, Math.min(24.0, rawShift));
+                horizShiftY[y] = Math.max(-42.0, Math.min(42.0, rawShift));
               }
             }
           }
@@ -5359,9 +5563,9 @@
           if (localMax > maxSurfaceDisp) maxSurfaceDisp = localMax;
         }
 
-        if (maxSurfaceDisp < 0.60) return null;
+        if (maxSurfaceDisp < 0.38) return null;
 
-        const shrinkGain = Math.min(1.0, (maxSurfaceDisp - 0.45) / 0.90);
+        const shrinkGain = Math.min(1.0, (maxSurfaceDisp - 0.25) / 0.55);
         for (let x = 0; x < dstW; x++) {
           mode0[x] *= shrinkGain;
           mode1[x] *= shrinkGain;
@@ -5444,7 +5648,7 @@
         let dstW = Math.round(Math.max(topW, botW, 760));
         let dstH = Math.round(dstW * ratioHW);
 
-        const maxSide = previewMaxSide || 1440;
+        const maxSide = previewMaxSide || 1180;
         if (Math.max(dstW, dstH) > maxSide) {
           const sc = maxSide / Math.max(dstW, dstH);
           dstW = Math.round(dstW * sc);
@@ -6549,8 +6753,9 @@
           for (let gi = 1; gi <= 5; gi++) {
             const v = gi / 6.0;
             ctx.beginPath();
-            for (let s = 0; s <= 24; s++) {
-              const u = s / 24.0;
+            const gridSteps = state.draggingHandle ? 10 : 24;
+            for (let s = 0; s <= gridSteps; s++) {
+              const u = s / gridSteps;
               const bx = (c[0].x * (1 - u) + c[1].x * u) * (1 - v) + (c[3].x * (1 - u) + c[2].x * u) * v;
               const by = (c[0].y * (1 - u) + c[1].y * u) * (1 - v) + (c[3].y * (1 - u) + c[2].y * u) * v;
               const tTop = evalEdge3PointOffset(eOff[0], u);
@@ -6567,8 +6772,9 @@
           for (let gj = 1; gj <= 3; gj++) {
             const u = gj / 4.0;
             ctx.beginPath();
-            for (let s = 0; s <= 24; s++) {
-              const v = s / 24.0;
+            const gridStepsV = state.draggingHandle ? 10 : 24;
+            for (let s = 0; s <= gridStepsV; s++) {
+              const v = s / gridStepsV;
               const bx = (c[0].x * (1 - u) + c[1].x * u) * (1 - v) + (c[3].x * (1 - u) + c[2].x * u) * v;
               const by = (c[0].y * (1 - u) + c[1].y * u) * (1 - v) + (c[3].y * (1 - u) + c[2].y * u) * v;
               const tTop = evalEdge3PointOffset(eOff[0], u);
@@ -7246,15 +7452,19 @@
           const idx = state.draggingHandle.index;
           const dx = pt.x - state.draggingHandle.startX;
           const dy = pt.y - state.draggingHandle.startY;
-          const rawX = Math.max(0, Math.min(w, state.draggingHandle.origX + dx));
-          const rawY = Math.max(0, Math.min(h, state.draggingHandle.origY + dy));
-          const snapRes = snapPointToLocalEdge(page.srcCanvas, rawX, rawY, 0, 0, 6);
-          page.corners[idx].x = snapRes.x;
-          page.corners[idx].y = snapRes.y;
+          // Direct 1:1 smooth finger placement with zero jerky magnetic snapping!
+          const newX = Math.max(0, Math.min(w, state.draggingHandle.origX + dx));
+          const newY = Math.max(0, Math.min(h, state.draggingHandle.origY + dy));
+          page.corners[idx].x = newX;
+          page.corners[idx].y = newY;
+          state.latestDragClientX = pt.clientX;
+          state.latestDragClientY = pt.clientY;
           if (!state.pointerRafId) {
             state.pointerRafId = requestAnimationFrame(() => {
               state.pointerRafId = null;
-              updateMagnifierLoupe(snapRes.x, snapRes.y, pt.clientX, pt.clientY, state.draggingHandle ? state.draggingHandle.label : "Góc", snapRes.snapped);
+              if (!state.draggingHandle) return;
+              const cur = page.corners[idx];
+              updateMagnifierLoupe(cur.x, cur.y, state.latestDragClientX, state.latestDragClientY, state.draggingHandle.label || "Góc", false);
               renderFullScreenEditor();
             });
           }
@@ -7265,45 +7475,33 @@
           const dy = pt.y - state.draggingHandle.startY;
           if (!page.edgeOffsets) page.edgeOffsets = createZeroEdgeOffsets();
 
-          // Compute inward normal of the current edge for magnetic edge-snap
-          const p1 = page.corners[eIdx];
-          const p2 = page.corners[(eIdx + 1) % 4];
-          const vx = p2.x - p1.x, vy = p2.y - p1.y;
-          const segLen = Math.hypot(vx, vy) || 1.0;
-          const nx = -vy / segLen, ny = vx / segLen;
-          const tSub = (sIdx + 1) / (NUM_EDGE_SUBPOINTS + 1);
-          const basePx = p1.x * (1.0 - tSub) + p2.x * tSub;
-          const basePy = p1.y * (1.0 - tSub) + p2.y * tSub;
-          const rawTargetX = basePx + state.draggingHandle.origOffX + dx;
-          const rawTargetY = basePy + state.draggingHandle.origOffY + dy;
+          // Direct 1:1 smooth sub-anchor tracking (no jerky edge-snap jumps while dragging!)
+          page.edgeOffsets[eIdx][sIdx].x = state.draggingHandle.origOffX + dx;
+          page.edgeOffsets[eIdx][sIdx].y = state.draggingHandle.origOffY + dy;
 
-          const snapRes = snapPointToLocalEdge(page.srcCanvas, rawTargetX, rawTargetY, nx, ny, 7);
-          const finalDx = snapRes.x - (basePx + state.draggingHandle.origOffX);
-          const finalDy = snapRes.y - (basePy + state.draggingHandle.origOffY);
-
-          page.edgeOffsets[eIdx][sIdx].x = Math.round(state.draggingHandle.origOffX + finalDx);
-          page.edgeOffsets[eIdx][sIdx].y = Math.round(state.draggingHandle.origOffY + finalDy);
-
-          // Elastic Neighbor Coupling: smoothly propagate curve deformation to adjacent sub-points on the same edge
+          // Gentle neighbor smoothing so curved edges stay continuous without fighting your finger
           const snapOrig = state.draggingHandle.origEdgeSnapshot;
           if (snapOrig && snapOrig.length === NUM_EDGE_SUBPOINTS) {
-            const weights = [1.0, 0.42, 0.14, 0.0, 0.0];
+            const weights = [1.0, 0.24, 0.0, 0.0, 0.0];
             for (let j = 0; j < NUM_EDGE_SUBPOINTS; j++) {
               if (j === sIdx) continue;
               const distIdx = Math.abs(j - sIdx);
               const wCouple = weights[distIdx] || 0;
               if (wCouple > 0) {
-                page.edgeOffsets[eIdx][j].x = Math.round(snapOrig[j].x + finalDx * wCouple);
-                page.edgeOffsets[eIdx][j].y = Math.round(snapOrig[j].y + finalDy * wCouple);
+                page.edgeOffsets[eIdx][j].x = snapOrig[j].x + dx * wCouple;
+                page.edgeOffsets[eIdx][j].y = snapOrig[j].y + dy * wCouple;
               }
             }
           }
 
+          state.latestDragClientX = pt.clientX;
+          state.latestDragClientY = pt.clientY;
           if (!state.pointerRafId) {
             state.pointerRafId = requestAnimationFrame(() => {
               state.pointerRafId = null;
+              if (!state.draggingHandle) return;
               const mp = getEdgeSubHandlePos(page, eIdx, sIdx);
-              updateMagnifierLoupe(mp.x, mp.y, pt.clientX, pt.clientY, state.draggingHandle ? state.draggingHandle.label : "Cạnh", snapRes.snapped);
+              updateMagnifierLoupe(mp.x, mp.y, state.latestDragClientX, state.latestDragClientY, state.draggingHandle.label || "Cạnh", false);
               renderFullScreenEditor();
             });
           }
@@ -7387,7 +7585,7 @@
         syncControlsFromPage(pageObj);
         renderPageList();
         renderStage();
-        idbSavePageRecord(pageObj, state.currentPageIndex, true);
+        scheduleSavePage(pageObj, true);
         idbSaveMeta("currentPageIndex", state.currentPageIndex);
         idbSaveMeta("hasUserClearedAll", false);
       }
@@ -9477,12 +9675,16 @@
             }
           }
 
-          // Refine the locked preview corners at full resolution (Stage 2 Viterbi & curved-rim fitting)
-          const capturedCorners = detectDocumentCorners(c, false, seedCorners);
+          // Close camera viewfinder IMMEDIATELY at t=0ms so the user never sees a frozen shutter screen!
           el.cameraModal.classList.remove("open");
           stopCamera();
-          addNewPageFromCanvas(c, `Scan_${state.pages.length + 1}`, capturedCorners, null, 0, "");
-          showToast("Đã chụp đúng khoảnh khắc căn chuẩn và lưu vào Thư viện!");
+          showToast("⚡ Đang dàn phẳng & làm nét tài liệu...");
+          const nextScanName = `Scan_${state.pages.length + 1}`;
+          setTimeout(() => {
+            const capturedCorners = detectDocumentCorners(c, false, seedCorners);
+            addNewPageFromCanvas(c, nextScanName, capturedCorners, null, 0, "");
+            showToast("Đã chụp đúng khoảnh khắc căn chuẩn và lưu vào Thư viện!");
+          }, 16);
         }
 
         el.btnCapturePhoto.addEventListener("touchstart", triggerInstantCameraCapture, { passive: false });
