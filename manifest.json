@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v48.0) — Quét tài liệu siêu nhanh, bắt nét chuẩn, chống lóa ngoài trời và làm nét chữ rõ trong ánh sáng yếu / đèn neon.",
+  "description": "ScanhoahocABC (v49.0) — Quét tài liệu siêu nhanh, chữ nét không lem viền, dòng chữ thẳng tuyệt đối, chạm lấy nét và chống lóa ngoài trời.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
