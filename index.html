@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v50.0) — Quét tài liệu siêu nhanh, xóa sạch quầng lem quanh chữ, bám chính xác đường lượn rìa sách mở, chạm lấy nét camera và chống lóa ngoài trời." />
+  <meta name="description" content="ScanhoahocABC (v51.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
   <style>
     :root {
       --primary: #2563eb;
@@ -1689,7 +1689,7 @@
         <button type="button" class="dd-mode-btn" data-mode="bw_sauvola">◐ Đen trắng</button>
         <button type="button" class="dd-mode-btn" data-mode="faint_boost">✒ Làm rõ chữ</button>
         <button type="button" class="dd-mode-btn" id="btnDdToggleAlpha">🪄 Tách nền</button>
-        <button type="button" class="dd-mode-btn" id="btnDdToggleLineAlign" title="Tự động nhận diện dòng chữ & đường kẻ để căn thẳng khớp với trang giấy">📏 Căn thẳng dòng & kẻ</button>
+        <button type="button" class="dd-mode-btn active" id="btnDdToggleLineAlign" title="Tự động nhận diện dòng chữ & đường kẻ để căn thẳng khớp với trang giấy">📏 Căn thẳng dòng & kẻ</button>
       </div>
 
       <div class="vpop-divider"></div>
@@ -1811,6 +1811,9 @@
       </button>
       <button type="button" class="vpop-action-btn" id="btnAlignByTextLines" title="Nhận diện dòng chữ & đường kẻ ngang/dọc bên trong để căn thẳng đồng bộ với khung trang">
         📏 Căn theo dòng
+      </button>
+      <button type="button" class="vpop-action-btn" id="btnSplitBookPages" title="Nhận diện đường phân cách gáy giữa sách mở và tách thành 2 trang riêng biệt">
+        📖 Tách 2 trang
       </button>
       <button type="button" class="vpop-action-btn" id="btnFullFrameCorners">
         ⛶ Toàn ảnh
@@ -2043,7 +2046,7 @@
           transparentBg: false,
           paperSize: "auto",
           bookCurve: 0,
-          autoLineDewarp: false // Straight lines by default; curved open-book pages are flattened cleanly via curved-rim Coons patch!
+          autoLineDewarp: true // Automatically straightens curved text lines & ruled lines on thick books (wave-free!)
         }
       };
 
@@ -2106,6 +2109,7 @@
         loupeLabel: document.getElementById("loupeLabel"),
         fsCropBar: document.getElementById("fsCropBar"),
         btnAutoDetectCorners: document.getElementById("btnAutoDetectCorners"),
+        btnSplitBookPages: document.getElementById("btnSplitBookPages"),
         btnFullFrameCorners: document.getElementById("btnFullFrameCorners"),
         btnAlignByTextLines: document.getElementById("btnAlignByTextLines"),
         btnAlignMode4Pt: document.getElementById("btnAlignMode4Pt"),
@@ -4775,7 +4779,6 @@
 
                     const hullIoU = evalFgIoU(hQuad);
                     const bestIoU = bestQuad ? evalFgIoU(bestQuad) : 0.0;
-                    // Open-book curved-rim check: when a book is open, left/right edges are straight while top/bottom rims curve away from straight chords!
                     const isCurvedOpenBookHull = (
                       hullIoU >= 0.80 && fillRatio >= 0.72 &&
                       hullIoU > bestIoU + 0.15 &&
@@ -4862,7 +4865,6 @@
         // STAGE 2: FULL-RESOLUTION 1D-CLOSED NORMAL PROFILE VITERBI + ALL-RIM CONTRAST & 5-SINE CURVED RIM
         const idxPairs = [[3, 0], [0, 1], [1, 2], [2, 3]];
         const nProf = 55;
-        // v50.0: Wide searchRad (up to 96px / 8.5%) with adaptive strideS=2 reaches deep open-book arches & spine dips at full speed!
         const searchRad = Math.min(96, Math.max(36, Math.round(Math.min(origW, origH) * 0.085)));
         const closeRadS2 = Math.min(origW, origH) >= 1400 ? 7 : 5;
         const M = searchRad + closeRadS2 + 4;
@@ -5183,7 +5185,6 @@
 
           const A5 = Array.from({ length: 5 }, (_, r) => {
             const row = new Float64Array(5);
-            // Smooth open-book arch harmonics (sin(pi), sin(2pi), sin(3pi)); strongly damp noisy 4th & 5th ripples!
             row[r] = [0.04, 0.09, 0.18, 2.8, 6.5][r];
             return row;
           });
@@ -5232,7 +5233,6 @@
           const maeLin = absLinSum / (wSum || 1.0);
           const maeCurve = absCurveSum / (wSum || 1.0);
 
-          // v50.0: Accurately captures open-book curved rims (>= 3.0px smooth arch) while keeping flat pages straight!
           if (maxArch > 3.0 && maeCurve < maeLin * 0.72) {
             anyEdgeCurved = true;
             const nSub = NUM_EDGE_SUBPOINTS || 5;
@@ -5254,7 +5254,98 @@
 
         srcCanvas._detectedEdgeOffsets = detectedEdgeOffsets;
         srcCanvas._hasCurvedRim = anyEdgeCurved;
+        srcCanvas._detectedSpine = detectBookSpineDivider(srcCanvas, refinedCorners);
         return refinedCorners;
+      }
+
+      // v51.0 Center Spine / Gutter Divider Detector for Open 2-Page Books:
+      // Scans vertical (for wide spreads) or horizontal (for rotated spreads) profiles across the middle 34%..66%
+      // of the document quad to find the dark center crease/valley separating left & right book pages!
+      function detectBookSpineDivider(srcCanvas, corners) {
+        if (!srcCanvas || !corners || corners.length !== 4) return null;
+        const w = srcCanvas.width, h = srcCanvas.height;
+        const data = getCachedSrcImageData(srcCanvas);
+        if (!data) return null;
+
+        const topW = Math.hypot(corners[1].x - corners[0].x, corners[1].y - corners[0].y);
+        const botW = Math.hypot(corners[2].x - corners[3].x, corners[2].y - corners[3].y);
+        const leftH = Math.hypot(corners[3].x - corners[0].x, corners[3].y - corners[0].y);
+        const rightH = Math.hypot(corners[2].x - corners[1].x, corners[2].y - corners[1].y);
+        const avgW = 0.5 * (topW + botW);
+        const avgH = 0.5 * (leftH + rightH);
+        if (avgW < 120 || avgH < 120) return null;
+
+        // Vertical spine divider if landscape/square-ish open spread (avgW >= avgH * 0.92)
+        const isVerticalSpine = avgW >= avgH * 0.92;
+        const N_SCAN = 64;
+        const N_ALONG = 28;
+        const prof = new Float32Array(N_SCAN);
+        const c0 = corners[0], c1 = corners[1], c2 = corners[2], c3 = corners[3];
+
+        for (let i = 0; i < N_SCAN; i++) {
+          const u = 0.15 + (i / (N_SCAN - 1)) * 0.70; // scan 15%..85%
+          let sumL = 0;
+          for (let j = 0; j < N_ALONG; j++) {
+            const v = 0.08 + (j / (N_ALONG - 1)) * 0.84;
+            const tu = isVerticalSpine ? u : v;
+            const tv = isVerticalSpine ? v : u;
+            const px = (c0.x * (1 - tu) + c1.x * tu) * (1 - tv) + (c3.x * (1 - tu) + c2.x * tu) * tv;
+            const py = (c0.y * (1 - tu) + c1.y * tu) * (1 - tv) + (c3.y * (1 - tu) + c2.y * tu) * tv;
+            const ix = Math.min(w - 1, Math.max(0, px | 0));
+            const iy = Math.min(h - 1, Math.max(0, py | 0));
+            const idx4 = (iy * w + ix) << 2;
+            sumL += 0.299 * data[idx4] + 0.587 * data[idx4 + 1] + 0.114 * data[idx4 + 2];
+          }
+          prof[i] = sumL / N_ALONG;
+        }
+
+        // Smooth profile lightly & find strongest valley in middle 35%..65% (indices ~18..46)
+        let bestIdx = -1, bestDip = 0, bestValleyL = 255;
+        const iStart = Math.floor(N_SCAN * 0.28);
+        const iEnd = Math.floor(N_SCAN * 0.72);
+        for (let i = iStart; i <= iEnd; i++) {
+          const leftRef = 0.5 * (prof[Math.max(0, i - 6)] + prof[Math.max(0, i - 10)]);
+          const rightRef = 0.5 * (prof[Math.min(N_SCAN - 1, i + 6)] + prof[Math.min(N_SCAN - 1, i + 10)]);
+          const sideMin = leftRef < rightRef ? leftRef : rightRef;
+          const dip = sideMin - prof[i];
+          if (dip > bestDip) {
+            bestDip = dip;
+            bestIdx = i;
+            bestValleyL = prof[i];
+          }
+        }
+
+        // Require a genuine dark spine valley (>= 14 luminance dip below BOTH left & right page paper!)
+        if (bestIdx < 0 || bestDip < 14.0) return null;
+
+        // Verify valley continuity along the spine (at least 60% of vertical slices must be darker than sides)
+        const uSpine = 0.15 + (bestIdx / (N_SCAN - 1)) * 0.70;
+        let contHits = 0;
+        for (let j = 0; j < N_ALONG; j++) {
+          const v = 0.08 + (j / (N_ALONG - 1)) * 0.84;
+          const sampleL = (uVal) => {
+            const tu = isVerticalSpine ? uVal : v;
+            const tv = isVerticalSpine ? v : uVal;
+            const px = (c0.x * (1 - tu) + c1.x * tu) * (1 - tv) + (c3.x * (1 - tu) + c2.x * tu) * tv;
+            const py = (c0.y * (1 - tu) + c1.y * tu) * (1 - tv) + (c3.y * (1 - tu) + c2.y * tu) * tv;
+            const ix = Math.min(w - 1, Math.max(0, px | 0));
+            const iy = Math.min(h - 1, Math.max(0, py | 0));
+            const idx4 = (iy * w + ix) << 2;
+            return 0.299 * data[idx4] + 0.587 * data[idx4 + 1] + 0.114 * data[idx4 + 2];
+          };
+          const cL = sampleL(uSpine);
+          const sL = sampleL(Math.max(0.05, uSpine - 0.09));
+          const sR = sampleL(Math.min(0.95, uSpine + 0.09));
+          if (Math.min(sL, sR) - cL >= 9.0) contHits++;
+        }
+        if (contHits < N_ALONG * 0.58) return null;
+
+        return {
+          orientation: isVerticalSpine ? "vertical" : "horizontal",
+          t: uSpine,
+          dip: Math.round(bestDip),
+          valleyL: Math.round(bestValleyL)
+        };
       }
 
       // =========================================================================
@@ -5329,7 +5420,7 @@
       function estimate2DBookSurfaceModes(rgbaData, dstW, dstH) {
         const M = 32;
         const subW = M * 6; // 192
-        const Hs = 384;
+        const Hs = 256;
         const scaleY = dstH / Hs;
         const scaleX = dstW / subW;
 
@@ -5433,7 +5524,9 @@
           [0.62, 0.95, 0.785]
         ];
 
-        const regH = [0.004, 0.025, 0.085, 8.0, 25.0];
+        // v51.0: Full responsiveness for physical thick-book arches (sin(pi), sin(2pi), sin(3pi));
+        // strictly block high-frequency 4-cycle ripples (sin(4pi)) so lines straighten cleanly without waves!
+        const regH = [0.002, 0.010, 0.024, 0.055, 1e6];
         const regV = [1.0, 0.62, 0.82];
         const nParams = V_MODES * K;
         const A_sys = Array.from({ length: nParams }, (_, r) => {
@@ -5731,9 +5824,10 @@
           if (localMax > maxSurfaceDisp) maxSurfaceDisp = localMax;
         }
 
-        if (maxSurfaceDisp < 4.5) return null;
+        // Smart curvature gate: flat pages (<2.2px) stay 0.0px untouched; curved thick books (>=2.2px) straighten fully!
+        if (maxSurfaceDisp < 2.2) return null;
 
-        const shrinkGain = Math.min(1.0, (maxSurfaceDisp - 0.25) / 0.55);
+        const shrinkGain = Math.min(1.0, (maxSurfaceDisp - 1.5) / 1.5);
         for (let x = 0; x < dstW; x++) {
           mode0[x] *= shrinkGain;
           mode1[x] *= shrinkGain;
@@ -6121,17 +6215,15 @@
         fastBoxBlurInPlace(clo, sw, sh, 3, tmp1, dst, colSum);
       }
 
-      // v50.0 Fast Half-Res Halo-Guard + Zero-Smear Page Filter Cache
-      // - scale=8 background envelope (4x faster, clean white balance & neon tint removal)
-      // - Half-res (w/2 x h/2) 1-pass rad=3 max-filter (= ±6px full-res halo guard at 1/8th CPU cost -> ~5ms!)
-      //   Completely ERASES real camera JPEG mosquito-noise & dirty gray halos around every dark letter!
+      // v51.0 Fast Inter-Line Spot Eraser + Accurate Spine-Shadow Paper Surface Cache
       function buildPageFilterCache(dewarpedCanvas) {
         const w = dewarpedCanvas.width;
         const h = dewarpedCanvas.height;
         const nPixels = w * h;
         const rawData = dewarpedCanvas.getContext("2d").getImageData(0, 0, w, h).data;
 
-        const scale = 8;
+        // Tight scale=4 background surface (follows uneven book spine shadows closely without overshooting eL between text lines!)
+        const scale = 4;
         const sw = Math.max(8, Math.floor(w / scale));
         const sh = Math.max(8, Math.floor(h / scale));
         const nSub = sw * sh;
@@ -6142,13 +6234,13 @@
 
         let brightClipCells = 0;
         for (let sy = 0; sy < sh; sy++) {
-          const yA = sy * scale + 2 < h ? sy * scale + 2 : h - 1;
-          const yB = sy * scale + 6 < h ? sy * scale + 6 : h - 1;
+          const yA = sy * scale + 1 < h ? sy * scale + 1 : h - 1;
+          const yB = sy * scale + 3 < h ? sy * scale + 3 : h - 1;
           const rA = yA * w, rB = yB * w;
           const sOff = sy * sw;
           for (let sx = 0; sx < sw; sx++) {
-            const xA = sx * scale + 2 < w ? sx * scale + 2 : w - 1;
-            const xB = sx * scale + 6 < w ? sx * scale + 6 : w - 1;
+            const xA = sx * scale + 1 < w ? sx * scale + 1 : w - 1;
+            const xB = sx * scale + 3 < w ? sx * scale + 3 : w - 1;
 
             const i0 = (rA + xA) << 2, i1 = (rA + xB) << 2, i2 = (rB + xA) << 2, i3 = (rB + xB) << 2;
             const l0 = 0.299 * rawData[i0] + 0.587 * rawData[i0 + 1] + 0.114 * rawData[i0 + 2];
@@ -6156,6 +6248,7 @@
             const l2 = 0.299 * rawData[i2] + 0.587 * rawData[i2 + 1] + 0.114 * rawData[i2 + 2];
             const l3 = 0.299 * rawData[i3] + 0.587 * rawData[i3 + 1] + 0.114 * rawData[i3 + 2];
 
+            // Pick 2nd brightest of the 4 pixels (rejects dark ink strokes AND bright noise spikes)
             let m1 = l0, m2 = -1.0, k1 = 0, k2 = 0;
             if (l1 > m1) { m2 = m1; k2 = k1; m1 = l1; k1 = 1; } else { m2 = l1; k2 = 1; }
             if (l2 > m1) { m2 = m1; k2 = k1; m1 = l2; k1 = 2; } else if (l2 > m2) { m2 = l2; k2 = 2; }
@@ -6178,6 +6271,7 @@
         const gG = new Float32Array(nSub);
         const gB = new Float32Array(nSub);
 
+        // rad=2 closing at scale=4 covers 20px window -> bridges bold letters cleanly while hugging local shadows closely!
         function smoothSubGrid(src, dst) {
           const dil = sepMaxFilter(src, sw, sh, 2);
           const clo = sepMinFilter(dil, sw, sh, 2);
@@ -6283,7 +6377,6 @@
         }
         const isLowLightDoc = !isBrightOutdoor && (avgPaperEnvL < 158.0 || isoNoiseEst > 3.2);
 
-        // Single fast 3x3 blur for tight micro-acutance sharpening & low-light flat-paper smoothing
         const tmpBuf = new Float32Array(nPixels);
         const blur1 = new Float32Array(nPixels);
         fastBlurRad1(uL, w, h, tmpBuf, blur1);
@@ -6310,9 +6403,9 @@
           }
         }
 
-        // Ultra-fast Half-Resolution Halo-Guard Map (dMaxHalf):
-        // Downsamples max darkness (255 - uL) to w/2 x h/2, then runs 1 pass of rad=3 max-filter (= ±6px full-res!).
-        // Takes ~5ms on 1.6MP and wipes out 100% of JPEG mosquito noise & dirty gray halos around every letter!
+        // Half-Resolution Inter-Line & Halo-Guard Map (dMaxHalf):
+        // Two fast passes at half-res (w/2 x h/2) -> covers ±10px full-res (bridges entire inter-line gap!) in ~8ms!
+        // Erases BOTH letter halos AND dark bleed-through/shadow spots sitting between lines of text!
         const hw = Math.max(4, (w + 1) >> 1);
         const hh = Math.max(4, (h + 1) >> 1);
         const dHalfRaw = new Float32Array(hw * hh);
@@ -6332,6 +6425,8 @@
           }
         }
         const dMaxHalf = new Uint8Array(hw * hh);
+        fastMaxRad3ToU8(dHalfRaw, hw, hh, tmpBuf, dMaxHalf);
+        for (let i = 0; i < hw * hh; i++) dHalfRaw[i] = dMaxHalf[i];
         fastMaxRad3ToU8(dHalfRaw, hw, hh, tmpBuf, dMaxHalf);
 
         const detailFine = new Float32Array(nPixels);
@@ -6472,7 +6567,7 @@
           const stdL = fc.stdL;
           const k = 0.16 + (1.0 - contrastAmt) * 0.10;
           const minDip = (isBrightOutdoor ? 9.0 : 16.0) + cleanAmt * (isBrightOutdoor ? 10.0 : 20.0) - contrastAmt * 6.0 - brightVal * 0.25;
-          const haloRatio = 0.30 + cleanAmt * 0.18;
+          const haloRatio = 0.34 + cleanAmt * 0.18;
           const darkGain = sharpAmt * 1.4;
 
           for (let y = 0; y < h; y++) {
@@ -6506,44 +6601,49 @@
           return;
         }
 
-        // ZERO-SMEAR HALO-ERASER PIPELINE (ultra_sharp, magic_color, faint_boost):
-        // Uses adaptive dMaxHalf * haloRatio right around every dark letter to WIPE OUT 100% of camera JPEG
-        // mosquito noise, lens shadow, and dirty gray halos straight to spotless white — while keeping faint
-        // text (small dMaxHalf) and sharp ink cores 100% crisp!
-        let paperFloor, haloRatio, gain, sharpDarkGain, paperWhiteTarget;
+        // INTER-LINE SPOT & HALO ERASER PIPELINE (ultra_sharp, magic_color, faint_boost):
+        // 1) Wide ±10px dMaxHalf * haloRatio erases dirty halos AND back-page bleed-through between lines of text!
+        // 2) Flat-Blotch Guard: soft low-gradient shadow/bleed-through spots (|detailFine| < 5) get extra floor (+22)
+        //    so inter-line spaces stay 100% spotless white while sharp ink strokes stay jet-black & crisp!
+        let paperFloor, haloRatio, gain, sharpDarkGain, paperWhiteTarget, flatBlotchGuard;
         if (mode === "ultra_sharp") {
           if (isBrightOutdoor) {
             paperFloor = 10.0 + cleanAmt * 10.0;
-            haloRatio = 0.36 + cleanAmt * 0.16;
+            haloRatio = 0.40 + cleanAmt * 0.16;
             gain = 1.95 + contrastAmt * 1.25;
             sharpDarkGain = sharpAmt * 1.65;
             paperWhiteTarget = 247;
+            flatBlotchGuard = 10.0;
           } else if (isLowLight) {
-            paperFloor = 20.0 + cleanAmt * 22.0 + Math.min(18.0, (fc.isoNoiseEst || 0.0) * 1.5);
-            haloRatio = 0.42 + cleanAmt * 0.18;
+            paperFloor = 24.0 + cleanAmt * 22.0 + Math.min(18.0, (fc.isoNoiseEst || 0.0) * 1.5);
+            haloRatio = 0.46 + cleanAmt * 0.18;
             gain = 1.85 + contrastAmt * 1.25;
             sharpDarkGain = sharpAmt * 1.75;
             paperWhiteTarget = 255;
+            flatBlotchGuard = 22.0;
           } else {
-            paperFloor = 16.0 + cleanAmt * 20.0;
-            haloRatio = 0.40 + cleanAmt * 0.18;
+            paperFloor = 18.0 + cleanAmt * 20.0;
+            haloRatio = 0.44 + cleanAmt * 0.18;
             gain = 1.68 + contrastAmt * 1.20;
             sharpDarkGain = sharpAmt * 1.55;
             paperWhiteTarget = 254;
+            flatBlotchGuard = 18.0;
           }
         } else if (mode === "faint_boost") {
           paperFloor = (isBrightOutdoor ? 8.0 : 14.0) + cleanAmt * (isBrightOutdoor ? 9.0 : 18.0);
-          haloRatio = 0.30 + cleanAmt * 0.16;
+          haloRatio = 0.34 + cleanAmt * 0.16;
           gain = 1.85 + contrastAmt * 1.40;
           sharpDarkGain = sharpAmt * 1.55;
           paperWhiteTarget = isBrightOutdoor ? 248 : 255;
+          flatBlotchGuard = 8.0;
         } else {
           // magic_color
           paperFloor = (isBrightOutdoor ? 11.0 : 18.0) + cleanAmt * (isBrightOutdoor ? 12.0 : 24.0);
-          haloRatio = 0.34 + cleanAmt * 0.18;
+          haloRatio = 0.38 + cleanAmt * 0.18;
           gain = 1.55 + contrastAmt * 1.20;
           sharpDarkGain = sharpAmt * 1.25;
           paperWhiteTarget = isBrightOutdoor ? 248 : 255;
+          flatBlotchGuard = 14.0;
         }
 
         const paperChromaFloor = isLowLight ? Math.min(38.0, 18.0 + (fc.isoNoiseEst || 2.0) * 1.5) : 16.0;
@@ -6558,20 +6658,25 @@
             const nr = uR[i], ng = uG[i], nb = uB[i];
             const nl = uL[i];
             const dL = 255.0 - nl;
+            const df = detailFine[i];
+            const absDf = df < 0.0 ? -df : df;
 
             const maxC = nr > ng ? (nr > nb ? nr : nb) : (ng > nb ? ng : nb);
             const minC = nr < ng ? (nr < nb ? nr : nb) : (ng < nb ? ng : nb);
             const chroma = maxC - minC;
 
-            // Adaptive Halo-Eraser threshold: rises sharply in the ±6px ring around dark ink to erase dirty halos!
+            // Adaptive Inter-Line & Halo-Eraser threshold:
+            // Rises around dark text (±10px) AND adds flatBlotchGuard when local edge contrast is flat (bleed-through/shadow spots!)
             const hFloor = dMaxHalf[hOff + (x >> 1)] * haloRatio;
-            const adaptiveFloor = paperFloor > hFloor ? paperFloor : hFloor;
+            let adaptiveFloor = paperFloor > hFloor ? paperFloor : hFloor;
+            if (absDf < 5.5 && dL < 125.0) {
+              adaptiveFloor += flatBlotchGuard * (1.0 - absDf / 5.5);
+            }
             const excessChroma = chroma > paperChromaFloor ? (chroma - paperChromaFloor) : 0.0;
             const effFloor = adaptiveFloor - excessChroma * 0.50;
             const cutFloor = effFloor > 6.0 ? effFloor : 6.0;
 
             const idx = i << 2;
-            // PAPER & HALO-ERASER GATE: Any dirty halo pixel around a letter snaps cleanly to spotless white!
             if (dL <= cutFloor && chroma < paperChromaFloor) {
               data[idx] = cleanWhite;
               data[idx + 1] = cleanWhite;
@@ -6580,20 +6685,16 @@
               continue;
             }
 
-            // Crisp ramp from spotless paper to razor-sharp ink stroke
-            const bandW = cutFloor * 0.35 > 7.0 ? cutFloor * 0.35 : 7.0;
+            const bandW = cutFloor * 0.32 > 6.0 ? cutFloor * 0.32 : 6.0;
             const excessInk = (dL - cutFloor) > (excessChroma * 0.85) ? (dL - cutFloor) : (excessChroma * 0.85);
             let t = excessInk / bandW;
             if (t > 1.0) t = 1.0; else if (t < 0.0) t = 0.0;
             const sStep = t * t * (3.0 - 2.0 * t);
 
             let boost = 0.0;
-            if (sharpAmt > 0.01) {
-              const df = detailFine[i];
-              if (df < -noiseDeadzone) {
-                boost = (df + noiseDeadzone) * sharpDarkGain * sStep;
-                if (boost < -52.0) boost = -52.0;
-              }
+            if (sharpAmt > 0.01 && df < -noiseDeadzone) {
+              boost = (df + noiseDeadzone) * sharpDarkGain * sStep;
+              if (boost < -52.0) boost = -52.0;
             }
 
             const effGain = sStep * gain;
@@ -6630,7 +6731,7 @@
           page.settings.paperSize,
           page.edgeOffsets,
           page.settings.bookCurve || 0,
-          page.settings.autoLineDewarp === true,
+          page.settings.autoLineDewarp !== false,
           page,
           previewMaxSide
         );
@@ -7059,6 +7160,32 @@
             ctx.stroke();
           }
           ctx.setLineDash([]);
+
+          // v51.0: Draw detected center spine divider line for open 2-page books!
+          const spineInfo = page.spineDivider || (page.srcCanvas && page.srcCanvas._detectedSpine);
+          if (spineInfo) {
+            const st = spineInfo.t;
+            let sp1, sp2;
+            if (spineInfo.orientation === "vertical") {
+              const tTop = evalEdge3PointOffset(eOff[0], st);
+              const tBot = evalEdge3PointOffset(eOff[2], 1.0 - st);
+              sp1 = { x: c[0].x * (1 - st) + c[1].x * st + tTop.x, y: c[0].y * (1 - st) + c[1].y * st + tTop.y };
+              sp2 = { x: c[3].x * (1 - st) + c[2].x * st + tBot.x, y: c[3].y * (1 - st) + c[2].y * st + tBot.y };
+            } else {
+              const tLeft = evalEdge3PointOffset(eOff[3], 1.0 - st);
+              const tRight = evalEdge3PointOffset(eOff[1], st);
+              sp1 = { x: c[0].x * (1 - st) + c[3].x * st + tLeft.x, y: c[0].y * (1 - st) + c[3].y * st + tLeft.y };
+              sp2 = { x: c[1].x * (1 - st) + c[2].x * st + tRight.x, y: c[1].y * (1 - st) + c[2].y * st + tRight.y };
+            }
+            ctx.strokeStyle = "#f59e0b";
+            ctx.lineWidth = Math.max(3.5, sW / 240);
+            ctx.setLineDash([Math.max(10, Math.round(sW / 60)), Math.max(7, Math.round(sW / 85))]);
+            ctx.beginPath();
+            ctx.moveTo(sp1.x, sp1.y);
+            ctx.lineTo(sp2.x, sp2.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
           ctx.restore();
 
           // In "❖ Căn đa điểm" mode, draw 5 intermediate points (t = 1/6, 2/6, 3/6, 4/6, 5/6) on each of the 4 edges!
@@ -8584,7 +8711,7 @@
         el.ddBookCurveVal.textContent = `${s.bookCurve || 0}%`;
         el.btnDdToggleAlpha.classList.toggle("active", !!s.transparentBg);
         if (el.btnDdToggleLineAlign) {
-          el.btnDdToggleLineAlign.classList.toggle("active", s.autoLineDewarp === true);
+          el.btnDdToggleLineAlign.classList.toggle("active", s.autoLineDewarp !== false);
         }
 
         el.ddFilenameInput.value = page.name || "";
@@ -9185,7 +9312,7 @@
           el.btnDdToggleLineAlign.addEventListener("click", () => {
             const page = getCurrentPage();
             if (!page) return;
-            page.settings.autoLineDewarp = !(page.settings.autoLineDewarp === true);
+            page.settings.autoLineDewarp = !(page.settings.autoLineDewarp !== false);
             syncControlsFromPage(page);
             updateGeometryAndProcess(page, true);
             scheduleSavePage(page, false);
@@ -9513,6 +9640,54 @@
             } else {
               showToast("📏 Các dòng chữ & đường kẻ đã thẳng khớp với khung trang giấy!");
             }
+          });
+        }
+
+        if (el.btnSplitBookPages) {
+          el.btnSplitBookPages.addEventListener("click", () => {
+            const page = getCurrentPage();
+            if (!page || !page.srcCanvas) return;
+            const spine = page.spineDivider || page.srcCanvas._detectedSpine || detectBookSpineDivider(page.srcCanvas, page.corners) || {
+              orientation: (Math.hypot(page.corners[1].x - page.corners[0].x, page.corners[1].y - page.corners[0].y) >= Math.hypot(page.corners[3].x - page.corners[0].x, page.corners[3].y - page.corners[0].y) * 0.92) ? "vertical" : "horizontal",
+              t: 0.5
+            };
+            const c = page.corners;
+            const eOff = page.edgeOffsets || createZeroEdgeOffsets();
+            const st = spine.t;
+            let p1Corners, p2Corners;
+            if (spine.orientation === "vertical") {
+              const tTop = evalEdge3PointOffset(eOff[0], st);
+              const tBot = evalEdge3PointOffset(eOff[2], 1.0 - st);
+              const mTop = { x: Math.round(c[0].x * (1 - st) + c[1].x * st + tTop.x), y: Math.round(c[0].y * (1 - st) + c[1].y * st + tTop.y) };
+              const mBot = { x: Math.round(c[3].x * (1 - st) + c[2].x * st + tBot.x), y: Math.round(c[3].y * (1 - st) + c[2].y * st + tBot.y) };
+              p1Corners = [{ ...c[0] }, mTop, mBot, { ...c[3] }];
+              p2Corners = [{ ...mTop }, { ...c[1] }, { ...c[2] }, { ...mBot }];
+            } else {
+              const tLeft = evalEdge3PointOffset(eOff[3], 1.0 - st);
+              const tRight = evalEdge3PointOffset(eOff[1], st);
+              const mLeft = { x: Math.round(c[0].x * (1 - st) + c[3].x * st + tLeft.x), y: Math.round(c[0].y * (1 - st) + c[3].y * st + tLeft.y) };
+              const mRight = { x: Math.round(c[1].x * (1 - st) + c[2].x * st + tRight.x), y: Math.round(c[1].y * (1 - st) + c[2].y * st + tRight.y) };
+              p1Corners = [{ ...c[0] }, { ...c[1] }, mRight, mLeft];
+              p2Corners = [{ ...mLeft }, { ...mRight }, { ...c[2] }, { ...c[3] }];
+            }
+            const baseName = page.name || "Sach";
+            // Update current page to Left/Top half
+            page.name = `${baseName}_Trang1`;
+            page.corners = p1Corners;
+            page.edgeOffsets = createZeroEdgeOffsets();
+            page.spineDivider = null;
+            page.settings.autoLineDewarp = true;
+            updateGeometryAndProcess(page);
+            scheduleSavePage(page, false);
+
+            // Clone source canvas for Right/Bottom half as a new page in Library
+            const srcCopy = document.createElement("canvas");
+            srcCopy.width = page.srcCanvas.width;
+            srcCopy.height = page.srcCanvas.height;
+            srcCopy.getContext("2d").drawImage(page.srcCanvas, 0, 0);
+            addNewPageFromCanvas(srcCopy, `${baseName}_Trang2`, p2Corners, createZeroEdgeOffsets(), 0, "");
+            setFsCropMode(false);
+            showToast("📖 Đã tách thành 2 trang sách riêng biệt & làm thẳng dòng chữ!");
           });
         }
 

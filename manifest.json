@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v50.0) — Quét tài liệu siêu nhanh, xóa sạch quầng lem quanh chữ, bám chính xác đường lượn rìa sách mở, chạm lấy nét và chống lóa ngoài trời.",
+  "description": "ScanhoahocABC (v51.0) — Quét sách mở & tài liệu siêu nét: Nhận diện gáy sách giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách dày cong, xóa sạch vết đen giữa các dòng chữ.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
