@@ -1,14 +1,13 @@
-# ScanhoahocABC (v47.0 — Hướng Dẫn Sử Dụng Nhanh)
+# ScanhoahocABC (v48.0 — Hướng Dẫn Sử Dụng Nhanh)
 
-## Các nâng cấp chính trên bản Siêu Nét Ánh Sáng Yếu / Đèn Neon (v47.0)
-1. **Chế độ ⚡ Siêu nét (Đèn yếu) mặc định**:
-   - Tự động khử nhiễu hạt, loại bỏ ám màu xanh/vàng của đèn neon và làm rõ nét từng nét chữ mà không gây viền sáng quanh chữ.
-   - Độ phân giải xử lý được nâng lên mức siêu nét để chữ nhỏ, chỉ số hóa học và bảng biểu vẫn rõ khi phóng to hoặc in ấn.
-2. **Thanh trượt 🔍 Độ nét (0% – 100%)**:
-   - Mở **🛠 Sửa → ☰** để điều chỉnh mức độ sắc nét theo ý muốn cho mọi chế độ màu (kể cả **🖼 Ảnh gốc**).
-3. **Chụp ảnh tối ưu cho phòng thiếu sáng / đèn neon**:
-   - Bấm **📷 Chụp ảnh**, giữ chắc tay khoảng nửa giây khi bấm **📷 Chụp** để ứng dụng tự chọn và ghép khung nét nhất, giảm rung và chống sọc nhấp nháy đèn neon.
-   - Có thể bật thêm **🔦 Bật đèn** trực tiếp trong màn hình máy ảnh khi phòng quá tối.
+## Các cải tiến chính trên bản v48.0
+1. **Tốc độ xử lý nhanh tức thì**:
+   - Đã loại bỏ hiện tượng giật, treo máy trên điện thoại khi chụp và chỉnh sửa tài liệu.
+2. **Bắt nét chuẩn & Chống lóa ngoài trời trên Camera**:
+   - Mở **📷 Chụp ảnh**, **chạm trực tiếp vào vùng chữ trên màn hình** để khóa nét đúng đối tượng trước khi bấm **📷 Chụp**.
+   - Khi chụp ngoài trời nắng gắt, bấm nút **☀ Chống lóa** ở góc trên phải màn hình máy ảnh để giảm chói; chế độ **⚡ Siêu nét (Mọi sáng)** cũng tự nhận diện ánh sáng gắt để không làm cháy trắng chữ.
+3. **Làm rõ nét chữ trong ánh sáng yếu / đèn neon**:
+   - Tự động khử nhiễu hạt, bỏ ám màu xanh/vàng của đèn neon và làm rõ nét chữ. Có thể mở **🛠 Sửa → ☰** để kéo thêm thanh **🔍 Độ nét** hoặc chuyển về **🖼 Ảnh gốc** bất cứ lúc nào.
 4. **Chạy Offline trên máy tính & điện thoại**:
-   - Trên Windows: giải nén và mở tệp `Chay_DocScan_Offline.bat` (hoặc mở trực tiếp `index.html`).
+   - Trên Windows: giải nén và mở `Chay_DocScan_Offline.bat` (hoặc mở `index.html`).
    - Trên GitHub Pages / điện thoại: tải đủ 5 tệp lên kho lưu trữ và mở bằng trình duyệt.

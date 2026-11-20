@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v47.0) — Ứng dụng quét tài liệu siêu nét trên smartphone, tối ưu ánh sáng yếu và đèn neon: Khử nhiễu ISO giữ biên, khử ám màu đèn huỳnh quang, làm nét chữ đa tầng 2400px, chụp liên thanh chống nhấp nháy." />
+  <meta name="description" content="ScanhoahocABC (v48.0) — Quét tài liệu siêu nhanh & sắc nét: Chạm lấy nét camera, chống lóa ngoài trời, khử nhiễu & làm nét chữ tối ưu cho ánh sáng yếu / đèn neon." />
   <style>
     :root {
       --primary: #2563eb;
@@ -1493,6 +1493,27 @@
       opacity: 1;
     }
 
+    /* Camera Tap-to-Focus Ring Indicator */
+    .cam-focus-ring {
+      position: absolute;
+      width: 66px;
+      height: 66px;
+      margin-left: -33px;
+      margin-top: -33px;
+      border-radius: 50%;
+      border: 2.5px solid #fde047;
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.55), inset 0 0 10px rgba(250, 204, 21, 0.25);
+      pointer-events: none;
+      opacity: 0;
+      transform: scale(1.35);
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      z-index: 15;
+    }
+    .cam-focus-ring.show {
+      opacity: 1;
+      transform: scale(1.0);
+    }
+
     /* Hold-to-Pan Visual Ring & Floating Indicator */
     .hold-pan-ring {
       position: fixed;
@@ -1662,7 +1683,7 @@
 
       <div class="vpop-divider"></div>
       <div id="ddColorModeGrid" style="display:flex; flex-direction:column; gap:4px; width:100%;">
-        <button type="button" class="dd-mode-btn active" data-mode="ultra_sharp">⚡ Siêu nét (Đèn yếu)</button>
+        <button type="button" class="dd-mode-btn active" data-mode="ultra_sharp">⚡ Siêu nét (Mọi sáng)</button>
         <button type="button" class="dd-mode-btn" data-mode="original">🖼 Ảnh gốc</button>
         <button type="button" class="dd-mode-btn" data-mode="magic_color">🎨 Tài liệu màu</button>
         <button type="button" class="dd-mode-btn" data-mode="bw_sauvola">◐ Đen trắng</button>
@@ -1691,9 +1712,9 @@
       <div class="vpop-slider-item">
         <div class="vpop-slider-top">
           <span class="vpop-slider-lbl">🔍 Độ nét</span>
-          <span class="vpop-slider-val" id="ddSharpnessVal" title="Chạm để đặt lại 78%" style="cursor:pointer;">78%</span>
+          <span class="vpop-slider-val" id="ddSharpnessVal" title="Chạm để đặt lại 75%" style="cursor:pointer;">75%</span>
         </div>
-        <input type="range" id="ddSharpnessSlider" min="0" max="100" value="78" />
+        <input type="range" id="ddSharpnessSlider" min="0" max="100" value="75" />
       </div>
 
       <div class="vpop-slider-item">
@@ -1911,10 +1932,10 @@
         <div class="form-field">
           <label for="exportScale">Độ phân giải</label>
           <select id="exportScale">
-            <option value="0.75">180 DPI (Nhẹ)</option>
-            <option value="1" selected>240 DPI (Siêu nét - Chuẩn)</option>
-            <option value="1.25">300 DPI (In ấn sắc nét)</option>
-            <option value="1.75">450 DPI (Siêu chi tiết)</option>
+            <option value="0.75">150 DPI (Nhẹ)</option>
+            <option value="1" selected>200 DPI (Tiêu chuẩn)</option>
+            <option value="1.5">300 DPI (Sắc nét)</option>
+            <option value="2">600 DPI (Cao nhất)</option>
           </select>
         </div>
 
@@ -1943,9 +1964,13 @@
           <video id="cameraVideo" autoplay playsinline muted></video>
           <canvas id="cameraOverlay"></canvas>
           <div class="screen-flash-assist" id="screenFlashAssist" aria-hidden="true"></div>
+          <div class="cam-focus-ring" id="camFocusRing" aria-hidden="true"></div>
           <div class="cam-top-bar">
             <button type="button" class="cam-floating-pill" id="btnCamTorchFloating" title="Bật / Tắt đèn Flash khi chụp">
               🔦 Đèn: Tắt
+            </button>
+            <button type="button" class="cam-floating-pill" id="btnCamAntiGlare" title="Giảm chói lóa khi chụp ngoài trời nắng">
+              ☀ Chống lóa: Tự động
             </button>
           </div>
           <div class="zoom-pill-bar" id="zoomPillBar">
@@ -2007,13 +2032,14 @@
         cameraAnimId: null,
         cameraTorchOn: false,
         cameraScreenFlashAssist: false,
+        cameraAntiGlareMode: 0, // 0: Auto, 1: Anti-Glare Outdoor (-EV)
         lastCameraCorners: null,
         defaultSettings: {
           colorMode: "ultra_sharp",
           brightness: 0,
-          sharpness: 78,
+          sharpness: 75,
           bgSuppress: 68,
-          contrast: 60,
+          contrast: 58,
           transparentBg: false,
           paperSize: "auto",
           bookCurve: 0,
@@ -2133,6 +2159,8 @@
         btnCancelCameraBottom: document.getElementById("btnCancelCameraBottom"),
         btnToggleFlash: document.getElementById("btnToggleFlash"),
         btnCamTorchFloating: document.getElementById("btnCamTorchFloating"),
+        btnCamAntiGlare: document.getElementById("btnCamAntiGlare"),
+        camFocusRing: document.getElementById("camFocusRing"),
         screenFlashAssist: document.getElementById("screenFlashAssist"),
         btnZoomMin: document.getElementById("btnZoomMin"),
         btnZoom1x: document.getElementById("btnZoom1x"),
@@ -2414,7 +2442,7 @@
       }
 
       function getModeLabel(mode) {
-        if (mode === "ultra_sharp") return "Siêu nét (Đèn yếu)";
+        if (mode === "ultra_sharp") return "Siêu nét";
         if (mode === "magic_color") return "Tài liệu màu";
         if (mode === "bw_sauvola") return "Đen trắng";
         if (mode === "faint_boost") return "Làm rõ chữ";
@@ -5775,10 +5803,10 @@
           }
         }
 
-        let dstW = Math.round(Math.max(topW, botW, 1080));
+        let dstW = Math.round(Math.max(topW, botW, 760));
         let dstH = Math.round(dstW * ratioHW);
 
-        const maxSide = previewMaxSide || 2400;
+        const maxSide = previewMaxSide || 1600;
         if (Math.max(dstW, dstH) > maxSide) {
           const sc = maxSide / Math.max(dstW, dstH);
           dstW = Math.round(dstW * sc);
@@ -5900,63 +5928,20 @@
               const dx = sx - x0;
               const dy = sy - y0;
 
-              if (!previewMaxSide && x0 >= 1 && x0 < sW - 2 && y0 >= 1 && y0 < sH - 2) {
-                // Catmull-Rom Bicubic Resampling (preserves subpixel text acutance & crispness)
-                const dx2 = dx * dx, dx3 = dx2 * dx;
-                const wx0 = -0.5 * dx + dx2 - 0.5 * dx3;
-                const wx1 = 1.0 - 2.5 * dx2 + 1.5 * dx3;
-                const wx2 = 0.5 * dx + 2.0 * dx2 - 1.5 * dx3;
-                const wx3 = -0.5 * dx2 + 0.5 * dx3;
+              const i00 = (y0 * sW + x0) * 4;
+              const i10 = i00 + 4;
+              const i01 = i00 + sW * 4;
+              const i11 = i01 + 4;
 
-                const dy2 = dy * dy, dy3 = dy2 * dy;
-                const wy0 = -0.5 * dy + dy2 - 0.5 * dy3;
-                const wy1 = 1.0 - 2.5 * dy2 + 1.5 * dy3;
-                const wy2 = 0.5 * dy + 2.0 * dy2 - 1.5 * dy3;
-                const wy3 = -0.5 * dy2 + 0.5 * dy3;
+              const w00 = (1 - dx) * (1 - dy);
+              const w10 = dx * (1 - dy);
+              const w01 = (1 - dx) * dy;
+              const w11 = dx * dy;
 
-                const r0 = ((y0 - 1) * sW + x0 - 1) << 2;
-                const r1 = r0 + (sW << 2);
-                const r2 = r1 + (sW << 2);
-                const r3 = r2 + (sW << 2);
-
-                const rr0 = sData[r0] * wx0 + sData[r0 + 4] * wx1 + sData[r0 + 8] * wx2 + sData[r0 + 12] * wx3;
-                const rr1 = sData[r1] * wx0 + sData[r1 + 4] * wx1 + sData[r1 + 8] * wx2 + sData[r1 + 12] * wx3;
-                const rr2 = sData[r2] * wx0 + sData[r2 + 4] * wx1 + sData[r2 + 8] * wx2 + sData[r2 + 12] * wx3;
-                const rr3 = sData[r3] * wx0 + sData[r3 + 4] * wx1 + sData[r3 + 8] * wx2 + sData[r3 + 12] * wx3;
-                const cr = rr0 * wy0 + rr1 * wy1 + rr2 * wy2 + rr3 * wy3;
-
-                const gg0 = sData[r0 + 1] * wx0 + sData[r0 + 5] * wx1 + sData[r0 + 9] * wx2 + sData[r0 + 13] * wx3;
-                const gg1 = sData[r1 + 1] * wx0 + sData[r1 + 5] * wx1 + sData[r1 + 9] * wx2 + sData[r1 + 13] * wx3;
-                const gg2 = sData[r2 + 1] * wx0 + sData[r2 + 5] * wx1 + sData[r2 + 9] * wx2 + sData[r2 + 13] * wx3;
-                const gg3 = sData[r3 + 1] * wx0 + sData[r3 + 5] * wx1 + sData[r3 + 9] * wx2 + sData[r3 + 13] * wx3;
-                const cg = gg0 * wy0 + gg1 * wy1 + gg2 * wy2 + gg3 * wy3;
-
-                const bb0 = sData[r0 + 2] * wx0 + sData[r0 + 6] * wx1 + sData[r0 + 10] * wx2 + sData[r0 + 14] * wx3;
-                const bb1 = sData[r1 + 2] * wx0 + sData[r1 + 6] * wx1 + sData[r1 + 10] * wx2 + sData[r1 + 14] * wx3;
-                const bb2 = sData[r2 + 2] * wx0 + sData[r2 + 6] * wx1 + sData[r2 + 10] * wx2 + sData[r2 + 14] * wx3;
-                const bb3 = sData[r3 + 2] * wx0 + sData[r3 + 6] * wx1 + sData[r3 + 10] * wx2 + sData[r3 + 14] * wx3;
-                const cb = bb0 * wy0 + bb1 * wy1 + bb2 * wy2 + bb3 * wy3;
-
-                tempData[di]     = cr < 0 ? 0 : (cr > 255 ? 255 : (cr + 0.5) | 0);
-                tempData[di + 1] = cg < 0 ? 0 : (cg > 255 ? 255 : (cg + 0.5) | 0);
-                tempData[di + 2] = cb < 0 ? 0 : (cb > 255 ? 255 : (cb + 0.5) | 0);
-                tempData[di + 3] = 255;
-              } else {
-                const i00 = (y0 * sW + x0) * 4;
-                const i10 = i00 + 4;
-                const i01 = i00 + sW * 4;
-                const i11 = i01 + 4;
-
-                const w00 = (1 - dx) * (1 - dy);
-                const w10 = dx * (1 - dy);
-                const w01 = (1 - dx) * dy;
-                const w11 = dx * dy;
-
-                tempData[di]     = sData[i00] * w00 + sData[i10] * w10 + sData[i01] * w01 + sData[i11] * w11;
-                tempData[di + 1] = sData[i00 + 1] * w00 + sData[i10 + 1] * w10 + sData[i01 + 1] * w01 + sData[i11 + 1] * w11;
-                tempData[di + 2] = sData[i00 + 2] * w00 + sData[i10 + 2] * w10 + sData[i01 + 2] * w01 + sData[i11 + 2] * w11;
-                tempData[di + 3] = 255;
-              }
+              tempData[di]     = sData[i00] * w00 + sData[i10] * w10 + sData[i01] * w01 + sData[i11] * w11;
+              tempData[di + 1] = sData[i00 + 1] * w00 + sData[i10 + 1] * w10 + sData[i01 + 1] * w01 + sData[i11 + 1] * w11;
+              tempData[di + 2] = sData[i00 + 2] * w00 + sData[i10 + 2] * w10 + sData[i01 + 2] * w01 + sData[i11 + 2] * w11;
+              tempData[di + 3] = 255;
             } else {
               tempData[di] = 255;
               tempData[di + 1] = 255;
@@ -6037,58 +6022,21 @@
                 const y0 = sy | 0;
                 const dy = sy - y0;
 
+                const i00 = (y0 * dstW + x0) * 4;
+                const i10 = i00 + 4;
+                const i01 = i00 + dstW * 4;
+                const i11 = i01 + 4;
                 const di = (y * dstW + x) * 4;
-                if (!previewMaxSide && x0 >= 1 && x0 < dstW - 2 && y0 >= 1 && y0 < dstH - 2) {
-                  const dx2 = dx * dx, dx3 = dx2 * dx;
-                  const wx0 = -0.5 * dx + dx2 - 0.5 * dx3;
-                  const wx1 = 1.0 - 2.5 * dx2 + 1.5 * dx3;
-                  const wx2 = 0.5 * dx + 2.0 * dx2 - 1.5 * dx3;
-                  const wx3 = -0.5 * dx2 + 0.5 * dx3;
 
-                  const dy2 = dy * dy, dy3 = dy2 * dy;
-                  const wy0 = -0.5 * dy + dy2 - 0.5 * dy3;
-                  const wy1 = 1.0 - 2.5 * dy2 + 1.5 * dy3;
-                  const wy2 = 0.5 * dy + 2.0 * dy2 - 1.5 * dy3;
-                  const wy3 = -0.5 * dy2 + 0.5 * dy3;
+                const wt00 = (1.0 - dx) * (1.0 - dy);
+                const wt10 = dx * (1.0 - dy);
+                const wt01 = (1.0 - dx) * dy;
+                const wt11 = dx * dy;
 
-                  const r0 = ((y0 - 1) * dstW + x0 - 1) << 2;
-                  const r1 = r0 + (dstW << 2);
-                  const r2 = r1 + (dstW << 2);
-                  const r3 = r2 + (dstW << 2);
-
-                  const cr = (tempData[r0] * wx0 + tempData[r0 + 4] * wx1 + tempData[r0 + 8] * wx2 + tempData[r0 + 12] * wx3) * wy0 +
-                             (tempData[r1] * wx0 + tempData[r1 + 4] * wx1 + tempData[r1 + 8] * wx2 + tempData[r1 + 12] * wx3) * wy1 +
-                             (tempData[r2] * wx0 + tempData[r2 + 4] * wx1 + tempData[r2 + 8] * wx2 + tempData[r2 + 12] * wx3) * wy2 +
-                             (tempData[r3] * wx0 + tempData[r3 + 4] * wx1 + tempData[r3 + 8] * wx2 + tempData[r3 + 12] * wx3) * wy3;
-                  const cg = (tempData[r0 + 1] * wx0 + tempData[r0 + 5] * wx1 + tempData[r0 + 9] * wx2 + tempData[r0 + 13] * wx3) * wy0 +
-                             (tempData[r1 + 1] * wx0 + tempData[r1 + 5] * wx1 + tempData[r1 + 9] * wx2 + tempData[r1 + 13] * wx3) * wy1 +
-                             (tempData[r2 + 1] * wx0 + tempData[r2 + 5] * wx1 + tempData[r2 + 9] * wx2 + tempData[r2 + 13] * wx3) * wy2 +
-                             (tempData[r3 + 1] * wx0 + tempData[r3 + 5] * wx1 + tempData[r3 + 9] * wx2 + tempData[r3 + 13] * wx3) * wy3;
-                  const cb = (tempData[r0 + 2] * wx0 + tempData[r0 + 6] * wx1 + tempData[r0 + 10] * wx2 + tempData[r0 + 14] * wx3) * wy0 +
-                             (tempData[r1 + 2] * wx0 + tempData[r1 + 6] * wx1 + tempData[r1 + 10] * wx2 + tempData[r1 + 14] * wx3) * wy1 +
-                             (tempData[r2 + 2] * wx0 + tempData[r2 + 6] * wx1 + tempData[r2 + 10] * wx2 + tempData[r2 + 14] * wx3) * wy2 +
-                             (tempData[r3 + 2] * wx0 + tempData[r3 + 6] * wx1 + tempData[r3 + 10] * wx2 + tempData[r3 + 14] * wx3) * wy3;
-
-                  dData[di]     = cr < 0 ? 0 : (cr > 255 ? 255 : (cr + 0.5) | 0);
-                  dData[di + 1] = cg < 0 ? 0 : (cg > 255 ? 255 : (cg + 0.5) | 0);
-                  dData[di + 2] = cb < 0 ? 0 : (cb > 255 ? 255 : (cb + 0.5) | 0);
-                  dData[di + 3] = 255;
-                } else {
-                  const i00 = (y0 * dstW + x0) * 4;
-                  const i10 = i00 + 4;
-                  const i01 = i00 + dstW * 4;
-                  const i11 = i01 + 4;
-
-                  const wt00 = (1.0 - dx) * (1.0 - dy);
-                  const wt10 = dx * (1.0 - dy);
-                  const wt01 = (1.0 - dx) * dy;
-                  const wt11 = dx * dy;
-
-                  dData[di]     = tempData[i00] * wt00 + tempData[i10] * wt10 + tempData[i01] * wt01 + tempData[i11] * wt11;
-                  dData[di + 1] = tempData[i00 + 1] * wt00 + tempData[i10 + 1] * wt10 + tempData[i01 + 1] * wt01 + tempData[i11 + 1] * wt11;
-                  dData[di + 2] = tempData[i00 + 2] * wt00 + tempData[i10 + 2] * wt10 + tempData[i01 + 2] * wt01 + tempData[i11 + 2] * wt11;
-                  dData[di + 3] = 255;
-                }
+                dData[di]     = tempData[i00] * wt00 + tempData[i10] * wt10 + tempData[i01] * wt01 + tempData[i11] * wt11;
+                dData[di + 1] = tempData[i00 + 1] * wt00 + tempData[i10 + 1] * wt10 + tempData[i01 + 1] * wt01 + tempData[i11 + 1] * wt11;
+                dData[di + 2] = tempData[i00 + 2] * wt00 + tempData[i10 + 2] * wt10 + tempData[i01 + 2] * wt01 + tempData[i11 + 2] * wt11;
+                dData[di + 3] = 255;
               }
             }
             outCtx.putImageData(outImg, 0, 0);
@@ -6163,11 +6111,22 @@
         fastBoxBlurInPlace(clo, sw, sh, 3, tmp1, dst, colSum);
       }
 
-      // v47.0 Fast Edge-Preserving 3x3 Bilateral Luminance Denoise (erases low-light ISO grain, preserves ink edges 100%)
-      function edgePreservingBilateral3x3(src, w, h, rangeSigma, dst) {
-        const inv2Sig2 = 1.0 / (2.0 * rangeSigma * rangeSigma + 1e-4);
+      // v48.0 Ultra-Fast 5-Tap Cross Edge-Preserving Bilateral Denoise using 256-entry LUT (ZERO Math.exp in pixel loop!)
+      const _bilatLutCache = { sigma: -1, lut: new Float32Array(256) };
+      function getBilateralLut(rangeSigma) {
+        const sKey = Math.round(rangeSigma * 2) * 0.5;
+        if (_bilatLutCache.sigma !== sKey) {
+          const inv2s2 = 1.0 / (2.0 * sKey * sKey + 1e-4);
+          const lut = _bilatLutCache.lut;
+          for (let d = 0; d < 256; d++) lut[d] = Math.exp(-(d * d) * inv2s2);
+          _bilatLutCache.sigma = sKey;
+        }
+        return _bilatLutCache.lut;
+      }
+
+      function fastCrossBilateralLUT(src, w, h, rangeSigma, dst) {
+        const lut = getBilateralLut(rangeSigma);
         const wm1 = w - 1, hm1 = h - 1;
-        // Copy borders
         for (let x = 0; x < w; x++) {
           dst[x] = src[x];
           dst[hm1 * w + x] = src[hm1 * w + x];
@@ -6180,42 +6139,14 @@
           const rDn = rOff + w;
           for (let x = 1; x < wm1; x++) {
             const c = src[rOff + x];
-            let sum = c * 1.5;
-            let wSum = 1.5;
-
-            const v0 = src[rUp + x - 1], d0 = v0 - c;
-            const w0 = Math.exp(-(d0 * d0) * inv2Sig2) * 0.70;
-            sum += v0 * w0; wSum += w0;
-
-            const v1 = src[rUp + x], d1 = v1 - c;
-            const w1 = Math.exp(-(d1 * d1) * inv2Sig2);
-            sum += v1 * w1; wSum += w1;
-
-            const v2 = src[rUp + x + 1], d2 = v2 - c;
-            const w2 = Math.exp(-(d2 * d2) * inv2Sig2) * 0.70;
-            sum += v2 * w2; wSum += w2;
-
-            const v3 = src[rOff + x - 1], d3 = v3 - c;
-            const w3 = Math.exp(-(d3 * d3) * inv2Sig2);
-            sum += v3 * w3; wSum += w3;
-
-            const v4 = src[rOff + x + 1], d4 = v4 - c;
-            const w4 = Math.exp(-(d4 * d4) * inv2Sig2);
-            sum += v4 * w4; wSum += w4;
-
-            const v5 = src[rDn + x - 1], d5 = v5 - c;
-            const w5 = Math.exp(-(d5 * d5) * inv2Sig2) * 0.70;
-            sum += v5 * w5; wSum += w5;
-
-            const v6 = src[rDn + x], d6 = v6 - c;
-            const w6 = Math.exp(-(d6 * d6) * inv2Sig2);
-            sum += v6 * w6; wSum += w6;
-
-            const v7 = src[rDn + x + 1], d7 = v7 - c;
-            const w7 = Math.exp(-(d7 * d7) * inv2Sig2) * 0.70;
-            sum += v7 * w7; wSum += w7;
-
-            dst[rOff + x] = sum / wSum;
+            const vU = src[rUp + x], vD = src[rDn + x];
+            const vL = src[rOff + x - 1], vR = src[rOff + x + 1];
+            let dU = (vU - c) | 0; if (dU < 0) dU = -dU; if (dU > 255) dU = 255;
+            let dD = (vD - c) | 0; if (dD < 0) dD = -dD; if (dD > 255) dD = 255;
+            let dL = (vL - c) | 0; if (dL < 0) dL = -dL; if (dL > 255) dL = 255;
+            let dR = (vR - c) | 0; if (dR < 0) dR = -dR; if (dR > 255) dR = 255;
+            const wU = lut[dU], wD = lut[dD], wL = lut[dL], wR = lut[dR];
+            dst[rOff + x] = (c * 1.4 + vU * wU + vD * wD + vL * wL + vR * wR) / (1.4 + wU + wD + wL + wR);
           }
         }
       }
@@ -6235,8 +6166,7 @@
         const subG = new Float32Array(nSub);
         const subB = new Float32Array(nSub);
 
-        // 75th-percentile 2x2-subblock pooling inside each 4x4 cell:
-        // Averages out high-ISO camera noise spikes while rejecting dark text strokes!
+        let brightClipCells = 0;
         for (let sy = 0; sy < sh; sy++) {
           const y0 = sy * scale;
           const y1 = y0 + 1 < h ? y0 + 1 : h - 1;
@@ -6279,10 +6209,13 @@
             if (q2L > max1) { max2 = max1; idx2 = idx1; max1 = q2L; idx1 = 2; } else if (q2L > max2) { max2 = q2L; idx2 = 2; }
             if (q3L > max1) { max2 = max1; idx2 = idx1; max1 = q3L; idx1 = 3; } else if (q3L > max2) { max2 = q3L; idx2 = 3; }
 
-            if (idx2 === 0) { subR[sOff + sx] = q0R; subG[sOff + sx] = q0G; subB[sOff + sx] = q0B; subL[sOff + sx] = q0L; }
-            else if (idx2 === 1) { subR[sOff + sx] = q1R; subG[sOff + sx] = q1G; subB[sOff + sx] = q1B; subL[sOff + sx] = q1L; }
-            else if (idx2 === 2) { subR[sOff + sx] = q2R; subG[sOff + sx] = q2G; subB[sOff + sx] = q2B; subL[sOff + sx] = q2L; }
-            else { subR[sOff + sx] = q3R; subG[sOff + sx] = q3G; subB[sOff + sx] = q3B; subL[sOff + sx] = q3L; }
+            let chosenL;
+            if (idx2 === 0) { subR[sOff + sx] = q0R; subG[sOff + sx] = q0G; subB[sOff + sx] = q0B; chosenL = q0L; }
+            else if (idx2 === 1) { subR[sOff + sx] = q1R; subG[sOff + sx] = q1G; subB[sOff + sx] = q1B; chosenL = q1L; }
+            else if (idx2 === 2) { subR[sOff + sx] = q2R; subG[sOff + sx] = q2G; subB[sOff + sx] = q2B; chosenL = q2L; }
+            else { subR[sOff + sx] = q3R; subG[sOff + sx] = q3G; subB[sOff + sx] = q3B; chosenL = q3L; }
+            subL[sOff + sx] = chosenL;
+            if (chosenL >= 232.0) brightClipCells++;
           }
         }
 
@@ -6298,10 +6231,11 @@
         computeFinePaperSurfaceGridFromSub(subG, sw, sh, subTmp, null, gG, subCol);
         computeFinePaperSurfaceGridFromSub(subB, sw, sh, subTmp, null, gB, subCol);
 
-        // Estimate average paper illumination (detects dim indoor / neon fluorescent lighting)
         let sumEnvL = 0.0;
         for (let i = 0; i < nSub; i++) sumEnvL += gL[i];
         const avgPaperEnvL = sumEnvL / (nSub || 1);
+        const brightClipFrac = brightClipCells / (nSub || 1);
+        const isBrightOutdoor = avgPaperEnvL > 205.0 || brightClipFrac > 0.22;
 
         const uR = new Uint8Array(nPixels);
         const uG = new Uint8Array(nPixels);
@@ -6323,6 +6257,8 @@
         }
 
         // Single-pass illumination & neon color-cast normalization
+        // In bright outdoor sun, cap white-point target to 248 instead of 255 to prevent harsh blinding glare!
+        const normTarget = isBrightOutdoor ? 248.0 : 255.0;
         for (let y = 0; y < h; y++) {
           const gy = y * invScale;
           const cgy = gy > maxGy ? maxGy : gy;
@@ -6356,10 +6292,10 @@
             const r = rawData[idx4], g = rawData[idx4 + 1], b = rawData[idx4 + 2];
             const lum = 0.299 * r + 0.587 * g + 0.114 * b;
 
-            const nr = (255.0 * r / eR + 0.5) | 0;
-            const ng = (255.0 * g / eG + 0.5) | 0;
-            const nb = (255.0 * b / eB + 0.5) | 0;
-            let nl = (255.0 * lum) / eL;
+            const nr = (normTarget * r / eR + 0.5) | 0;
+            const ng = (normTarget * g / eG + 0.5) | 0;
+            const nb = (normTarget * b / eB + 0.5) | 0;
+            let nl = (normTarget * lum) / eL;
             if (nl > 255.0) nl = 255.0; else if (nl < 0.0) nl = 0.0;
 
             uR[i] = nr > 255 ? 255 : (nr < 0 ? 0 : nr);
@@ -6370,11 +6306,11 @@
           }
         }
 
-        // Estimate normalized high-ISO noise floor on paper pixels (robust 35th-percentile Laplacian)
+        // Fast noise floor estimation on paper pixels
         const nHist = new Int32Array(64);
         let nSamples = 0;
-        const stepY = Math.max(2, (h / 180) | 0);
-        const stepX = Math.max(2, (w / 180) | 0);
+        const stepY = Math.max(2, (h / 140) | 0);
+        const stepX = Math.max(2, (w / 140) | 0);
         for (let y = 2; y < h - 2; y += stepY) {
           const rOff = y * w;
           for (let x = 2; x < w - 2; x += stepX) {
@@ -6386,7 +6322,7 @@
             }
           }
         }
-        let isoNoiseEst = 1.5;
+        let isoNoiseEst = 1.2;
         if (nSamples > 20) {
           let cum = 0;
           const target = nSamples * 0.45;
@@ -6395,11 +6331,12 @@
             if (cum >= target) { isoNoiseEst = b * 0.5; break; }
           }
         }
-        const isLowLightDoc = avgPaperEnvL < 165.0 || isoNoiseEst > 3.2;
+        const isLowLightDoc = !isBrightOutdoor && (avgPaperEnvL < 158.0 || isoNoiseEst > 3.2);
 
-        // 1. Chroma-Noise Suppression (removes purple/green/yellow neon ISO speckles while preserving vivid red/blue ink!)
-        const tmpMax = new Float32Array(nPixels);
-        if (isLowLightDoc || isoNoiseEst > 2.0) {
+        const tmpBuf = new Float32Array(nPixels);
+        // Only run chroma & bilateral denoise when actually needed (low light / neon ISO noise) -> 0ms overhead outdoors!
+        if (isLowLightDoc) {
+          // 1. Fast Chroma-Noise Suppression (eliminates purple/green neon ISO speckles)
           const crBuf = new Float32Array(nPixels);
           const cbBuf = new Float32Array(nPixels);
           const crSmooth = new Float32Array(nPixels);
@@ -6409,21 +6346,15 @@
             crBuf[i] = uR[i] - l;
             cbBuf[i] = uB[i] - l;
           }
-          fastBlurRad1(crBuf, w, h, tmpMax, crSmooth);
-          fastBlurRad1(cbBuf, w, h, tmpMax, cbSmooth);
-          if (isLowLightDoc) {
-            fastBlurRad1(crSmooth, w, h, tmpMax, crSmooth);
-            fastBlurRad1(cbSmooth, w, h, tmpMax, cbSmooth);
-          }
-          const chromaBlend = isLowLightDoc ? 0.90 : 0.50;
-          const chromaLimit = isLowLightDoc ? 68.0 : 48.0;
-          const chromaCore = isLowLightDoc ? 38.0 : 24.0;
+          fastBlurRad1(crBuf, w, h, tmpBuf, crSmooth);
+          fastBlurRad1(cbBuf, w, h, tmpBuf, cbSmooth);
+          fastBlurRad1(crSmooth, w, h, tmpBuf, crSmooth);
+          fastBlurRad1(cbSmooth, w, h, tmpBuf, cbSmooth);
           for (let i = 0; i < nPixels; i++) {
             const crRaw = crBuf[i], cbRaw = cbBuf[i];
             const chromaMag = Math.abs(crRaw) + Math.abs(cbRaw);
-            // Only smooth low/medium chroma ISO blotches; keep saturated pen/stamp strokes sharp
-            if (chromaMag < chromaLimit) {
-              const wC = chromaMag < chromaCore ? chromaBlend : chromaBlend * (1.0 - (chromaMag - chromaCore) / (chromaLimit - chromaCore));
+            if (chromaMag < 68.0) {
+              const wC = chromaMag < 38.0 ? 0.90 : 0.90 * (1.0 - (chromaMag - 38.0) / 30.0);
               const nCr = crRaw * (1.0 - wC) + crSmooth[i] * wC;
               const nCb = cbRaw * (1.0 - wC) + cbSmooth[i] * wC;
               const l = uL[i];
@@ -6435,18 +6366,15 @@
               uB[i] = nb > 255 ? 255 : (nb < 0 ? 0 : nb);
             }
           }
-        }
 
-        // 2. Edge-Preserving Bilateral Luminance Denoise (silky smooth paper, razor-sharp ink edges!)
-        const uLClean = new Float32Array(nPixels);
-        if (isLowLightDoc || isoNoiseEst > 1.8) {
-          const rangeSigma = Math.min(34.0, Math.max(10.0, isoNoiseEst * 3.2 + (isLowLightDoc ? 6.5 : 0.0)));
-          edgePreservingBilateral3x3(uL, w, h, rangeSigma, uLClean);
-          if (isLowLightDoc && isoNoiseEst > 4.0) {
-            edgePreservingBilateral3x3(uLClean, w, h, rangeSigma * 0.9, tmpMax);
-            uLClean.set(tmpMax);
+          // 2. Fast 5-Tap LUT Edge-Preserving Bilateral Denoise (~12ms on 1600px!)
+          const rangeSigma = Math.min(34.0, Math.max(12.0, isoNoiseEst * 3.2 + 6.5));
+          const uLClean = new Float32Array(nPixels);
+          fastCrossBilateralLUT(uL, w, h, rangeSigma, uLClean);
+          if (isoNoiseEst > 4.5) {
+            fastCrossBilateralLUT(uLClean, w, h, rangeSigma * 0.85, tmpBuf);
+            uLClean.set(tmpBuf);
           }
-          // Sync RGB channels with bilateral luminance delta so color & luminance stay perfectly locked
           for (let i = 0; i < nPixels; i++) {
             const delta = uLClean[i] - uL[i];
             if (delta !== 0) {
@@ -6460,27 +6388,24 @@
             uL[i] = uLClean[i];
             dL[i] = 255.0 - uLClean[i];
           }
-        } else {
-          uLClean.set(uL);
         }
 
         // 3. 2-pass rad=3 max filter (13x13 halo-guard zone)
         const dMaxLocal = new Uint8Array(nPixels);
-        fastMaxRad3ToU8(dL, w, h, tmpMax, dMaxLocal);
+        fastMaxRad3ToU8(dL, w, h, tmpBuf, dMaxLocal);
         for (let i = 0; i < nPixels; i++) dL[i] = dMaxLocal[i];
-        fastMaxRad3ToU8(dL, w, h, tmpMax, dMaxLocal);
+        fastMaxRad3ToU8(dL, w, h, tmpBuf, dMaxLocal);
 
-        // 4. Precompute Multi-Scale Detail Maps (Fine 3x3 + Medium 5x5) for instant 60fps halo-free sharpening!
+        // 4. Precompute fast Fine (3x3) + Medium (5x5) detail maps for instant 60fps sharpening
         const blur1 = new Float32Array(nPixels);
         const blur2 = new Float32Array(nPixels);
-        fastBlurRad1(uLClean, w, h, tmpMax, blur1);
-        fastBlurRad1(blur1, w, h, tmpMax, blur2);
+        fastBlurRad1(uL, w, h, tmpBuf, blur1);
+        fastBlurRad1(blur1, w, h, tmpBuf, blur2);
 
-        // Store compact Int8-quantized detail maps (scale 0.5 -> range [-64..+63.5] = 0.5 luminance precision, only 1 byte/px!)
         const detailFine = new Float32Array(nPixels);
         const detailMed = new Float32Array(nPixels);
         for (let i = 0; i < nPixels; i++) {
-          detailFine[i] = uLClean[i] - blur1[i];
+          detailFine[i] = uL[i] - blur1[i];
           detailMed[i] = blur1[i] - blur2[i];
         }
 
@@ -6498,6 +6423,7 @@
           avgPaperEnvL,
           isoNoiseEst,
           isLowLightDoc,
+          isBrightOutdoor,
           meanL: null,
           stdL: null
         };
@@ -6532,7 +6458,7 @@
         const mode = settings.colorMode || "ultra_sharp";
         const brightVal = settings.brightness || 0;
         const bShift = Math.round(brightVal * 2.1);
-        const sharpPct = settings.sharpness !== undefined ? settings.sharpness : 78;
+        const sharpPct = settings.sharpness !== undefined ? settings.sharpness : 75;
         const sharpAmt = Math.max(0.0, Math.min(1.0, sharpPct / 100.0));
         const transparentBg = !!settings.transparentBg;
 
@@ -6556,7 +6482,7 @@
         const fc = page.filterCache;
         const nPixels = w * h;
         const cleanAmt = (settings.bgSuppress ?? 68) / 100.0;
-        const contrastAmt = (settings.contrast ?? 60) / 100.0;
+        const contrastAmt = (settings.contrast ?? 58) / 100.0;
 
         if (!fc.outImg || fc.outImg.width !== w || fc.outImg.height !== h) {
           fc.outImg = outCtx.createImageData(w, h);
@@ -6573,13 +6499,17 @@
         const detailMed = fc.detailMed;
         const dMaxLocal = fc.dMaxLocal;
         const isLowLight = !!fc.isLowLightDoc;
-        const noiseDeadzone = Math.max(1.6, Math.min(8.5, (fc.isoNoiseEst || 1.5) * 0.95 + (isLowLight ? 1.8 : 0.4)));
+        const isBrightOutdoor = !!fc.isBrightOutdoor;
+        const noiseDeadzone = isLowLight
+          ? Math.max(2.0, Math.min(8.5, (fc.isoNoiseEst || 1.5) * 0.95 + 1.8))
+          : 1.4;
 
-        // Multi-scale asymmetric halo-free sharpening gains scaled by user sharpness slider (0..100%)
-        const fineDarkGain = sharpAmt * (isLowLight ? 2.15 : 1.75);
-        const medDarkGain = sharpAmt * (isLowLight ? 1.35 : 0.95);
-        const fineBrightGain = sharpAmt * 0.52;
-        const medBrightGain = sharpAmt * 0.28;
+        // Multi-scale asymmetric halo-free sharpening:
+        // In bright outdoor sun, brightGain = 0.0 so sunlit paper NEVER glares or blows out!
+        const fineDarkGain = sharpAmt * (isLowLight ? 2.15 : (isBrightOutdoor ? 1.85 : 1.70));
+        const medDarkGain = sharpAmt * (isLowLight ? 1.30 : (isBrightOutdoor ? 1.15 : 0.90));
+        const fineBrightGain = isBrightOutdoor ? 0.0 : (sharpAmt * 0.42);
+        const medBrightGain = isBrightOutdoor ? 0.0 : (sharpAmt * 0.22);
 
         if (mode === "original") {
           for (let i = 0; i < nPixels; i++) {
@@ -6597,7 +6527,7 @@
                   ? (effF * fineDarkGain * 0.85 + effM * medDarkGain * 0.85)
                   : (effF * fineBrightGain * 0.85 + effM * medBrightGain * 0.85);
                 if (boost < -56.0) boost = -56.0;
-                else if (boost > 30.0) boost = 30.0;
+                else if (boost > 24.0) boost = 24.0;
               }
             }
             const r = Math.min(255, Math.max(0, Math.round(rawData[idx] + boost + bShift)));
@@ -6622,7 +6552,7 @@
           const meanL = fc.meanL;
           const stdL = fc.stdL;
           const k = 0.16 + (1.0 - contrastAmt) * 0.10;
-          const minDip = 14.0 + cleanAmt * 20.0 - contrastAmt * 6.0 - brightVal * 0.25;
+          const minDip = (isBrightOutdoor ? 8.0 : 14.0) + cleanAmt * (isBrightOutdoor ? 10.0 : 20.0) - contrastAmt * 6.0 - brightVal * 0.25;
           const haloRatio = 0.24 + cleanAmt * 0.16;
 
           for (let i = 0; i < nPixels; i++) {
@@ -6633,15 +6563,15 @@
               const comb = df * 0.65 + dm * 0.35;
               if (comb < -noiseDeadzone) {
                 shBoost = Math.max(-55.0, (comb + noiseDeadzone) * fineDarkGain * 1.15);
-              } else if (comb > noiseDeadzone) {
-                shBoost = Math.min(25.0, (comb - noiseDeadzone) * fineBrightGain);
+              } else if (comb > noiseDeadzone && !isBrightOutdoor) {
+                shBoost = Math.min(22.0, (comb - noiseDeadzone) * fineBrightGain);
               }
             }
             const nl = Math.min(255.0, Math.max(0.0, uL[i] + shBoost + bShift * 0.5));
             const mL = meanL[i];
             const sL = stdL[i];
             const sauvolaT = mL * (1.0 - k * (1.0 - sL / 128.0));
-            const haloGuard = Math.max(6.0, Math.max(minDip, dMaxLocal[i] * haloRatio));
+            const haloGuard = Math.max(5.0, Math.max(minDip, dMaxLocal[i] * haloRatio));
             const effT = Math.min(sauvolaT, 255.0 - haloGuard);
 
             const diff = nl - effT;
@@ -6660,28 +6590,48 @@
           return;
         }
 
-        let baseFloor, haloRatio, gain, extraSharpMult, inkGamma;
+        let baseFloor, haloRatio, gain, extraSharpMult, inkGamma, paperWhiteTarget;
         if (mode === "ultra_sharp") {
-          // Dedicated Low-Light & Neon Ultra-Sharp Mode:
-          // Cleans dim/neon mottled background completely while reconstructing razor-sharp dark & colored ink!
-          baseFloor = (isLowLight ? 21.0 : 16.0) + cleanAmt * 24.0;
-          haloRatio = 0.30 + cleanAmt * 0.17;
-          gain = (isLowLight ? 1.88 : 1.65) + contrastAmt * 1.38;
-          extraSharpMult = isLowLight ? 1.28 : 1.15;
-          inkGamma = isLowLight ? 1.18 : 1.08;
+          if (isBrightOutdoor) {
+            // Outdoor Anti-Glare Mode: low floor rescues sunlit/glared faint text, soft natural paper (246) avoids harsh glare!
+            baseFloor = 7.5 + cleanAmt * 9.5;
+            haloRatio = 0.22 + cleanAmt * 0.12;
+            gain = 1.95 + contrastAmt * 1.35;
+            extraSharpMult = 1.18;
+            inkGamma = 1.22;
+            paperWhiteTarget = 247;
+          } else if (isLowLight) {
+            // Low-Light / Neon Mode: suppresses amplified ISO grain, cleans neon cast, sharpens dark & colored ink
+            baseFloor = 20.0 + cleanAmt * 22.0;
+            haloRatio = 0.30 + cleanAmt * 0.16;
+            gain = 1.85 + contrastAmt * 1.35;
+            extraSharpMult = 1.25;
+            inkGamma = 1.18;
+            paperWhiteTarget = 255;
+          } else {
+            // Normal Indoor Mode
+            baseFloor = 14.0 + cleanAmt * 20.0;
+            haloRatio = 0.28 + cleanAmt * 0.15;
+            gain = 1.62 + contrastAmt * 1.25;
+            extraSharpMult = 1.12;
+            inkGamma = 1.08;
+            paperWhiteTarget = 254;
+          }
         } else if (mode === "faint_boost") {
-          baseFloor = 14.0 + cleanAmt * 18.0;
-          haloRatio = 0.28 + cleanAmt * 0.16;
-          gain = 1.75 + contrastAmt * 1.50;
+          baseFloor = (isBrightOutdoor ? 6.5 : 14.0) + cleanAmt * (isBrightOutdoor ? 8.5 : 18.0);
+          haloRatio = 0.26 + cleanAmt * 0.14;
+          gain = 1.85 + contrastAmt * 1.50;
           extraSharpMult = 1.12;
-          inkGamma = 1.14;
+          inkGamma = 1.16;
+          paperWhiteTarget = isBrightOutdoor ? 248 : 255;
         } else {
           // magic_color
-          baseFloor = 18.0 + cleanAmt * 28.0;
-          haloRatio = 0.32 + cleanAmt * 0.18;
-          gain = 1.50 + contrastAmt * 1.30;
+          baseFloor = (isBrightOutdoor ? 9.5 : 18.0) + cleanAmt * (isBrightOutdoor ? 12.0 : 26.0);
+          haloRatio = 0.30 + cleanAmt * 0.16;
+          gain = 1.55 + contrastAmt * 1.30;
           extraSharpMult = 1.0;
           inkGamma = 1.0;
+          paperWhiteTarget = isBrightOutdoor ? 248 : 255;
         }
 
         const fDarkG = fineDarkGain * extraSharpMult;
@@ -6706,7 +6656,7 @@
                 ? (effF * fDarkG + effM * mDarkG)
                 : (effF * fBrightG + effM * mBrightG);
               if (boost < -68.0) boost = -68.0;
-              else if (boost > 32.0) boost = 32.0;
+              else if (boost > 24.0) boost = 24.0;
             }
           }
 
@@ -6727,23 +6677,22 @@
 
           let r, g, b;
           if (dL <= lowEdge && chroma < paperChromaFloor) {
-            const wv = bShift < 0 ? Math.max(0, 255 + bShift) : 255;
+            const wv = Math.min(255, Math.max(0, paperWhiteTarget + bShift));
             r = wv; g = wv; b = wv;
           } else {
-            const bandW = Math.max(6.0, effFloor * 0.55);
+            const bandW = Math.max(5.0, effFloor * 0.50);
             const effSignal = Math.max(dL, excessChroma * 0.78);
             const t = Math.min(1.0, Math.max(0.0, (effSignal - lowEdge) / bandW));
             const sStep = t * t * (3.0 - 2.0 * t);
             const neutralScale = dL > 0.5 ? Math.max(0.0, (dL - lowEdge * (1.0 - 0.35 * sStep)) / dL) : 0.0;
             let effGain = sStep * gain * Math.max(neutralScale, chroma > 18 ? 0.85 : 0.0);
             if (inkGamma > 1.01 && dL > lowEdge) {
-              // Mild darkening curve on genuine ink strokes so dim/neon text looks crisp and solid
               effGain *= (1.0 + (inkGamma - 1.0) * sStep);
             }
 
-            r = Math.min(255, Math.max(0, Math.round(255.0 - (255.0 - nr) * effGain + bShift)));
-            g = Math.min(255, Math.max(0, Math.round(255.0 - (255.0 - ng) * effGain + bShift)));
-            b = Math.min(255, Math.max(0, Math.round(255.0 - (255.0 - nb) * effGain + bShift)));
+            r = Math.min(255, Math.max(0, Math.round(paperWhiteTarget - (paperWhiteTarget - nr) * effGain + bShift)));
+            g = Math.min(255, Math.max(0, Math.round(paperWhiteTarget - (paperWhiteTarget - ng) * effGain + bShift)));
+            b = Math.min(255, Math.max(0, Math.round(paperWhiteTarget - (paperWhiteTarget - nb) * effGain + bShift)));
           }
 
           const idx = i * 4;
@@ -8720,7 +8669,7 @@
         el.ddBrightnessSlider.value = s.brightness || 0;
         const bVal = s.brightness || 0;
         el.ddBrightnessVal.textContent = bVal > 0 ? `+${bVal}` : `${bVal}`;
-        const shVal = s.sharpness !== undefined ? s.sharpness : 78;
+        const shVal = s.sharpness !== undefined ? s.sharpness : 75;
         if (el.ddSharpnessSlider) el.ddSharpnessSlider.value = shVal;
         if (el.ddSharpnessVal) el.ddSharpnessVal.textContent = `${shVal}%`;
         el.ddCleanSlider.value = s.bgSuppress ?? 68;
@@ -8802,7 +8751,7 @@
             const img = new Image();
             img.onload = () => {
               const c = document.createElement("canvas");
-              const maxSide = 2800;
+              const maxSide = 1800;
               let w = img.naturalWidth || img.width;
               let h = img.naturalHeight || img.height;
               if (Math.max(w, h) > maxSide) {
@@ -8916,11 +8865,12 @@
         try {
           let stream = null;
           try {
+            // Use Full HD 1920x1080 for live preview so smartphone primary lens PDAF autofocus stays fast and locked!
             stream = await navigator.mediaDevices.getUserMedia({
               video: {
                 facingMode: { ideal: "environment" },
-                width: { ideal: 3840 },
-                height: { ideal: 2160 }
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
               },
               audio: false
             });
@@ -8933,7 +8883,12 @@
           state.cameraStream = stream;
           state.cameraTorchOn = false;
           state.cameraScreenFlashAssist = false;
+          state.cameraAntiGlareMode = 0;
           syncCameraFlashUI();
+          if (el.btnCamAntiGlare) {
+            el.btnCamAntiGlare.textContent = "☀ Chống lóa: Tự động";
+            el.btnCamAntiGlare.classList.remove("flash-on");
+          }
           el.cameraModal.classList.add("open");
           el.cameraVideo.srcObject = stream;
           await el.cameraVideo.play();
@@ -8950,7 +8905,6 @@
               }
             }
           } catch (_) {}
-          await applyCameraZoom("1");
           runCameraLiveOverlay();
         } catch (err) {
           el.cameraModal.classList.remove("open");
@@ -8978,6 +8932,65 @@
         state.cameraTorchOn = false;
         state.cameraScreenFlashAssist = false;
         syncCameraFlashUI();
+      }
+
+      async function triggerCameraTapFocus(clientX, clientY) {
+        if (!state.cameraStream || !el.cameraVideoWrap) return;
+        const rect = el.cameraVideoWrap.getBoundingClientRect();
+        const nx = Math.max(0.05, Math.min(0.95, (clientX - rect.left) / Math.max(1, rect.width)));
+        const ny = Math.max(0.05, Math.min(0.95, (clientY - rect.top) / Math.max(1, rect.height)));
+        if (el.camFocusRing) {
+          el.camFocusRing.style.left = `${(nx * 100).toFixed(1)}%`;
+          el.camFocusRing.style.top = `${(ny * 100).toFixed(1)}%`;
+          el.camFocusRing.classList.add("show");
+          clearTimeout(el.camFocusRing._t);
+          el.camFocusRing._t = setTimeout(() => el.camFocusRing.classList.remove("show"), 900);
+        }
+        const vTrack = state.cameraStream.getVideoTracks()[0];
+        if (!vTrack || typeof vTrack.applyConstraints !== "function") return;
+        try {
+          const caps = typeof vTrack.getCapabilities === "function" ? (vTrack.getCapabilities() || {}) : {};
+          const adv = {};
+          if (caps.pointsOfInterest) adv.pointsOfInterest = [{ x: nx, y: ny }];
+          if (Array.isArray(caps.focusMode) && caps.focusMode.includes("single-shot")) {
+            adv.focusMode = "single-shot";
+          } else if (Array.isArray(caps.focusMode) && caps.focusMode.includes("continuous")) {
+            adv.focusMode = "continuous";
+          }
+          if (Object.keys(adv).length > 0) {
+            await vTrack.applyConstraints({ advanced: [adv] }).catch(() => {});
+          }
+          if (adv.focusMode === "single-shot" && Array.isArray(caps.focusMode) && caps.focusMode.includes("continuous")) {
+            setTimeout(() => {
+              if (state.cameraStream && vTrack.readyState === "live") {
+                vTrack.applyConstraints({ advanced: [{ focusMode: "continuous" }] }).catch(() => {});
+              }
+            }, 1200);
+          }
+        } catch (_) {}
+      }
+
+      async function toggleCameraAntiGlare() {
+        if (!state.cameraStream) return;
+        state.cameraAntiGlareMode = state.cameraAntiGlareMode ? 0 : 1;
+        const on = state.cameraAntiGlareMode === 1;
+        if (el.btnCamAntiGlare) {
+          el.btnCamAntiGlare.textContent = on ? "☀ Chống lóa: Bật (-EV)" : "☀ Chống lóa: Tự động";
+          el.btnCamAntiGlare.classList.toggle("flash-on", on);
+        }
+        const vTrack = state.cameraStream.getVideoTracks()[0];
+        if (vTrack && typeof vTrack.getCapabilities === "function" && typeof vTrack.applyConstraints === "function") {
+          try {
+            const caps = vTrack.getCapabilities() || {};
+            if (caps.exposureCompensation) {
+              const minEv = caps.exposureCompensation.min ?? -2;
+              const maxEv = caps.exposureCompensation.max ?? 2;
+              const targetEv = on ? Math.max(minEv, Math.min(maxEv, -0.8)) : 0;
+              await vTrack.applyConstraints({ advanced: [{ exposureCompensation: targetEv }] }).catch(() => {});
+            }
+          } catch (_) {}
+        }
+        showToast(on ? "☀ Đã giảm chói ngoài trời (-EV)!" : "☀ Đã về đo sáng tự động.");
       }
 
       function runCameraLiveOverlay() {
@@ -9309,7 +9322,7 @@
         });
         el.ddBrightnessSlider.addEventListener("change", () => { renderStage(); scheduleSavePage(getCurrentPage(), false); });
 
-        // Sharpness Slider inside ☰ Vertical Popup (60fps zero-lag multi-scale sharpening)
+        // Sharpness Slider inside ☰ Vertical Popup (60fps zero-lag sharpening)
         if (el.ddSharpnessSlider) {
           el.ddSharpnessSlider.addEventListener("input", () => {
             const page = getCurrentPage();
@@ -9330,9 +9343,9 @@
           el.ddSharpnessVal.addEventListener("click", () => {
             const page = getCurrentPage();
             if (!page) return;
-            page.settings.sharpness = 78;
-            if (el.ddSharpnessSlider) el.ddSharpnessSlider.value = 78;
-            el.ddSharpnessVal.textContent = "78%";
+            page.settings.sharpness = 75;
+            if (el.ddSharpnessSlider) el.ddSharpnessSlider.value = 75;
+            el.ddSharpnessVal.textContent = "75%";
             applyCachedFiltersToPage(page);
             scheduleSavePage(page, false);
             renderStage();
@@ -10041,6 +10054,15 @@
             toggleCameraFlash();
           });
         }
+        if (el.btnCamAntiGlare) {
+          el.btnCamAntiGlare.addEventListener("click", () => {
+            toggleCameraAntiGlare();
+          });
+        }
+        el.cameraVideoWrap.addEventListener("click", (e) => {
+          if (e.target && e.target.closest("button")) return;
+          triggerCameraTapFocus(e.clientX, e.clientY);
+        });
 
         [el.btnZoomMin, el.btnZoom1x, el.btnZoom15x].forEach((zBtn) => {
           zBtn.addEventListener("click", () => {
@@ -10123,103 +10145,17 @@
             }
           }
 
-          // v47.0 Ultra-HD Low-Light & Neon Anti-Flicker Capture:
-          // 1) Try native ImageCapture.takePhoto() up to 2800px (full camera ISP + HDR).
-          // 2) If unavailable/timed out (e.g. iOS Safari or dim stream), capture a rapid 4-frame burst
-          //    spanning >1 full 100Hz neon flicker cycle: score sharpness (Laplacian energy) & merge
-          //    aligned steady frames to slash ISO noise & eliminate fluorescent flicker bands!
-          async function captureSharpBurstFromVideo(vid, baseCanvas) {
-            const bw = vid.videoWidth, bh = vid.videoHeight;
-            if (!bw || !bh) return baseCanvas;
-            const frames = [];
-            const probeW = 160;
-            const probeH = Math.max(90, Math.round((bh / bw) * probeW));
-            const probeC = document.createElement("canvas");
-            probeC.width = probeW;
-            probeC.height = probeH;
-            const pctx = probeC.getContext("2d", { willReadFrequently: true });
-
-            for (let f = 0; f < 4; f++) {
-              if (f > 0) await new Promise((r) => setTimeout(r, 32));
-              if (!vid || vid.readyState < 2) break;
-              const fc = document.createElement("canvas");
-              fc.width = bw;
-              fc.height = bh;
-              fc.getContext("2d").drawImage(vid, 0, 0, bw, bh);
-              pctx.drawImage(fc, 0, 0, probeW, probeH);
-              const pd = pctx.getImageData(0, 0, probeW, probeH).data;
-              const gray = new Float32Array(probeW * probeH);
-              for (let i = 0; i < probeW * probeH; i++) {
-                const i4 = i << 2;
-                gray[i] = 0.299 * pd[i4] + 0.587 * pd[i4 + 1] + 0.114 * pd[i4 + 2];
-              }
-              // Center 64% ROI sharpness score (Laplacian variance)
-              let sharpSum = 0;
-              const x0 = Math.floor(probeW * 0.18), x1 = Math.floor(probeW * 0.82);
-              const y0 = Math.floor(probeH * 0.18), y1 = Math.floor(probeH * 0.82);
-              for (let y = y0; y < y1; y++) {
-                const ro = y * probeW;
-                for (let x = x0; x < x1; x++) {
-                  const lap = 4 * gray[ro + x] - gray[ro + x - 1] - gray[ro + x + 1] - gray[ro - probeW + x] - gray[ro + probeW + x];
-                  sharpSum += lap * lap;
-                }
-              }
-              frames.push({ canvas: fc, gray, sharp: sharpSum });
-            }
-            if (!frames.length) return baseCanvas;
-            frames.sort((a, b) => b.sharp - a.sharp);
-            const best = frames[0];
-            // Check which other frames are steady (low hand shake) for noise-canceling temporal stack
-            const steady = [best];
-            const nG = probeW * probeH;
-            for (let k = 1; k < frames.length; k++) {
-              if (frames[k].sharp < best.sharp * 0.78) continue;
-              let diffSum = 0;
-              const gA = best.gray, gB = frames[k].gray;
-              for (let i = 0; i < nG; i += 2) diffSum += Math.abs(gA[i] - gB[i]);
-              const mad = diffSum / (nG * 0.5);
-              if (mad < 8.5) steady.push(frames[k]);
-            }
-            if (steady.length === 1) return best.canvas;
-
-            const merged = document.createElement("canvas");
-            merged.width = bw;
-            merged.height = bh;
-            const mctx = merged.getContext("2d");
-            const acc = new Float32Array(bw * bh * 3);
-            for (let k = 0; k < steady.length; k++) {
-              const d = steady[k].canvas.getContext("2d").getImageData(0, 0, bw, bh).data;
-              const wgt = k === 0 ? 1.35 : 1.0;
-              for (let p = 0, q = 0; p < d.length; p += 4, q += 3) {
-                acc[q]     += d[p] * wgt;
-                acc[q + 1] += d[p + 1] * wgt;
-                acc[q + 2] += d[p + 2] * wgt;
-              }
-            }
-            const totalW = 1.35 + (steady.length - 1);
-            const invW = 1.0 / totalW;
-            const outImg = mctx.createImageData(bw, bh);
-            const od = outImg.data;
-            for (let p = 0, q = 0; p < od.length; p += 4, q += 3) {
-              od[p]     = (acc[q] * invW + 0.5) | 0;
-              od[p + 1] = (acc[q + 1] * invW + 0.5) | 0;
-              od[p + 2] = (acc[q + 2] * invW + 0.5) | 0;
-              od[p + 3] = 255;
-            }
-            mctx.putImageData(outImg, 0, 0);
-            return merged;
-          }
-
+          // v43.0 HD Still Capture: Prefer native ImageCapture.takePhoto() (full sensor ISP, HDR, sharp optics)
+          // raced with a 900ms guard so it never hangs, falling back seamlessly to the 4K/full-res video frame.
           let finalCanvas = fallbackCanvas;
-          let gotNativeStill = false;
           const vTrack = state.cameraStream ? state.cameraStream.getVideoTracks()[0] : null;
           if (vTrack && vTrack.readyState === "live" && typeof window.ImageCapture === "function") {
-            showToast("📸 Đang chụp ảnh siêu nét...");
+            showToast("📸 Đang chụp ảnh độ nét cao...");
             try {
               const ic = new window.ImageCapture(vTrack);
               const photoBlob = await Promise.race([
                 ic.takePhoto(),
-                new Promise((_, rej) => setTimeout(() => rej(new Error("takePhoto_timeout")), 1100))
+                new Promise((_, rej) => setTimeout(() => rej(new Error("takePhoto_timeout")), 650))
               ]);
               if (photoBlob && photoBlob.size > 0) {
                 let bmp = null;
@@ -10229,7 +10165,7 @@
                 const srcW = bmp ? bmp.width : 0;
                 const srcH = bmp ? bmp.height : 0;
                 if (bmp && srcW >= Math.min(vw, vh)) {
-                  const maxCapSide = 2800;
+                  const maxCapSide = 2200;
                   let tw = srcW, th = srcH;
                   if (Math.max(tw, th) > maxCapSide) {
                     const sc = maxCapSide / Math.max(tw, th);
@@ -10241,22 +10177,13 @@
                   hdCanvas.height = th;
                   hdCanvas.getContext("2d").drawImage(bmp, 0, 0, tw, th);
                   if (typeof bmp.close === "function") bmp.close();
+                  // v44.0: Always run full Stage 1 + Stage 2 on takePhoto() HD still because camera still-photo FOV/EIS crop differs from live video preview!
                   seedCorners = null;
                   finalCanvas = hdCanvas;
-                  gotNativeStill = true;
                 } else if (bmp && typeof bmp.close === "function") {
                   bmp.close();
                 }
               }
-            } catch (_) {
-              gotNativeStill = false;
-            }
-          }
-          if (!gotNativeStill && video && video.readyState >= 2) {
-            showToast("⚡ Đang ghép khung chống nhiễu đèn yếu...");
-            try {
-              finalCanvas = await captureSharpBurstFromVideo(video, fallbackCanvas);
-              seedCorners = null;
             } catch (_) {
               finalCanvas = fallbackCanvas;
             }

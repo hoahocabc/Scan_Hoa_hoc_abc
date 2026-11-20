@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v47.0) — Ứng dụng quét tài liệu siêu nét, tối ưu cho ánh sáng yếu và đèn neon: Khử nhiễu giữ biên, khử ám màu, làm nét đa tầng và chụp liên thanh chống nhấp nháy.",
+  "description": "ScanhoahocABC (v48.0) — Quét tài liệu siêu nhanh, bắt nét chuẩn, chống lóa ngoài trời và làm nét chữ rõ trong ánh sáng yếu / đèn neon.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
