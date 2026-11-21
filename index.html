@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v61.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
+  <meta name="description" content="ScanhoahocABC (v62.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
   <style>
     :root {
       --primary: #2563eb;
@@ -3759,7 +3759,7 @@
           }));
         } else {
           // 360px working resolution for crisp rim localization on all object sizes
-          const maxDim = skipFullResRefine ? 240 : 320;
+          const maxDim = skipFullResRefine ? 280 : 320;
           const scale = Math.min(1, maxDim / Math.max(origW, origH));
           const w = Math.max(72, Math.round(origW * scale));
           const h = Math.max(72, Math.round(origH * scale));
@@ -4837,57 +4837,57 @@
             ];
           }
 
-          const pairsPts = [
-            { p1: bestQuad[0], p2: bestQuad[1], rmap: rawTop, isH: true },
-            { p1: bestQuad[1], p2: bestQuad[2], rmap: rawRight, isH: false },
-            { p1: bestQuad[2], p2: bestQuad[3], rmap: rawBot, isH: true },
-            { p1: bestQuad[3], p2: bestQuad[0], rmap: rawLeft, isH: false }
-          ];
-          const refinedLines = pairsPts.map((item) => {
-            const ptsStrong = [];
-            const ptsAll = [];
-            const rmap = item.rmap;
-            const dRad = noiseSigma >= 0.25 ? 6 : 4;
-            for (let k = 0; k < 48; k++) {
-              const t = 0.05 + (k / 47.0) * 0.90;
-              const px = item.p1.x * (1.0 - t) + item.p2.x * t;
-              const py = item.p1.y * (1.0 - t) + item.p2.y * t;
-              const ix = Math.round(px), iy = Math.round(py);
-              let bestOff = 0, bestVal = -1.0;
-              for (let d = -dRad; d <= dRad; d++) {
-                const nx = item.isH ? ix : Math.min(w - 2, Math.max(1, ix + d));
-                const ny = item.isH ? Math.min(h - 2, Math.max(1, iy + d)) : iy;
-                const val = rmap[ny * w + nx];
-                if (val > bestVal) { bestVal = val; bestOff = d; }
-              }
-              // Subpixel parabolic interpolation around bestOff for higher Stage-1 line precision
-              let subOff = bestOff;
-              if (bestOff > -dRad && bestOff < dRad && bestVal > 0.2) {
-                const vM = rmap[(item.isH ? Math.min(h - 2, Math.max(1, iy + bestOff - 1)) : iy) * w + (item.isH ? ix : Math.min(w - 2, Math.max(1, ix + bestOff - 1)))];
-                const vP = rmap[(item.isH ? Math.min(h - 2, Math.max(1, iy + bestOff + 1)) : iy) * w + (item.isH ? ix : Math.min(w - 2, Math.max(1, ix + bestOff + 1)))];
-                const denom = 2.0 * (2.0 * bestVal - vM - vP);
-                if (Math.abs(denom) > 1e-4) subOff += Math.max(-0.5, Math.min(0.5, (vM - vP) / denom));
-              }
-              const pt = item.isH
-                ? { x: px, y: Math.min(h - 2, Math.max(1, iy + subOff)), t }
-                : { x: Math.min(w - 2, Math.max(1, ix + subOff)), y: py, t };
-              ptsAll.push(pt);
-              if (bestVal > 0.45) ptsStrong.push(pt);
-            }
-            return fitChordLineWithArchGuard(ptsStrong.length >= 14 ? ptsStrong : ptsAll, item.p1, item.p2, 1.4);
-          });
-
           const idxPairsStage1 = [[3, 0], [0, 1], [1, 2], [2, 3]];
-          stage1Corners = idxPairsStage1.map((pair, k) => {
-            const pt = intersectAbc(refinedLines[pair[0]], refinedLines[pair[1]]);
-            if (pt) {
-              const dx = pt.x - bestQuad[k].x, dy = pt.y - bestQuad[k].y;
-              if (dx * dx + dy * dy < 576.0) {
-                return { x: pt.x / scale, y: pt.y / scale };
+          function refineQuadOnRimMaps(qIn, dRadPass) {
+            const pairs = [
+              { p1: qIn[0], p2: qIn[1], rmap: rawTop, isH: true },
+              { p1: qIn[1], p2: qIn[2], rmap: rawRight, isH: false },
+              { p1: qIn[2], p2: qIn[3], rmap: rawBot, isH: true },
+              { p1: qIn[3], p2: qIn[0], rmap: rawLeft, isH: false }
+            ];
+            const lines = pairs.map((item) => {
+              const ptsStrong = [];
+              const ptsAll = [];
+              const rmap = item.rmap;
+              for (let k = 0; k < 48; k++) {
+                const t = 0.05 + (k / 47.0) * 0.90;
+                const px = item.p1.x * (1.0 - t) + item.p2.x * t;
+                const py = item.p1.y * (1.0 - t) + item.p2.y * t;
+                const ix = Math.round(px), iy = Math.round(py);
+                let bestOff = 0, bestVal = -1.0;
+                for (let d = -dRadPass; d <= dRadPass; d++) {
+                  const nx = item.isH ? ix : Math.min(w - 2, Math.max(1, ix + d));
+                  const ny = item.isH ? Math.min(h - 2, Math.max(1, iy + d)) : iy;
+                  const val = rmap[ny * w + nx];
+                  if (val > bestVal) { bestVal = val; bestOff = d; }
+                }
+                let subOff = bestOff;
+                if (bestOff > -dRadPass && bestOff < dRadPass && bestVal > 0.2) {
+                  const vM = rmap[(item.isH ? Math.min(h - 2, Math.max(1, iy + bestOff - 1)) : iy) * w + (item.isH ? ix : Math.min(w - 2, Math.max(1, ix + bestOff - 1)))];
+                  const vP = rmap[(item.isH ? Math.min(h - 2, Math.max(1, iy + bestOff + 1)) : iy) * w + (item.isH ? ix : Math.min(w - 2, Math.max(1, ix + bestOff + 1)))];
+                  const denom = 2.0 * (2.0 * bestVal - vM - vP);
+                  if (Math.abs(denom) > 1e-4) subOff += Math.max(-0.5, Math.min(0.5, (vM - vP) / denom));
+                }
+                const pt = item.isH
+                  ? { x: px, y: Math.min(h - 2, Math.max(1, iy + subOff)), t }
+                  : { x: Math.min(w - 2, Math.max(1, ix + subOff)), y: py, t };
+                ptsAll.push(pt);
+                if (bestVal > 0.45) ptsStrong.push(pt);
               }
-            }
-            return { x: bestQuad[k].x / scale, y: bestQuad[k].y / scale };
-          });
+              return fitChordLineWithArchGuard(ptsStrong.length >= 14 ? ptsStrong : ptsAll, item.p1, item.p2, 1.4);
+            });
+            return idxPairsStage1.map((pair, k) => {
+              const pt = intersectAbc(lines[pair[0]], lines[pair[1]]);
+              if (pt) {
+                const dx = pt.x - qIn[k].x, dy = pt.y - qIn[k].y;
+                if (dx * dx + dy * dy < 576.0) return { x: pt.x, y: pt.y };
+              }
+              return { x: qIn[k].x, y: qIn[k].y };
+            });
+          }
+          const qRef1 = refineQuadOnRimMaps(bestQuad, noiseSigma >= 0.25 ? 6 : 5);
+          const qRef2 = refineQuadOnRimMaps(qRef1, 2);
+          stage1Corners = qRef2.map((p) => ({ x: p.x / scale, y: p.y / scale }));
 
           if (skipFullResRefine) {
             srcCanvas._detectedEdgeOffsets = createZeroEdgeOffsets();
@@ -5575,7 +5575,6 @@
         const subW = M * 6; // 192
         const Hs = 320;
         const scaleY = dstH / Hs;
-        const scaleX = dstW / subW;
 
         // 1. Dark-preserving vertical min downsampling to (subW x Hs) so thin 1-2px ruled lines & fine text are NEVER aliased away!
         const L0 = new Float32Array(subW * Hs);
@@ -5604,7 +5603,8 @@
           }
         }
 
-        // 2. Dual-Channel Horizontal Feature Extraction (Text Baselines + Continuous Ruled Lines)
+        // 2. Local Illumination-Normalized Dual-Channel Feature Extraction (so shadowed bottom halves have 100% equal contrast!)
+        const L_bg = new Float32Array(subW * Hs);
         const L_hClose = new Float32Array(subW * Hs);
         const tmpH = new Float32Array(subW * Hs);
         for (let sy = 0; sy < Hs; sy++) {
@@ -5617,6 +5617,14 @@
               if (L0[sOff + nx] < mv) mv = L0[sOff + nx];
             }
             tmpH[sOff + sx] = mv;
+
+            const bx0 = sx - 10 > 0 ? sx - 10 : 0;
+            const bx1 = sx + 10 < subW - 1 ? sx + 10 : subW - 1;
+            let bgM = 70.0;
+            for (let nx = bx0; nx <= bx1; nx += 2) {
+              if (L0[sOff + nx] > bgM) bgM = L0[sOff + nx];
+            }
+            L_bg[sOff + sx] = bgM;
           }
           for (let sx = 0; sx < subW; sx++) {
             const x0 = sx - 2 > 0 ? sx - 2 : 0;
@@ -5631,16 +5639,17 @@
 
         const E_raw = new Float32Array(subW * Hs);
         const E0 = new Float32Array(subW * Hs);
-        const my = Math.floor(Hs * 0.04);
-        const mx = Math.floor(subW * 0.04);
+        const my = Math.floor(Hs * 0.025);
+        const mx = Math.floor(subW * 0.035);
         for (let sy = Math.max(3, my); sy < Hs - Math.max(3, my); sy++) {
           const sOff = sy * subW;
           const up2 = (sy - 2) * subW, dn2 = (sy + 2) * subW;
           const up3 = (sy - 3) * subW, dn3 = (sy + 3) * subW;
           for (let sx = mx; sx < subW - mx; sx++) {
+            const normGain = 225.0 / L_bg[sOff + sx];
             const diffText = Math.max(0.0, 0.5 * (L0[up3 + sx] + L0[dn3 + sx]) - L0[sOff + sx]);
             const diffRule = Math.max(0.0, 0.5 * (L_hClose[up2 + sx] + L_hClose[dn2 + sx]) - L_hClose[sOff + sx]);
-            E_raw[sOff + sx] = 0.55 * diffText + 0.45 * diffRule;
+            E_raw[sOff + sx] = (0.55 * diffText + 0.45 * diffRule) * normGain;
           }
         }
         for (let sy = Math.max(4, my); sy < Hs - Math.max(4, my); sy++) {
@@ -5676,55 +5685,66 @@
           }
         }
 
-        const K = 5; // 1 Linear Tilt/Fan mode + 4 Dirichlet Sine harmonic modes
-        const V_MODES = 3; // 3 Vertical Legendre modes (v0, v1, v2)
+        // 4. v62.0 8-Strip Coupled 2D Vertical Mesh (each strip independently tracks its own local curve, smoothly coupled in y!)
+        // Solves piecewise bottom-only bends, opposite top/bottom conical curls, and shadowed bottom halves!
+        const K = 4; // [u-0.5, sin(pi*u), sin(2*pi*u), sin(3*pi*u)] — strictly zero 4-cycle wave artifacts!
         const B_cols = [];
         for (let k = 0; k < M; k++) {
-          B_cols.push(evalCoupledHorizBasis5(k / (M - 1)));
+          const b5 = evalCoupledHorizBasis5(k / (M - 1));
+          B_cols.push([b5[0], b5[1], b5[2], b5[3]]);
         }
 
-        // v61.0: 6 balanced zones covering down to 0.97 so the bottom half gets equal accuracy with the top half!
-        const zones = [
-          [0.04, 0.34, 0.190],
-          [0.16, 0.48, 0.320],
-          [0.32, 0.64, 0.480],
-          [0.48, 0.78, 0.630],
-          [0.60, 0.90, 0.750],
-          [0.70, 0.97, 0.835]
+        const strips = [
+          [0.02, 0.22, 0.11],
+          [0.12, 0.32, 0.22],
+          [0.24, 0.44, 0.34],
+          [0.36, 0.56, 0.46],
+          [0.48, 0.68, 0.58],
+          [0.60, 0.80, 0.70],
+          [0.72, 0.92, 0.82],
+          [0.80, 0.98, 0.90]
         ];
+        const NZ = strips.length; // 8
+        const nParams = NZ * K;   // 32
 
-        // v61.0: Relaxed regV[2]=1.5 lets quadratic vertical curvature adapt cleanly to steeper bottom-half book curl,
-        // while regH[4]=1e6 strictly blocks 4-cycle ripples so flat paper stays 100% straight!
-        const regH = [0.001, 0.0055, 0.014, 0.036, 1e6];
-        const regV = [1.0, 0.28, 1.5];
-        const nParams = V_MODES * K;
+        const regH = [0.0012, 0.0055, 0.015, 0.040];
+        const lambdaV = [0.02, 0.05, 0.10, 0.20];
         const A_sys = Array.from({ length: nParams }, (_, r) => {
           const row = new Float64Array(nParams);
-          const vm = (r / K) | 0;
           const hm = r % K;
-          row[r] = regV[vm] * regH[hm];
+          row[r] = regH[hm];
           return row;
         });
         const b_sys = new Float64Array(nParams);
 
-        // v61.0: Cycle-safe maxD1 = 5 prevents line-jump aliasing across normal book line spacing (7-9 rows in Hs=320)!
-        const maxD1 = 5;
+        // Smooth vertical coupling between adjacent strips z and z-1
+        for (let z = 1; z < NZ; z++) {
+          for (let hm = 0; hm < K; hm++) {
+            const r0 = (z - 1) * K + hm;
+            const r1 = z * K + hm;
+            const lv = lambdaV[hm];
+            A_sys[r0][r0] += lv;
+            A_sys[r1][r1] += lv;
+            A_sys[r0][r1] -= lv;
+            A_sys[r1][r0] -= lv;
+          }
+        }
+
+        const maxD1 = 5; // strictly cycle-safe against 7-9px book line spacing!
         const corrs = new Float64Array(2 * maxD1 + 1);
         const corrsSorted = new Float64Array(2 * maxD1 + 1);
         const norms = new Float64Array(M);
         const step1Shift = new Float64Array(M);
         const step1Valid = new Uint8Array(M);
-        const dB_full = new Float64Array(nParams);
-        const A_zone = Array.from({ length: nParams }, () => new Float64Array(nParams));
-        const b_zone = new Float64Array(nParams);
+        const dB = new Float64Array(K);
+        const Az = Array.from({ length: K }, () => new Float64Array(K));
+        const bz = new Float64Array(K);
         let totalMatchedPairs = 0;
 
-        for (let z = 0; z < zones.length; z++) {
-          const y0_f = zones[z][0], y1_f = zones[z][1], ty_c = zones[z][2];
-          const ya = Math.max(10, Math.floor(Hs * y0_f));
-          const yb = Math.min(Hs - 10, Math.floor(Hs * y1_f));
-          if (yb - ya < 20) continue;
-          const vVec = evalVertBasis3(ty_c);
+        for (let z = 0; z < NZ; z++) {
+          const ya = Math.max(6, Math.floor(Hs * strips[z][0]));
+          const yb = Math.min(Hs - 6, Math.floor(Hs * strips[z][1]));
+          if (yb - ya < 16) continue;
 
           let maxNorm = 0;
           for (let k = 0; k < M; k++) {
@@ -5741,14 +5761,11 @@
           }
           if (maxNorm < 1e-3) continue;
 
-          for (let r = 0; r < nParams; r++) {
-            b_zone[r] = 0;
-            A_zone[r].fill(0);
-          }
-          let zonePairs = 0;
-          let zoneWeightSum = 0;
+          for (let r = 0; r < K; r++) { bz[r] = 0; Az[r].fill(0); }
+          let stripPairs = 0;
+          let stripWeightSum = 0;
 
-          // Pass 1: Step = 1 (adjacent columns, strictly cycle-safe d in [-5..+5] + gentle zero-lag preference)
+          // Pass 1: step = 1 (adjacent columns)
           for (let k = 1; k < M; k++) {
             const kp = k - 1;
             if (norms[k] < 0.14 * maxNorm || norms[kp] < 0.14 * maxNorm) continue;
@@ -5773,7 +5790,7 @@
             }
             corrsSorted.sort();
             const medC = corrsSorted[maxD1];
-            if (bestC > 0.38 && (bestC - medC) > 0.09) {
+            if (bestC > 0.36 && (bestC - medC) > 0.085) {
               let bestD = bestI - maxD1;
               if (bestI > 0 && bestI < 2 * maxD1) {
                 const vm = corrs[bestI - 1], v0 = corrs[bestI], vp = corrs[bestI + 1];
@@ -5782,28 +5799,21 @@
               }
               step1Shift[k] = bestD;
               step1Valid[k] = 1;
-
               const deltaPx = bestD * scaleY;
               const w = (bestC - medC) * bestC * bestC;
-              zonePairs++;
-              zoneWeightSum += w;
-
+              stripPairs++;
+              stripWeightSum += w;
               const Bk = B_cols[k], Bkp = B_cols[kp];
-              for (let vm = 0; vm < V_MODES; vm++) {
-                const vv = vVec[vm];
-                const baseIdx = vm * K;
-                for (let hm = 0; hm < K; hm++) dB_full[baseIdx + hm] = vv * (Bk[hm] - Bkp[hm]);
-              }
-              for (let r = 0; r < nParams; r++) {
-                const wdBr = w * dB_full[r];
-                b_zone[r] += wdBr * deltaPx;
-                const rowAz = A_zone[r];
-                for (let c = 0; c < nParams; c++) rowAz[c] += wdBr * dB_full[c];
+              for (let hm = 0; hm < K; hm++) dB[hm] = Bk[hm] - Bkp[hm];
+              for (let r = 0; r < K; r++) {
+                const wdBr = w * dB[r];
+                bz[r] += wdBr * deltaPx;
+                for (let c = 0; c < K; c++) Az[r][c] += wdBr * dB[c];
               }
             }
           }
 
-          // Pass 2: Phase-Unwrapped Multi-Span Steps (step = 2, 4, 6) guided by accumulated step1Shift!
+          // Pass 2: multi-span steps = 2, 4, 6 guided by step1Shift
           const winR = 4;
           const winLen = 2 * winR + 1;
           const winCorrs = new Float64Array(winLen);
@@ -5819,7 +5829,6 @@
                 if (step1Valid[j]) { sumPred += step1Shift[j]; cntPred++; }
               }
               const dCenter = cntPred > 0 ? Math.max(-24, Math.min(24, Math.round((sumPred / cntPred) * step))) : 0;
-
               const prevOff = kp * Hs, currOff = k * Hs, normPrev = norms[kp];
               let bestWi = winR, bestC = -1.0;
               for (let wi = 0; wi < winLen; wi++) {
@@ -5840,7 +5849,7 @@
               }
               winSorted.sort();
               const medC = winSorted[winR];
-              if (bestC > 0.40 && (bestC - medC) > 0.08) {
+              if (bestC > 0.38 && (bestC - medC) > 0.08) {
                 let bestD = dCenter + (bestWi - winR);
                 if (bestWi > 0 && bestWi < winLen - 1) {
                   const vm = winCorrs[bestWi - 1], v0 = winCorrs[bestWi], vp = winCorrs[bestWi + 1];
@@ -5849,139 +5858,30 @@
                 }
                 const deltaPx = bestD * scaleY;
                 const w = ((bestC - medC) * bestC * bestC) / Math.pow(step, 0.55);
-                zonePairs++;
-                zoneWeightSum += w;
-
+                stripPairs++;
+                stripWeightSum += w;
                 const Bk = B_cols[k], Bkp = B_cols[kp];
-                for (let vm = 0; vm < V_MODES; vm++) {
-                  const vv = vVec[vm];
-                  const baseIdx = vm * K;
-                  for (let hm = 0; hm < K; hm++) dB_full[baseIdx + hm] = vv * (Bk[hm] - Bkp[hm]);
-                }
-                for (let r = 0; r < nParams; r++) {
-                  const wdBr = w * dB_full[r];
-                  b_zone[r] += wdBr * deltaPx;
-                  const rowAz = A_zone[r];
-                  for (let c = 0; c < nParams; c++) rowAz[c] += wdBr * dB_full[c];
+                for (let hm = 0; hm < K; hm++) dB[hm] = Bk[hm] - Bkp[hm];
+                for (let r = 0; r < K; r++) {
+                  const wdBr = w * dB[r];
+                  bz[r] += wdBr * deltaPx;
+                  for (let c = 0; c < K; c++) Az[r][c] += wdBr * dB[c];
                 }
               }
             }
           }
 
-          // Per-zone weight normalization so sparser bottom-half lines are NEVER drowned out by dense top-half paragraphs!
-          if (zonePairs >= 4 && zoneWeightSum > 1e-6) {
-            const zScale = Math.min(2.8, Math.max(0.65, 10.0 / zoneWeightSum));
-            totalMatchedPairs += zonePairs;
-            for (let r = 0; r < nParams; r++) {
-              b_sys[r] += b_zone[r] * zScale;
-              const rowA = A_sys[r];
-              const rowAz = A_zone[r];
-              for (let c = 0; c < nParams; c++) rowA[c] += rowAz[c] * zScale;
+          if (stripPairs >= 3 && stripWeightSum > 1e-6) {
+            // Normalize every strip's total weight so sparse bottom strips have EQUAL authority to dense top strips!
+            const zScale = Math.min(4.0, Math.max(0.75, 10.0 / stripWeightSum));
+            totalMatchedPairs += stripPairs;
+            const baseR = z * K;
+            for (let r = 0; r < K; r++) {
+              b_sys[baseR + r] += bz[r] * zScale;
+              const rowA = A_sys[baseR + r];
+              for (let c = 0; c < K; c++) rowA[baseR + c] += Az[r][c] * zScale;
             }
           }
-        }
-
-        // 4. Vertical Ruled-Line / Table Column / Left-Right Margin Shear & Bow Estimation (horizShiftY[y])
-        const horizShiftY = new Float32Array(dstH);
-        {
-          const Mv = 24;
-          const E_vert = new Float32Array(subW * Hs);
-          for (let sy = my; sy < Hs - my; sy++) {
-            const sOff = sy * subW;
-            for (let sx = Math.max(3, mx); sx < subW - Math.max(3, mx); sx++) {
-              const diffV = Math.max(0.0, 0.5 * (L0[sOff + sx - 2] + L0[sOff + sx + 2]) - L0[sOff + sx]);
-              if (diffV > 4.0) E_vert[sOff + sx] = diffV;
-            }
-          }
-          const Pv = new Float64Array(Mv * subW);
-          const rawPv = new Float64Array(subW);
-          for (let kv = 0; kv < Mv; kv++) {
-            const y0 = Math.max(my, Math.floor((kv / Mv) * Hs) - 4);
-            const y1 = Math.min(Hs - 1 - my, Math.floor(((kv + 1) / Mv) * Hs) + 4);
-            if (y1 < y0) continue;
-            const span = y1 - y0 + 1;
-            for (let sx = 0; sx < subW; sx++) {
-              let s = 0;
-              for (let sy = y0; sy <= y1; sy++) s += E_vert[sy * subW + sx];
-              rawPv[sx] = s / span;
-            }
-            const kvOff = kv * subW;
-            for (let sx = 0; sx < subW; sx++) {
-              const x0 = Math.max(0, sx - 6), x1 = Math.min(subW - 1, sx + 6);
-              let m = 0;
-              for (let nx = x0; nx <= x1; nx++) m += rawPv[nx];
-              m /= (x1 - x0 + 1);
-              Pv[kvOff + sx] = Math.max(0.0, rawPv[sx] - m);
-            }
-          }
-
-          const Av = [
-            new Float64Array([0.06, 0, 0]),
-            new Float64Array([0, 0.12, 0]),
-            new Float64Array([0, 0, 0.22])
-          ];
-          const bv = new Float64Array(3);
-          const vNorms = new Float64Array(Mv);
-          let maxVNorm = 0;
-          for (let kv = 0; kv < Mv; kv++) {
-            let sq = 0;
-            const kvOff = kv * subW;
-            for (let sx = mx + 6; sx < subW - mx - 6; sx++) {
-              const v = Pv[kvOff + sx];
-              sq += v * v;
-            }
-            vNorms[kv] = Math.sqrt(sq);
-            if (vNorms[kv] > maxVNorm) maxVNorm = vNorms[kv];
-          }
-          let vMatched = 0;
-          if (maxVNorm > 1e-3) {
-            const dLim = 4;
-            const cArr = new Float64Array(2 * dLim + 1);
-            for (let kv = 1; kv < Mv; kv++) {
-              const kvp = kv - 1;
-              if (vNorms[kv] < 0.30 * maxVNorm || vNorms[kvp] < 0.30 * maxVNorm) continue;
-              const prevOff = kvp * subW, currOff = kv * subW;
-              let bestD = 0, bestC = -1;
-              for (let d = -dLim; d <= dLim; d++) {
-                let dot = 0, sq = 0;
-                for (let sx = mx + 8; sx < subW - mx - 8; sx++) {
-                  const vp = Pv[prevOff + sx];
-                  const vc = Pv[currOff + sx + d];
-                  dot += vp * vc;
-                  sq += vc * vc;
-                }
-                const cVal = dot / (vNorms[kvp] * (Math.sqrt(sq) + 1e-6));
-                cArr[d + dLim] = cVal;
-                if (cVal > bestC) { bestC = cVal; bestD = d; }
-              }
-              const sorted = Float64Array.from(cArr).sort();
-              const med = sorted[dLim];
-              if (bestC > 0.50 && (bestC - med) > 0.12) {
-                const bi = bestD + dLim;
-                let subD = bestD;
-                if (bi > 0 && bi < 2 * dLim) {
-                  const vm = cArr[bi - 1], v0 = cArr[bi], vp = cArr[bi + 1];
-                  const den = 2.0 * (2.0 * v0 - vm - vp);
-                  if (Math.abs(den) > 1e-9) subD += Math.max(-0.5, Math.min(0.5, (vm - vp) / den));
-                }
-                const dxPx = subD * scaleX;
-                const w = (bestC - med) * bestC * bestC;
-                const v1 = kv / (Mv - 1), v0 = kvp / (Mv - 1);
-                const dB = [
-                  v1 - v0,
-                  Math.sin(Math.PI * v1) - Math.sin(Math.PI * v0),
-                  Math.sin(2.0 * Math.PI * v1) - Math.sin(2.0 * Math.PI * v0)
-                ];
-                for (let r = 0; r < 3; r++) {
-                  bv[r] += w * dB[r] * dxPx;
-                  for (let c = 0; c < 3; c++) Av[r][c] += w * dB[r] * dB[c];
-                }
-                vMatched++;
-              }
-            }
-          }
-          // v52.0: Keep horizShiftY strictly 0 to prevent S-bending straight vertical margins on indented paragraphs!
-          void vMatched;
         }
 
         if (totalMatchedPairs < 10) {
@@ -5989,49 +5889,38 @@
         }
 
         const coeffs = solveLinearSystem(A_sys, b_sys);
-
+        const stripCenters = strips.map((s) => s[2]);
+        const stripCurves = Array.from({ length: NZ }, () => new Float32Array(dstW));
         const mode0 = new Float32Array(dstW);
         const mode1 = new Float32Array(dstW);
-        const mode2 = new Float32Array(dstW);
-
-        // v52.0: Measure PURE non-linear arch curvature in Zone 0 (EXCLUDING linear tilt u-0.5!)
-        // so a 100% flat sheet with slight residual skew (0.5..3 deg) NEVER triggers wave warping!
-        let maxCurveDisp0 = 0;
         let maxSurfaceDisp = 0;
-        for (let x = 0; x < dstW; x++) {
-          const u = x / (dstW - 1);
-          const B = evalCoupledHorizBasis5(u);
-          // Pure non-linear book arch (sin(pi*u), sin(2*pi*u), sin(3*pi*u))
-          const curve0 = B[1] * coeffs[1] + B[2] * coeffs[2] + B[3] * coeffs[3];
-          const absC0 = curve0 < 0 ? -curve0 : curve0;
-          if (absC0 > maxCurveDisp0) maxCurveDisp0 = absC0;
 
-          let s0 = 0, s1 = 0, s2 = 0;
-          for (let j = 0; j < K; j++) {
-            s0 += B[j] * coeffs[j];
-            s1 += B[j] * coeffs[K + j];
-            s2 += B[j] * coeffs[2 * K + j];
+        for (let x = 0; x < dstW; x++) {
+          const u = x / Math.max(1, dstW - 1);
+          const b5 = evalCoupledHorizBasis5(u);
+          let sumAll = 0;
+          for (let z = 0; z < NZ; z++) {
+            const baseR = z * K;
+            const val = b5[0] * coeffs[baseR] + b5[1] * coeffs[baseR + 1] + b5[2] * coeffs[baseR + 2] + b5[3] * coeffs[baseR + 3];
+            stripCurves[z][x] = val;
+            sumAll += val;
+            const av = val < 0 ? -val : val;
+            if (av > maxSurfaceDisp) maxSurfaceDisp = av;
           }
-          mode0[x] = s0;
-          mode1[x] = s1;
-          mode2[x] = s2;
-          const topDisp = Math.abs(s0 - 0.35 * s1 + 0.04 * s2);
-          const botDisp = Math.abs(s0 + 0.35 * s1 + 0.04 * s2);
-          const localMax = Math.max(topDisp, Math.abs(s0), botDisp);
-          if (localMax > maxSurfaceDisp) maxSurfaceDisp = localMax;
+          mode0[x] = sumAll / NZ;
+          mode1[x] = stripCurves[NZ - 1][x] - stripCurves[0][x];
         }
 
-        // v58.0: Straighten any real tilt, arch, or top/bottom curve (>= 1.2px) with full unity gain for >= 2.5px!
         if (maxSurfaceDisp < 1.2) return null;
 
         const shrinkGain = Math.min(1.0, (maxSurfaceDisp - 0.8) / 1.5);
         for (let x = 0; x < dstW; x++) {
           mode0[x] *= shrinkGain;
           mode1[x] *= shrinkGain;
-          mode2[x] *= shrinkGain;
+          for (let z = 0; z < NZ; z++) stripCurves[z][x] *= shrinkGain;
         }
 
-        return { mode0, mode1, mode2, horizShiftY, maxSurfaceDisp, coeffs };
+        return { stripCurves, stripCenters, mode0, mode1, horizShiftY: new Float32Array(dstH), maxSurfaceDisp, coeffs };
       }
 
       function createZeroEdgeOffsets() {
@@ -6272,17 +6161,28 @@
         const outImg = outCanvas._reusableOutImg;
         const dData = outImg.data;
 
-        // Stage 2: 2D Multi-Zone Top/Middle/Bottom Book Surface & Parallel Text-Line Flattening
+        // Stage 2: v62.0 8-Strip Coupled 2D Vertical Mesh & 2-Pass Composed Text-Line Flattening
         if (autoLineDewarp !== false) {
+          function getStripInterpParams(ty, centers) {
+            const nz = centers.length;
+            if (ty <= centers[0]) return [0, 0, 0.0];
+            if (ty >= centers[nz - 1]) return [nz - 1, nz - 1, 0.0];
+            let z0 = 0;
+            while (z0 < nz - 2 && centers[z0 + 1] < ty) z0++;
+            const span = (centers[z0 + 1] - centers[z0]) || 1e-6;
+            const alpha = (ty - centers[z0]) / span;
+            return [z0, z0 + 1, alpha];
+          }
           let surfModes = (cachedModesHost && cachedModesHost.cachedAutoModes && cachedModesHost.cachedAutoW === dstW && cachedModesHost.cachedAutoH === dstH)
             ? cachedModesHost.cachedAutoModes
             : undefined;
           if (surfModes === undefined) {
             surfModes = estimate2DBookSurfaceModes(tempData, dstW, dstH);
-            // v58.0 2-Pass Coarse-to-Fine Residual Refinement (composes Pass 1 + Pass 2 into ONE single-resample warp!):
-            if (surfModes && surfModes.maxSurfaceDisp >= 1.5) {
-              const p1m0 = surfModes.mode0, p1m1 = surfModes.mode1, p1m2 = surfModes.mode2;
-              // Build compact 2x-downsampled Pass-1 warped preview solely for fast (~18ms) Pass-2 residual estimation!
+            // v62.0 2-Pass Coarse-to-Fine Residual Refinement on 8-Strip Mesh (ONE single-resample warp!):
+            if (surfModes && surfModes.maxSurfaceDisp >= 1.5 && surfModes.stripCurves) {
+              const p1Strips = surfModes.stripCurves;
+              const p1Centers = surfModes.stripCenters;
+              const nz = p1Strips.length;
               const rw = Math.max(192, dstW >> 1);
               const rh = Math.max(256, dstH >> 1);
               const pass1Small = new Uint8ClampedArray(rw * rh * 4);
@@ -6291,13 +6191,14 @@
               for (let ry = 0; ry < rh; ry++) {
                 const ty = ry * invRh1;
                 const yFull = ty * (dstH - 1);
-                const uV = ty - 0.5;
-                const v2 = uV * uV - (1.0 / 12.0);
-                const vTap = Math.min(1.0, ty / 0.035, (1.0 - ty) / 0.035);
+                const [z0, z1, za] = getStripInterpParams(ty, p1Centers);
+                const s0Arr = p1Strips[z0], s1Arr = p1Strips[z1];
+                const omZa = 1.0 - za;
+                const vTap = Math.min(1.0, ty / 0.015, (1.0 - ty) / 0.015);
                 for (let rx = 0; rx < rw; rx++) {
                   const tx = rx * invRw1;
                   const xFull = Math.min(dstW - 1, Math.round(tx * (dstW - 1)));
-                  const wVal = (p1m0[xFull] + uV * p1m1[xFull] + v2 * p1m2[xFull]) * vTap;
+                  const wVal = (s0Arr[xFull] * omZa + s1Arr[xFull] * za) * vTap;
                   const syFull = Math.min(dstH - 1, Math.max(0, Math.round(yFull + wVal)));
                   const si = (syFull * dstW + xFull) << 2;
                   const di = (ry * rw + rx) << 2;
@@ -6308,16 +6209,21 @@
                 }
               }
               const resModes = estimate2DBookSurfaceModes(pass1Small, rw, rh);
-              if (resModes && resModes.maxSurfaceDisp >= 0.5) {
+              if (resModes && resModes.maxSurfaceDisp >= 0.45 && resModes.stripCurves) {
                 const scaleBackY = (dstH - 1) / Math.max(1, rh - 1);
-                const rm0 = resModes.mode0, rm1 = resModes.mode1, rm2 = resModes.mode2;
+                const rStrips = resModes.stripCurves;
                 for (let x = 0; x < dstW; x++) {
                   const rxf = (x / Math.max(1, dstW - 1)) * (rw - 1);
                   const rx0 = Math.min(rw - 2, rxf | 0);
                   const rdx = rxf - rx0;
-                  p1m0[x] += (rm0[rx0] * (1.0 - rdx) + rm0[rx0 + 1] * rdx) * scaleBackY;
-                  p1m1[x] += (rm1[rx0] * (1.0 - rdx) + rm1[rx0 + 1] * rdx) * scaleBackY;
-                  p1m2[x] += (rm2[rx0] * (1.0 - rdx) + rm2[rx0 + 1] * rdx) * scaleBackY;
+                  let sumAll = 0;
+                  for (let z = 0; z < nz; z++) {
+                    const rArr = rStrips[z];
+                    p1Strips[z][x] += (rArr[rx0] * (1.0 - rdx) + rArr[rx0 + 1] * rdx) * scaleBackY;
+                    sumAll += p1Strips[z][x];
+                  }
+                  surfModes.mode0[x] = sumAll / nz;
+                  surfModes.mode1[x] = p1Strips[nz - 1][x] - p1Strips[0][x];
                 }
               }
             }
@@ -6327,8 +6233,8 @@
               cachedModesHost.cachedAutoH = dstH;
             }
           }
-          if (surfModes && (surfModes.maxDisp === undefined || surfModes.maxDisp >= 0.35)) {
-            const { mode0, mode1, mode2, horizShiftY } = surfModes;
+          if (surfModes && surfModes.stripCurves && (surfModes.maxDisp === undefined || surfModes.maxDisp >= 0.35)) {
+            const { stripCurves, stripCenters, mode0, mode1, horizShiftY } = surfModes;
             const arcCum = new Float32Array(dstW);
             const avgSlope0 = (mode0[dstW - 1] - mode0[0]) / Math.max(1, dstW - 1);
             for (let u = 1; u < dstW; u++) {
@@ -6351,13 +6257,12 @@
             }
 
             const maxSx = dstW - 1.001;
-            const maxSy = dstH - 1.001;
             for (let y = 0; y < dstH; y++) {
               const ty = y * invDstH1;
-              const uVert = ty - 0.5;
-              const v1 = uVert;
-              const v2 = uVert * uVert - (1.0 / 12.0);
-              const vTaper = Math.min(1.0, ty / 0.035, (1.0 - ty) / 0.035);
+              const [z0, z1, za] = getStripInterpParams(ty, stripCenters);
+              const s0Arr = stripCurves[z0], s1Arr = stripCurves[z1];
+              const omZa = 1.0 - za;
+              const vTaper = Math.min(1.0, ty / 0.015, (1.0 - ty) / 0.015);
               const hShift = horizShiftY ? horizShiftY[y] : 0.0;
 
               for (let x = 0; x < dstW; x++) {
@@ -6366,10 +6271,9 @@
                 const x0 = sx | 0;
                 const dx = sx - x0;
 
-                const w0 = mode0[x0] * (1.0 - dx) + mode0[x0 + 1] * dx;
-                const w1 = mode1[x0] * (1.0 - dx) + mode1[x0 + 1] * dx;
-                const w2 = mode2[x0] * (1.0 - dx) + mode2[x0 + 1] * dx;
-                const wVal = (w0 + v1 * w1 + v2 * w2) * vTaper;
+                const wA = s0Arr[x0] * (1.0 - dx) + s0Arr[x0 + 1] * dx;
+                const wB = s1Arr[x0] * (1.0 - dx) + s1Arr[x0 + 1] * dx;
+                const wVal = (wA * omZa + wB * za) * vTaper;
 
                 const sy = Math.min(dstH - 1.001, Math.max(0.0, y + wVal));
                 const y0 = sy | 0;
@@ -9327,7 +9231,7 @@
             const now = Date.now();
             if (now - lastDetectTs >= 70) {
               lastDetectTs = now;
-              const maxSide = 240;
+              const maxSide = 280;
               const sc = Math.min(1, maxSide / Math.max(vw, vh));
               const targetW = Math.max(72, Math.round(vw * sc));
               const targetH = Math.max(72, Math.round(vh * sc));

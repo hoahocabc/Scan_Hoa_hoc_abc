@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v61.0) — Quét tài liệu chuyên nghiệp: Bắt rìa chuẩn cả khi đưa camera ra xa & vùng ánh sáng mạnh phía trên, cùng Căn thẳng dòng đồng đều cả nửa trên và nửa dưới trang.",
+  "description": "ScanhoahocABC (v62.0) — Quét tài liệu chuyên nghiệp: Căn thẳng dòng lưới 8 dải dọc độc lập nắn chuẩn cả nửa dưới trang & Bắt rìa 280px tinh chỉnh góc 2 vòng.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",

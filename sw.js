@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scanhoahocabc-v61';
+const CACHE_NAME = 'scanhoahocabc-v62';
 const ASSETS = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', (event) => {
