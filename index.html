@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v58.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
+  <meta name="description" content="ScanhoahocABC (v59.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
   <style>
     :root {
       --primary: #2563eb;
@@ -3906,9 +3906,9 @@
             }
           }
 
-          // Low-Light Adaptive Dynamic Range Boost: lifts dim night/indoor frames cleanly into optimal daylight range
-          if (p90L < 145.0) {
-            lowLightGain = Math.min(2.6, 200.0 / Math.max(40.0, p90L));
+          // v59.0 Low-Light / Neon Adaptive Dynamic Range Boost: lifts dim indoor/neon frames cleanly for crisp edge contrast
+          if (p90L < 170.0) {
+            lowLightGain = Math.min(2.6, 212.0 / Math.max(40.0, p90L));
             for (let i = 0; i < nPix; i++) {
               const r = R[i] * lowLightGain, g = G[i] * lowLightGain, b = B[i] * lowLightGain, l = L[i] * lowLightGain;
               R[i] = r > 255.0 ? 255.0 : r;
@@ -4584,12 +4584,12 @@
             const midT = avgBorderL + (p85InteriorL - avgBorderL) * 0.46;
             const fgThresh = Math.max(avgBorderL + 16.0, Math.min(p85InteriorL - 12.0, 0.65 * otsuT + 0.35 * midT));
             // Shadow-tolerant lower threshold paired with illumination-normalized N_surf so phone/hand shadows never chop off paper!
-            const shadowLowT = Math.max(avgBorderL + 26.0, fgThresh * 0.72);
+            const shadowLowT = Math.max(avgBorderL + 18.0, fgThresh * 0.65);
 
             const fgMask = new Uint8Array(nPix);
             for (let i = 0; i < nPix; i++) {
               const lv = L_surf[i];
-              if (lv >= fgThresh || (lv >= shadowLowT && N_surf[i] >= 158.0)) fgMask[i] = 1;
+              if (lv >= fgThresh || (lv >= shadowLowT && N_surf[i] >= 152.0)) fgMask[i] = 1;
             }
 
             const compId = new Int32Array(nPix);
@@ -4815,27 +4815,37 @@
             { p1: bestQuad[3], p2: bestQuad[0], rmap: rawLeft, isH: false }
           ];
           const refinedLines = pairsPts.map((item) => {
+            const ptsStrong = [];
             const ptsAll = [];
             const rmap = item.rmap;
-            for (let k = 0; k < 44; k++) {
-              const t = 0.05 + (k / 43.0) * 0.90;
+            const dRad = noiseSigma >= 0.25 ? 6 : 4;
+            for (let k = 0; k < 48; k++) {
+              const t = 0.05 + (k / 47.0) * 0.90;
               const px = item.p1.x * (1.0 - t) + item.p2.x * t;
               const py = item.p1.y * (1.0 - t) + item.p2.y * t;
               const ix = Math.round(px), iy = Math.round(py);
               let bestOff = 0, bestVal = -1.0;
-              const dRad = noiseSigma >= 0.25 ? 6 : 3;
               for (let d = -dRad; d <= dRad; d++) {
                 const nx = item.isH ? ix : Math.min(w - 2, Math.max(1, ix + d));
                 const ny = item.isH ? Math.min(h - 2, Math.max(1, iy + d)) : iy;
                 const val = rmap[ny * w + nx];
                 if (val > bestVal) { bestVal = val; bestOff = d; }
               }
+              // Subpixel parabolic interpolation around bestOff for higher Stage-1 line precision
+              let subOff = bestOff;
+              if (bestOff > -dRad && bestOff < dRad && bestVal > 0.2) {
+                const vM = rmap[(item.isH ? Math.min(h - 2, Math.max(1, iy + bestOff - 1)) : iy) * w + (item.isH ? ix : Math.min(w - 2, Math.max(1, ix + bestOff - 1)))];
+                const vP = rmap[(item.isH ? Math.min(h - 2, Math.max(1, iy + bestOff + 1)) : iy) * w + (item.isH ? ix : Math.min(w - 2, Math.max(1, ix + bestOff + 1)))];
+                const denom = 2.0 * (2.0 * bestVal - vM - vP);
+                if (Math.abs(denom) > 1e-4) subOff += Math.max(-0.5, Math.min(0.5, (vM - vP) / denom));
+              }
               const pt = item.isH
-                ? { x: px, y: Math.min(h - 2, Math.max(1, iy + bestOff)), t }
-                : { x: Math.min(w - 2, Math.max(1, ix + bestOff)), y: py, t };
+                ? { x: px, y: Math.min(h - 2, Math.max(1, iy + subOff)), t }
+                : { x: Math.min(w - 2, Math.max(1, ix + subOff)), y: py, t };
               ptsAll.push(pt);
+              if (bestVal > 0.45) ptsStrong.push(pt);
             }
-            return fitChordLineWithArchGuard(ptsAll, item.p1, item.p2, 1.4);
+            return fitChordLineWithArchGuard(ptsStrong.length >= 14 ? ptsStrong : ptsAll, item.p1, item.p2, 1.4);
           });
 
           const idxPairsStage1 = [[3, 0], [0, 1], [1, 2], [2, 3]];
@@ -5043,7 +5053,7 @@
               const sharpCreaseDip = exactDip > 0.0 ? (0.82 * exactDip + 0.18 * dip) : 0.0;
               const sameSurfS2 = absStep < 9.0 && macDC < 9.0 && flatVar < 8.5;
               const isDarkInPaperS2 = !allowDarkObjectPolarity && L_out > 170.0 && (L_out - L_in > 22.0);
-              const isInkS2 = isDarkInPaperS2 || (sameSurfS2 && minSideL > 100.0 && dip > 32.0);
+              const isInkS2 = isDarkInPaperS2 || (sameSurfS2 && minSideL > 100.0 && dip > 24.0);
 
               let flatRimStepS2 = 0.0;
               const rawRimS2 = absStep > macDC * 0.78 ? absStep : macDC * 0.78;
@@ -5169,7 +5179,7 @@
           chordLines.push(fitChordLineWithArchGuard(seamPts, p1, p2, 3.2));
         }
 
-        const refinedCorners = idxPairs.map((pair, k) => {
+        let refinedCorners = idxPairs.map((pair, k) => {
           const pt = intersectAbc(chordLines[pair[0]], chordLines[pair[1]]);
           if (pt) {
             const dx = pt.x - stage1Corners[k].x, dy = pt.y - stage1Corners[k].y;
@@ -5185,6 +5195,76 @@
             y: Math.max(0, Math.min(origH, Math.round(stage1Corners[k].y)))
           };
         });
+
+        // v59.0 Stage 2B Tight Subpixel Lock (±10px) for single sheets:
+        // Re-aligns along the accurate Stage 2A normals to eliminate any residual 1-4px offset on white-on-white & tilted sheets!
+        if (!isOpenBookSpread) {
+          const fineLines = [];
+          const radB = 10;
+          const nProfB = 36;
+          for (let k = 0; k < 4; k++) {
+            const p1 = refinedCorners[k], p2 = refinedCorners[(k + 1) % 4];
+            const isFlushB = (k === 2 && p1.y >= origH - 12 && p2.y >= origH - 12) || (k === 3 && p1.x <= 12 && p2.x <= 12);
+            if (isFlushB) { fineLines.push(chordLines[k]); continue; }
+            const vx = p2.x - p1.x, vy = p2.y - p1.y;
+            const segLen = Math.hypot(vx, vy) || 1.0;
+            const nx = -vy / segLen, ny = vx / segLen;
+            const ptsB = [];
+            for (let i = 0; i < nProfB; i++) {
+              const t = 0.06 + (i / (nProfB - 1)) * 0.88;
+              const bx = p1.x * (1.0 - t) + p2.x * t;
+              const by = p1.y * (1.0 - t) + p2.y * t;
+              let bestS = 0, bestSc = 0;
+              const scArr = new Float32Array(2 * radB + 1);
+              for (let s = -radB; s <= radB; s++) {
+                const cx = bx + s * nx, cy = by + s * ny;
+                const xC = Math.min(origW - 1, Math.max(0, Math.round(cx)));
+                const yC = Math.min(origH - 1, Math.max(0, Math.round(cy)));
+                const xIn = Math.min(origW - 1, Math.max(0, Math.round(cx + 3 * nx)));
+                const yIn = Math.min(origH - 1, Math.max(0, Math.round(cy + 3 * ny)));
+                const xOut = Math.min(origW - 1, Math.max(0, Math.round(cx - 3 * nx)));
+                const yOut = Math.min(origH - 1, Math.max(0, Math.round(cy - 3 * ny)));
+                const iC = (yC * origW + xC) << 2, iIn = (yIn * origW + xIn) << 2, iOut = (yOut * origW + xOut) << 2;
+                const lC = 0.299 * fullData[iC] + 0.587 * fullData[iC + 1] + 0.114 * fullData[iC + 2];
+                const lIn = 0.299 * fullData[iIn] + 0.587 * fullData[iIn + 1] + 0.114 * fullData[iIn + 2];
+                const lOut = 0.299 * fullData[iOut] + 0.587 * fullData[iOut + 1] + 0.114 * fullData[iOut + 2];
+                const dR = fullData[iIn] - fullData[iOut], dG = fullData[iIn + 1] - fullData[iOut + 1], dB = fullData[iIn + 2] - fullData[iOut + 2];
+                const dC = fastNorm3(dR, dG, dB);
+                const step = allowDarkObjectPolarity ? Math.abs(lIn - lOut) : Math.max(0, lIn - lOut);
+                const minSide = lIn < lOut ? lIn : lOut;
+                const dip = (minSide > 95.0 && Math.abs(lIn - lOut) < 28.0) ? Math.max(0, minSide - lC) : 0.0;
+                const isInnerInk = (!allowDarkObjectPolarity && Math.abs(lIn - lOut) < 10.0 && dip > 26.0);
+                const sc = isInnerInk ? 0.0 : (step + 0.55 * dC + 2.6 * dip) * (1.0 - 0.015 * Math.abs(s));
+                scArr[s + radB] = sc;
+                if (sc > bestSc) { bestSc = sc; bestS = s; }
+              }
+              if (bestSc > 5.0) {
+                let subS = bestS;
+                const bi = bestS + radB;
+                if (bi > 0 && bi < 2 * radB) {
+                  const vM = scArr[bi - 1], v0 = scArr[bi], vP = scArr[bi + 1];
+                  const den = 2.0 * (2.0 * v0 - vM - vP);
+                  if (Math.abs(den) > 1e-4) subS += Math.max(-0.5, Math.min(0.5, (vM - vP) / den));
+                }
+                ptsB.push({ x: bx + subS * nx, y: by + subS * ny, t });
+              }
+            }
+            fineLines.push(ptsB.length >= 12 ? fitSingleIrlsLine(ptsB) : chordLines[k]);
+          }
+          refinedCorners = idxPairs.map((pair, k) => {
+            const pt = intersectAbc(fineLines[pair[0]], fineLines[pair[1]]);
+            if (pt) {
+              const dx = pt.x - refinedCorners[k].x, dy = pt.y - refinedCorners[k].y;
+              if (dx * dx + dy * dy <= 144.0) {
+                return {
+                  x: Math.max(0, Math.min(origW, Math.round(pt.x))),
+                  y: Math.max(0, Math.min(origH, Math.round(pt.y)))
+                };
+              }
+            }
+            return refinedCorners[k];
+          });
+        }
 
         const detectedEdgeOffsets = createZeroEdgeOffsets();
         let anyEdgeCurved = false;
