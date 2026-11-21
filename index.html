@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v59.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
+  <meta name="description" content="ScanhoahocABC (v60.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
   <style>
     :root {
       --primary: #2563eb;
@@ -3755,7 +3755,7 @@
           }));
         } else {
           // 360px working resolution for crisp rim localization on all object sizes
-          const maxDim = skipFullResRefine ? 180 : 320;
+          const maxDim = skipFullResRefine ? 240 : 320;
           const scale = Math.min(1, maxDim / Math.max(origW, origH));
           const w = Math.max(72, Math.round(origW * scale));
           const h = Math.max(72, Math.round(origH * scale));
@@ -4001,9 +4001,29 @@
             }
           }
 
-          // 2. Illumination envelope (rad=20) using Van Herk O(1) Max Filter + Row-Major Box Blur
-          fastVanHerkMaxFilter(L_surf, w, h, 20, scratch1, scratch2);
-          fastBoxBlurInPlace(scratch2, w, h, 16, scratch1, L_env, colSum);
+          // 2. Illumination envelope: fast half-res in Live Camera, exact full-res on Final Capture
+          if (skipFullResRefine) {
+            const ew = Math.max(16, (w + 1) >> 1), eh = Math.max(16, (h + 1) >> 1);
+            const eSrc = scratch1.subarray(0, ew * eh);
+            const eTmp = scratch2.subarray(0, ew * eh);
+            const eMax = new Float32Array(ew * eh);
+            const eBlur = new Float32Array(ew * eh);
+            for (let ey = 0; ey < eh; ey++) {
+              const sy = Math.min(h - 1, ey << 1) * w;
+              const eo = ey * ew;
+              for (let ex = 0; ex < ew; ex++) eSrc[eo + ex] = L_surf[sy + Math.min(w - 1, ex << 1)];
+            }
+            fastVanHerkMaxFilter(eSrc, ew, eh, 10, eTmp, eMax);
+            fastBoxBlurInPlace(eMax, ew, eh, 8, eTmp, eBlur, colSum);
+            for (let y = 0; y < h; y++) {
+              const ey = Math.min(eh - 1, y >> 1) * ew;
+              const ro = y * w;
+              for (let x = 0; x < w; x++) L_env[ro + x] = eBlur[ey + Math.min(ew - 1, x >> 1)];
+            }
+          } else {
+            fastVanHerkMaxFilter(L_surf, w, h, 20, scratch1, scratch2);
+            fastBoxBlurInPlace(scratch2, w, h, 16, scratch1, L_env, colSum);
+          }
 
           let sumBrightCr = 0.0, sumBrightCb = 0.0, cntBright = 0;
           const brightThreshL = Math.max(95.0, p85InteriorL - 10.0);
@@ -4095,7 +4115,7 @@
             const om25 = oneMinusTArr[25], t25 = tLineArr[25];
             const om35 = oneMinusTArr[35], t35 = tLineArr[35];
 
-            const vStep = 2;
+            const vStep = skipFullResRefine ? 3 : 2;
             const maxKeptFull = skipFullResRefine ? 4 : 7;
             const maxKeptTot = skipFullResRefine ? 5 : 8;
             for (let xt = x0Min; xt < x0Max; xt += vStep) {
@@ -4182,7 +4202,7 @@
             const om25 = oneMinusTArr[25], t25 = tLineArr[25];
             const om35 = oneMinusTArr[35], t35 = tLineArr[35];
 
-            const hStep = 2;
+            const hStep = skipFullResRefine ? 3 : 2;
             const maxKeptFull = skipFullResRefine ? 4 : 7;
             const maxKeptTot = skipFullResRefine ? 5 : 8;
             for (let yl = y0Min; yl < y0Max; yl += hStep) {
@@ -9267,7 +9287,7 @@
             const now = Date.now();
             if (now - lastDetectTs >= 70) {
               lastDetectTs = now;
-              const maxSide = 180;
+              const maxSide = 240;
               const sc = Math.min(1, maxSide / Math.max(vw, vh));
               const targetW = Math.max(72, Math.round(vw * sc));
               const targetH = Math.max(72, Math.round(vh * sc));
@@ -10520,7 +10540,7 @@
           showToast("⚡ Đang dàn phẳng & làm nét tài liệu HD...");
           const nextScanName = `Scan_${state.pages.length + 1}`;
           setTimeout(() => {
-            const capturedCorners = detectDocumentCorners(finalCanvas, false, seedCorners);
+            const capturedCorners = detectDocumentCorners(finalCanvas, false, null);
             addNewPageFromCanvas(finalCanvas, nextScanName, capturedCorners, null, 0, "");
             showToast("Đã chụp ảnh HD, làm nét và lưu vào Thư viện!");
           }, 16);
