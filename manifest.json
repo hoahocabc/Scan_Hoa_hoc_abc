@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v54.0) — Quét tài liệu & sách mở: Nhận diện chuẩn xác giấy trắng trên nền trắng không bị lượn/lõm ở giữa, mặc định Ảnh gốc độ nét cao, bắt chuẩn rìa võng giữa sách mở đôi.",
+  "description": "ScanhoahocABC (v55.0) — Quét tài liệu siêu ổn định: Khung bắt rìa camera đứng vững không nhảy giật, bảo toàn 100% đường thẳng không bị nắn cong, mặc định Ảnh gốc độ nét cao.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",

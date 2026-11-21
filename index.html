@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v54.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
+  <meta name="description" content="ScanhoahocABC (v55.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
   <style>
     :root {
       --primary: #2563eb;
@@ -1688,7 +1688,7 @@
         <button type="button" class="dd-mode-btn" data-mode="bw_sauvola">◐ Đen trắng</button>
         <button type="button" class="dd-mode-btn" data-mode="faint_boost">✒ Làm rõ chữ</button>
         <button type="button" class="dd-mode-btn" id="btnDdToggleAlpha">🪄 Tách nền</button>
-        <button type="button" class="dd-mode-btn active" id="btnDdToggleLineAlign" title="Tự động nhận diện dòng chữ & đường kẻ để căn thẳng khớp với trang giấy">📏 Căn thẳng dòng & kẻ</button>
+        <button type="button" class="dd-mode-btn" id="btnDdToggleLineAlign" title="Bật khi chụp trang sách dày bị uốn cong để kéo thẳng dòng chữ & đường kẻ">📏 Căn thẳng dòng & kẻ</button>
       </div>
 
       <div class="vpop-divider"></div>
@@ -2045,7 +2045,7 @@
           transparentBg: false,
           paperSize: "auto",
           bookCurve: 0,
-          autoLineDewarp: true // Automatically straightens curved text lines & ruled lines on thick books (wave-free!)
+          autoLineDewarp: false // Pure 4-corner perspective by default: 100% straight lines NEVER bent into curves!
         }
       };
 
@@ -5266,7 +5266,8 @@
 
           // v54.0: Only activate automatic curved-rim offsets on genuine open-book spreads (with a real center spine)
           // so a single flat sheet (especially white-on-white!) NEVER gets a fake middle pinch/wave!
-          if (isOpenBookSpread && (maxArch > 6.5 || maxLocalArch > 7.5) && maeCurve < maeLin * 0.68) {
+          // v55.0: Only curve borders automatically on unmistakable deeply arched open books (>=12px arch + strong center spine)
+          if (isOpenBookSpread && (maxArch >= 12.0 || maxLocalArch >= 12.0) && maeCurve < maeLin * 0.62) {
             anyEdgeCurved = true;
             for (let m = 0; m < nSub; m++) {
               const t = (m + 1) / (nSub + 1);
@@ -5351,8 +5352,8 @@
           }
         }
 
-        // Require a genuine wide dark book-spine valley (>= 22 luminance dip below BOTH left & right page paper!)
-        if (bestIdx < 0 || bestDip < 22.0) return null;
+        // Require a genuine wide dark book-spine valley (>= 28 luminance dip below BOTH left & right page paper!)
+        if (bestIdx < 0 || bestDip < 28.0) return null;
 
         // Verify valley continuity along the spine (at least 60% of vertical slices must be darker than sides)
         const uSpine = 0.15 + (bestIdx / (N_SCAN - 1)) * 0.70;
@@ -6759,7 +6760,7 @@
           page.settings.paperSize,
           page.edgeOffsets,
           page.settings.bookCurve || 0,
-          page.settings.autoLineDewarp !== false,
+          page.settings.autoLineDewarp === true,
           page,
           previewMaxSide
         );
@@ -8739,7 +8740,7 @@
         el.ddBookCurveVal.textContent = `${s.bookCurve || 0}%`;
         el.btnDdToggleAlpha.classList.toggle("active", !!s.transparentBg);
         if (el.btnDdToggleLineAlign) {
-          el.btnDdToggleLineAlign.classList.toggle("active", s.autoLineDewarp !== false);
+          el.btnDdToggleLineAlign.classList.toggle("active", s.autoLineDewarp === true);
         }
 
         el.ddFilenameInput.value = page.name || "";
@@ -9080,7 +9081,7 @@
             if (overlay.height !== vh) overlay.height = vh;
             frameCount++;
             const now = Date.now();
-            if (now - lastDetectTs >= 40) {
+            if (now - lastDetectTs >= 70) {
               lastDetectTs = now;
               const maxSide = 180;
               const sc = Math.min(1, maxSide / Math.max(vw, vh));
@@ -9098,22 +9099,54 @@
                 x: Math.round(p.x * sx),
                 y: Math.round(p.y * sy)
               }));
+              const diag = Math.hypot(vw, vh) || 1000;
               let relJump = 0;
               if (!state.lastCameraCorners) {
                 state.lastCameraCorners = nextCorners;
+                state._camPendingJump = null;
+                state._camPendingCount = 0;
               } else {
                 let maxJump = 0;
                 for (let idx = 0; idx < 4; idx++) {
                   const dj = Math.hypot(nextCorners[idx].x - state.lastCameraCorners[idx].x, nextCorners[idx].y - state.lastCameraCorners[idx].y);
                   if (dj > maxJump) maxJump = dj;
                 }
-                const diag = Math.hypot(vw, vh) || 1000;
                 relJump = maxJump / diag;
-                const alpha = relJump < 0.008 ? 0.42 : relJump < 0.035 ? 0.72 : 0.92;
-                state.lastCameraCorners = state.lastCameraCorners.map((prev, idx) => ({
-                  x: Math.round(prev.x * (1.0 - alpha) + nextCorners[idx].x * alpha),
-                  y: Math.round(prev.y * (1.0 - alpha) + nextCorners[idx].y * alpha)
-                }));
+                if (relJump >= 0.065) {
+                  // v55.0 3-Frame Outlier Rejection: ignore 1-2 frame noisy glitches; only move after 3 consistent frames!
+                  let sameAsPending = false;
+                  if (state._camPendingJump) {
+                    let pDiff = 0;
+                    for (let idx = 0; idx < 4; idx++) {
+                      const d = Math.hypot(nextCorners[idx].x - state._camPendingJump[idx].x, nextCorners[idx].y - state._camPendingJump[idx].y);
+                      if (d > pDiff) pDiff = d;
+                    }
+                    sameAsPending = (pDiff / diag) < 0.045;
+                  }
+                  if (sameAsPending) {
+                    state._camPendingCount = (state._camPendingCount || 0) + 1;
+                    state._camPendingJump = nextCorners;
+                    if (state._camPendingCount >= 3) {
+                      state.lastCameraCorners = nextCorners;
+                      state._camPendingJump = null;
+                      state._camPendingCount = 0;
+                    }
+                  } else {
+                    state._camPendingJump = nextCorners;
+                    state._camPendingCount = 1;
+                  }
+                } else {
+                  state._camPendingJump = null;
+                  state._camPendingCount = 0;
+                  // Deadband lock: rock-steady when holding still (alpha=0.14), smooth tracking when moving (alpha=0.30)
+                  if (relJump >= 0.004) {
+                    const alpha = relJump < 0.015 ? 0.14 : 0.30;
+                    state.lastCameraCorners = state.lastCameraCorners.map((prev, idx) => ({
+                      x: Math.round(prev.x * (1.0 - alpha) + nextCorners[idx].x * alpha),
+                      y: Math.round(prev.y * (1.0 - alpha) + nextCorners[idx].y * alpha)
+                    }));
+                  }
+                }
               }
               // Only snapshot full-res frame when quad is steady or initializing (eliminates redundant 1080p copies during fast camera panning)
               const nextSlotIdx = 1 - state.cameraSyncActiveIdx;
@@ -9340,7 +9373,7 @@
           el.btnDdToggleLineAlign.addEventListener("click", () => {
             const page = getCurrentPage();
             if (!page) return;
-            page.settings.autoLineDewarp = !(page.settings.autoLineDewarp !== false);
+            page.settings.autoLineDewarp = !(page.settings.autoLineDewarp === true);
             syncControlsFromPage(page);
             updateGeometryAndProcess(page, true);
             scheduleSavePage(page, false);
