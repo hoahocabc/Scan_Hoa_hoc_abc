@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v53.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
+  <meta name="description" content="ScanhoahocABC (v54.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
   <style>
     :root {
       --primary: #2563eb;
@@ -3755,7 +3755,7 @@
           }));
         } else {
           // 360px working resolution for crisp rim localization on all object sizes
-          const maxDim = skipFullResRefine ? 160 : 240;
+          const maxDim = skipFullResRefine ? 180 : 320;
           const scale = Math.min(1, maxDim / Math.max(origW, origH));
           const w = Math.max(72, Math.round(origW * scale));
           const h = Math.max(72, Math.round(origH * scale));
@@ -4860,10 +4860,17 @@
           }
         }
 
-        // STAGE 2: FULL-RESOLUTION 1D-CLOSED NORMAL PROFILE VITERBI + ALL-RIM CONTRAST & 5-SINE CURVED RIM
+        // STAGE 2: FULL-RESOLUTION 1D-CLOSED NORMAL PROFILE VITERBI
+        // v54.0: Detect whether this is an open 2-page book spread (has a real dark center spine) BEFORE Stage 2!
+        // - Single sheet (including white-on-white!): uses strict straight-edge v46 parameters -> ZERO fake center dip/wave!
+        // - Open 2-page book spread: unlocks wide searchRad & steep center V-notch tracking!
+        const prelimSpine = detectBookSpineDivider(srcCanvas, stage1Corners);
+        const isOpenBookSpread = Boolean(prelimSpine);
         const idxPairs = [[3, 0], [0, 1], [1, 2], [2, 3]];
         const nProf = 55;
-        const searchRad = Math.min(96, Math.max(36, Math.round(Math.min(origW, origH) * 0.085)));
+        const searchRad = isOpenBookSpread
+          ? Math.min(96, Math.max(36, Math.round(Math.min(origW, origH) * 0.085)))
+          : Math.min(56, Math.max(24, Math.round(Math.min(origW, origH) * 0.056)));
         const closeRadS2 = Math.min(origW, origH) >= 1400 ? 7 : 5;
         const M = searchRad + closeRadS2 + 4;
         const profLen = 2 * M + 1;
@@ -4876,7 +4883,7 @@
         const surfR = new Float32Array(profLen);
         const surfG = new Float32Array(profLen);
         const surfB = new Float32Array(profLen);
-        const strideS = searchRad > 54 ? 2 : 1;
+        const strideS = (isOpenBookSpread && searchRad > 54) ? 2 : 1;
         const halfStates = Math.floor(searchRad / strideS);
         const nStates = 2 * halfStates + 1;
         const scoreMat = new Float32Array(nProf * nStates);
@@ -4955,9 +4962,19 @@
                 profG[pIdx] = pG > 255.0 ? 255.0 : pG;
                 profB[pIdx] = pB > 255.0 ? 255.0 : pB;
                 creaseProfL[pIdx] = profL[pIdx];
-              } else {
-                // v53.0: Use exact center sample l0 so narrow V-notches in the middle of an open book are NEVER bridged by ±4px walls!
+              } else if (isOpenBookSpread) {
+                // Open book: exact center ray l0 preserves narrow V-notch cavities at the center spine!
                 profL[pIdx] = l0; profR[pIdx] = r0; profG[pIdx] = g0; profB[pIdx] = b0;
+                creaseProfL[pIdx] = l0;
+              } else {
+                // Single sheet (including white-on-white): tangential max rejects dark interior text crossing the rim!
+                if (lM >= l0 && lM >= lP) {
+                  profL[pIdx] = lM; profR[pIdx] = rM; profG[pIdx] = gM; profB[pIdx] = bM;
+                } else if (lP >= l0 && lP >= lM) {
+                  profL[pIdx] = lP; profR[pIdx] = rP; profG[pIdx] = gP; profB[pIdx] = bP;
+                } else {
+                  profL[pIdx] = l0; profR[pIdx] = r0; profG[pIdx] = g0; profB[pIdx] = b0;
+                }
                 creaseProfL[pIdx] = l0;
               }
             }
@@ -5079,16 +5096,18 @@
           for (let i = 1; i < nProf; i++) {
             const currOff = i * nStates;
             const prevOff = (i - 1) * nStates;
+            const maxStepS = isOpenBookSpread ? 8 : 5;
+            const cLinS = isOpenBookSpread ? 0.30 : 0.45;
+            const cQuadS = isOpenBookSpread ? 0.08 : 0.18;
             for (let si = 0; si < nStates; si++) {
-              // v53.0: Wider transition step (±8) & gentler quadratic slope cost let Viterbi hug sharp center V-notches on open books!
-              const spMin = si - 8 < 0 ? 0 : si - 8;
-              const spMax = si + 8 >= nStates ? nStates - 1 : si + 8;
+              const spMin = si - maxStepS < 0 ? 0 : si - maxStepS;
+              const spMax = si + maxStepS >= nStates ? nStates - 1 : si + maxStepS;
               let bestPrev = si;
               let bestVal = -1e12;
               for (let sp = spMin; sp <= spMax; sp++) {
                 const ds = si - sp;
                 const absDs = ds < 0 ? -ds : ds;
-                const cand = dpMat[prevOff + sp] - (0.30 * absDs + 0.08 * ds * ds);
+                const cand = dpMat[prevOff + sp] - (cLinS * absDs + cQuadS * ds * ds);
                 if (cand > bestVal) {
                   bestVal = cand;
                   bestPrev = sp;
@@ -5245,8 +5264,9 @@
             if (Math.abs(exactVal) > maxLocalArch) maxLocalArch = Math.abs(exactVal);
           }
 
-          // Flat paper stays 100% straight; genuine open-book arches & sharp center V-notches (>=6.5px) track to the exact tip!
-          if ((maxArch > 6.5 || maxLocalArch > 7.5) && maeCurve < maeLin * 0.68) {
+          // v54.0: Only activate automatic curved-rim offsets on genuine open-book spreads (with a real center spine)
+          // so a single flat sheet (especially white-on-white!) NEVER gets a fake middle pinch/wave!
+          if (isOpenBookSpread && (maxArch > 6.5 || maxLocalArch > 7.5) && maeCurve < maeLin * 0.68) {
             anyEdgeCurved = true;
             for (let m = 0; m < nSub; m++) {
               const t = (m + 1) / (nSub + 1);
@@ -5289,8 +5309,10 @@
         const avgH = 0.5 * (leftH + rightH);
         if (avgW < 120 || avgH < 120) return null;
 
-        // Vertical spine divider if landscape/square-ish open spread (avgW >= avgH * 0.92)
-        const isVerticalSpine = avgW >= avgH * 0.92;
+        // v54.0: Only landscape 2-page open-book spreads (avgW >= avgH * 1.05) have an automatic vertical center spine!
+        // Prevents portrait single sheets (with horizontal text lines) from ever triggering false spine detection!
+        if (avgW < avgH * 1.05) return null;
+        const isVerticalSpine = true;
         const N_SCAN = 64;
         const N_ALONG = 28;
         const prof = new Float32Array(N_SCAN);
@@ -5329,8 +5351,8 @@
           }
         }
 
-        // Require a genuine dark spine valley (>= 14 luminance dip below BOTH left & right page paper!)
-        if (bestIdx < 0 || bestDip < 14.0) return null;
+        // Require a genuine wide dark book-spine valley (>= 22 luminance dip below BOTH left & right page paper!)
+        if (bestIdx < 0 || bestDip < 22.0) return null;
 
         // Verify valley continuity along the spine (at least 60% of vertical slices must be darker than sides)
         const uSpine = 0.15 + (bestIdx / (N_SCAN - 1)) * 0.70;
