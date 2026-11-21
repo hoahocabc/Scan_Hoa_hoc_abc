@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v55.0) — Quét tài liệu siêu ổn định: Khung bắt rìa camera đứng vững không nhảy giật, bảo toàn 100% đường thẳng không bị nắn cong, mặc định Ảnh gốc độ nét cao.",
+  "description": "ScanhoahocABC (v56.0) — Quét tài liệu siêu chuẩn: Bắt rìa chính xác giấy trắng trên nền trắng, tách nền sạch hoàn toàn chữ mặt sau trang sách mỏng, khung camera ổn định và Ảnh gốc độ nét cao.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",

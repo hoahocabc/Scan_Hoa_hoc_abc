@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v55.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
+  <meta name="description" content="ScanhoahocABC (v56.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
   <style>
     :root {
       --primary: #2563eb;
@@ -3490,8 +3490,8 @@
             }
 
             let wwCreaseX = 0.0;
-            if (minLX > 80.0 && minNX > 155.0 && absStepX < 30.0 && flatVarX < 5.5 && dipY > minCreaseDip && dipY < 30.0) {
-              wwCreaseX = dipY;
+            if (minLX > 80.0 && minNX > 155.0 && absStepX < 32.0 && flatVarX < 10.5 && dipY > minCreaseDip && dipY < 32.0) {
+              wwCreaseX = dipY * (flatVarX <= 5.5 ? 1.0 : (1.0 - (flatVarX - 5.5) * 0.12));
             }
 
             let flatRimStepX = 0.0;
@@ -3628,8 +3628,8 @@
             }
 
             let wwCreaseY = 0.0;
-            if (minLY > 80.0 && minNY > 155.0 && absStepY < 30.0 && flatVarY < 5.5 && dipX > minCreaseDip && dipX < 30.0) {
-              wwCreaseY = dipX;
+            if (minLY > 80.0 && minNY > 155.0 && absStepY < 32.0 && flatVarY < 10.5 && dipX > minCreaseDip && dipX < 32.0) {
+              wwCreaseY = dipX * (flatVarY <= 5.5 ? 1.0 : (1.0 - (flatVarY - 5.5) * 0.12));
             }
 
             let flatRimStepY = 0.0;
@@ -5038,19 +5038,24 @@
               const cp0 = creaseProfL[cIdx - 1], cp1 = creaseProfL[cIdx], cp2 = creaseProfL[cIdx + 1];
               const minC = cp0 < cp1 ? (cp0 < cp2 ? cp0 : cp2) : (cp1 < cp2 ? cp1 : cp2);
               const dip = minSideL - minC;
-              const sameSurfS2 = absStep < 9.0 && macDC < 9.0 && flatVar < 5.5;
+              // Exact center-pixel dip creates a sharp 1px peak on the true white-on-white crease (no 3px flat plateau!)
+              const exactDip = minSideL - cp1;
+              const sharpCreaseDip = exactDip > 0.0 ? (0.82 * exactDip + 0.18 * dip) : 0.0;
+              const sameSurfS2 = absStep < 9.0 && macDC < 9.0 && flatVar < 8.5;
               const isDarkInPaperS2 = !allowDarkObjectPolarity && L_out > 170.0 && (L_out - L_in > 22.0);
               const isInkS2 = isDarkInPaperS2 || (sameSurfS2 && minSideL > 100.0 && dip > 32.0);
 
               let flatRimStepS2 = 0.0;
               const rawRimS2 = absStep > macDC * 0.78 ? absStep : macDC * 0.78;
-              if (!isInkS2 && rawRimS2 >= s2MinFlatStep && flatVar < rawRimS2 * 0.50 + 1.2) {
-                flatRimStepS2 = rawRimS2 - flatVar * 0.80;
+              if (!isInkS2 && rawRimS2 >= s2MinFlatStep && flatVar < rawRimS2 * 0.55 + 2.0) {
+                flatRimStepS2 = rawRimS2 - flatVar * 0.65;
               }
 
               let wwCrease = 0.0;
-              if (!isInkS2 && minSideL > 75.0 && absStep < 32.0 && flatVar < 5.2) {
-                if (dip > s2MinCreaseDip && dip < 30.0) wwCrease = dip;
+              if (!isInkS2 && minSideL > 75.0 && absStep < 32.0 && flatVar < 12.0) {
+                if (sharpCreaseDip > s2MinCreaseDip && dip < 32.0) {
+                  wwCrease = sharpCreaseDip * (flatVar <= 6.0 ? 1.0 : (1.0 - (flatVar - 6.0) * 0.10));
+                }
               }
 
               const illumEqS2 = (maxSideL < 165.0 && (noiseSigma >= 0.20 || minSideL < 120.0)) ? Math.min(1.95, 165.0 / (maxSideL > 48.0 ? maxSideL : 48.0)) : 1.0;
@@ -6577,36 +6582,68 @@
         const noiseDeadzone = isLowLight ? (2.5 + Math.min(5.0, (fc.isoNoiseEst || 1.5) * 0.65)) : 1.5;
 
         if (mode === "original") {
-          // v53.0 High-Sharpness Natural Original:
-          // Crisp micro-acutance on real text strokes WITHOUT darkening thin-paper bleed-through or creating halos!
+          // v56.0 High-Sharpness Natural Original + Bleed-Through-Free Transparent Background ("🪄 Tách nền")
           const darkGain = sharpAmt * 1.65;
           const brightGain = isBrightOutdoor ? 0.0 : (sharpAmt * 0.40);
           const origDeadzone = Math.max(noiseDeadzone, 2.6);
-          for (let i = 0; i < nPixels; i++) {
-            const idx = i << 2;
-            let boost = 0.0;
-            if (sharpAmt > 0.01) {
+          const alphaBaseFloor = 30.0 + cleanAmt * 42.0;
+          const alphaHaloRatio = 0.34 + cleanAmt * 0.16;
+          const paperChromaLim = isLowLight ? 36.0 : 22.0;
+
+          for (let y = 0; y < h; y++) {
+            const rOff = y * w;
+            const hOff = (y >> 1) * hw;
+            for (let x = 0; x < w; x++) {
+              const i = rOff + x;
+              const idx = i << 2;
               const df = detailFine[i];
-              // Only sharpen pixels with clear local edge contrast (> origDeadzone) so flat paper & faint bleed-through stay untouched!
-              if (df < -origDeadzone) {
-                boost = (df + origDeadzone) * darkGain;
-                if (boost < -48.0) boost = -48.0;
-              } else if (df > origDeadzone && brightGain > 0.0) {
-                boost = (df - origDeadzone) * brightGain;
-                if (boost > 22.0) boost = 22.0;
+              let boost = 0.0;
+              if (sharpAmt > 0.01) {
+                if (df < -origDeadzone) {
+                  boost = (df + origDeadzone) * darkGain;
+                  if (boost < -48.0) boost = -48.0;
+                } else if (df > origDeadzone && brightGain > 0.0) {
+                  boost = (df - origDeadzone) * brightGain;
+                  if (boost > 22.0) boost = 22.0;
+                }
               }
-            }
-            let r = (rawData[idx] + boost + bShift + 0.5) | 0;
-            let g = (rawData[idx + 1] + boost + bShift + 0.5) | 0;
-            let b = (rawData[idx + 2] + boost + bShift + 0.5) | 0;
-            data[idx]     = r < 0 ? 0 : (r > 255 ? 255 : r);
-            data[idx + 1] = g < 0 ? 0 : (g > 255 ? 255 : g);
-            data[idx + 2] = b < 0 ? 0 : (b > 255 ? 255 : b);
-            if (transparentBg) {
-              const d = 255.0 - uL[i];
-              data[idx + 3] = d < 18.0 ? 0 : (d < 48.0 ? (((d - 18.0) * 8.5) | 0) : 255);
-            } else {
-              data[idx + 3] = 255;
+              let r = (rawData[idx] + boost + bShift + 0.5) | 0;
+              let g = (rawData[idx + 1] + boost + bShift + 0.5) | 0;
+              let b = (rawData[idx + 2] + boost + bShift + 0.5) | 0;
+              data[idx]     = r < 0 ? 0 : (r > 255 ? 255 : r);
+              data[idx + 1] = g < 0 ? 0 : (g > 255 ? 255 : g);
+              data[idx + 2] = b < 0 ? 0 : (b > 255 ? 255 : b);
+
+              if (transparentBg) {
+                const d = 255.0 - uL[i];
+                const ur = uR[i], ug = uG[i], ub = uB[i];
+                const maxC = ur > ug ? (ur > ub ? ur : ub) : (ug > ub ? ug : ub);
+                const minC = ur < ug ? (ur < ub ? ur : ub) : (ug < ub ? ug : ub);
+                const chroma = maxC - minC;
+                const absDf = df < 0.0 ? -df : df;
+
+                // Adaptive Bleed-Through-Free Alpha Cut:
+                // Erases thin-paper back-side ghost text (shallow d & soft diffused edges) -> alpha = 0!
+                // Keeps crisp front-side dark ink & vivid colored pens/stamps -> alpha = 255!
+                const hCut = dMaxHalf[hOff + (x >> 1)] * alphaHaloRatio;
+                let cut = alphaBaseFloor > hCut ? alphaBaseFloor : hCut;
+                if (absDf < 6.0 && d < 120.0) {
+                  cut += 20.0 * (1.0 - absDf / 6.0);
+                }
+                const colorSignal = chroma > paperChromaLim ? (chroma - paperChromaLim) * 1.35 : 0.0;
+                const effInk = (d > colorSignal ? d : colorSignal);
+                const effCut = chroma > paperChromaLim ? Math.max(12.0, cut - colorSignal * 0.65) : cut;
+
+                if (effInk <= effCut) {
+                  data[idx + 3] = 0;
+                } else {
+                  const span = 26.0;
+                  const aVal = (((effInk - effCut) / span) * 255.0) | 0;
+                  data[idx + 3] = aVal > 255 ? 255 : aVal;
+                }
+              } else {
+                data[idx + 3] = 255;
+              }
             }
           }
           outCtx.putImageData(outImg, 0, 0);
@@ -6736,9 +6773,20 @@
             data[idx + 2] = b < 0 ? 0 : (b > 255 ? 255 : b);
 
             if (transparentBg) {
-              const lumOut = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
-              const dark = (255.0 - lumOut) + chroma * 0.85;
-              data[idx + 3] = dark < 12.0 ? 0 : (dark < 46.0 ? (((dark - 12.0) * 7.5) | 0) : 255);
+              // Compute alpha from PRE-GAIN normalized depth dL (so gain amplification never turns thin-paper bleed-through opaque!)
+              const alphaBase = 30.0 + cleanAmt * 42.0;
+              const hAlpha = dMaxHalf[hOff + (x >> 1)] * (0.34 + cleanAmt * 0.16);
+              let aCut = alphaBase > hAlpha ? alphaBase : hAlpha;
+              if (absDf < 6.0 && dL < 120.0) aCut += 20.0 * (1.0 - absDf / 6.0);
+              const cSig = chroma > paperChromaFloor ? (chroma - paperChromaFloor) * 1.35 : 0.0;
+              const effInkA = dL > cSig ? dL : cSig;
+              const effCutA = chroma > paperChromaFloor ? Math.max(12.0, aCut - cSig * 0.65) : aCut;
+              if (effInkA <= effCutA) {
+                data[idx + 3] = 0;
+              } else {
+                const aVal = (((effInkA - effCutA) / 26.0) * 255.0) | 0;
+                data[idx + 3] = aVal > 255 ? 255 : aVal;
+              }
             } else {
               data[idx + 3] = 255;
             }
