@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v57.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
+  <meta name="description" content="ScanhoahocABC (v58.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
   <style>
     :root {
       --primary: #2563eb;
@@ -5582,9 +5582,9 @@
 
         // v51.0: Full responsiveness for physical thick-book arches (sin(pi), sin(2pi), sin(3pi));
         // strictly block high-frequency 4-cycle ripples (sin(4pi)) so lines straighten cleanly without waves!
-        const regH = [0.002, 0.010, 0.024, 0.055, 1e6];
-        // v57.0: Responsive Zone 1 (1.2) straightens top-up/bottom-down opposite book curves cleanly while keeping Zone 2 wave-free!
-        const regV = [1.0, 1.2, 18.0];
+        // v58.0: High responsiveness for steep thick-book spine curls (sin(pi), sin(2pi), sin(3pi)) while strictly blocking 4-cycle waves!
+        const regH = [0.001, 0.0055, 0.014, 0.036, 1e6];
+        const regV = [1.0, 0.35, 12.0];
         const nParams = V_MODES * K;
         const A_sys = Array.from({ length: nParams }, (_, r) => {
           const row = new Float64Array(nParams);
@@ -5595,8 +5595,8 @@
         });
         const b_sys = new Float64Array(nParams);
 
-        // Cycle-safe maxD = 5 for step=1 (strictly less than half line spacing ~6.8px in Hs=384!)
-        const maxD1 = 8;
+        // Wider maxD1 = 10 captures steep thick-book spine bends cleanly!
+        const maxD1 = 10;
         const corrs = new Float64Array(2 * maxD1 + 1);
         const corrsSorted = new Float64Array(2 * maxD1 + 1);
         const norms = new Float64Array(M);
@@ -5881,10 +5881,10 @@
           if (localMax > maxSurfaceDisp) maxSurfaceDisp = localMax;
         }
 
-        // v57.0: Since "Căn thẳng dòng" is explicitly toggled by the user, straighten ANY real tilt, arch, or top/bottom curve (>= 1.8px)!
-        if (maxSurfaceDisp < 1.8) return null;
+        // v58.0: Straighten any real tilt, arch, or top/bottom curve (>= 1.2px) with full unity gain for >= 2.5px!
+        if (maxSurfaceDisp < 1.2) return null;
 
-        const shrinkGain = Math.min(1.0, (maxSurfaceDisp - 1.0) / 2.0);
+        const shrinkGain = Math.min(1.0, (maxSurfaceDisp - 0.8) / 1.5);
         for (let x = 0; x < dstW; x++) {
           mode0[x] *= shrinkGain;
           mode1[x] *= shrinkGain;
@@ -6139,6 +6139,48 @@
             : undefined;
           if (surfModes === undefined) {
             surfModes = estimate2DBookSurfaceModes(tempData, dstW, dstH);
+            // v58.0 2-Pass Coarse-to-Fine Residual Refinement (composes Pass 1 + Pass 2 into ONE single-resample warp!):
+            if (surfModes && surfModes.maxSurfaceDisp >= 2.0) {
+              const p1m0 = surfModes.mode0, p1m1 = surfModes.mode1, p1m2 = surfModes.mode2;
+              // Build compact 2x-downsampled Pass-1 warped preview solely for fast (~18ms) Pass-2 residual estimation!
+              const rw = Math.max(192, dstW >> 1);
+              const rh = Math.max(256, dstH >> 1);
+              const pass1Small = new Uint8ClampedArray(rw * rh * 4);
+              const invRw1 = 1.0 / Math.max(1, rw - 1);
+              const invRh1 = 1.0 / Math.max(1, rh - 1);
+              for (let ry = 0; ry < rh; ry++) {
+                const ty = ry * invRh1;
+                const yFull = ty * (dstH - 1);
+                const uV = ty - 0.5;
+                const v2 = uV * uV - (1.0 / 12.0);
+                const vTap = Math.min(1.0, ty / 0.035, (1.0 - ty) / 0.035);
+                for (let rx = 0; rx < rw; rx++) {
+                  const tx = rx * invRw1;
+                  const xFull = Math.min(dstW - 1, Math.round(tx * (dstW - 1)));
+                  const wVal = (p1m0[xFull] + uV * p1m1[xFull] + v2 * p1m2[xFull]) * vTap;
+                  const syFull = Math.min(dstH - 1, Math.max(0, Math.round(yFull + wVal)));
+                  const si = (syFull * dstW + xFull) << 2;
+                  const di = (ry * rw + rx) << 2;
+                  pass1Small[di]     = tempData[si];
+                  pass1Small[di + 1] = tempData[si + 1];
+                  pass1Small[di + 2] = tempData[si + 2];
+                  pass1Small[di + 3] = 255;
+                }
+              }
+              const resModes = estimate2DBookSurfaceModes(pass1Small, rw, rh);
+              if (resModes && resModes.maxSurfaceDisp >= 0.8) {
+                const scaleBackY = (dstH - 1) / Math.max(1, rh - 1);
+                const rm0 = resModes.mode0, rm1 = resModes.mode1, rm2 = resModes.mode2;
+                for (let x = 0; x < dstW; x++) {
+                  const rxf = (x / Math.max(1, dstW - 1)) * (rw - 1);
+                  const rx0 = Math.min(rw - 2, rxf | 0);
+                  const rdx = rxf - rx0;
+                  p1m0[x] += (rm0[rx0] * (1.0 - rdx) + rm0[rx0 + 1] * rdx) * scaleBackY;
+                  p1m1[x] += (rm1[rx0] * (1.0 - rdx) + rm1[rx0 + 1] * rdx) * scaleBackY;
+                  p1m2[x] += (rm2[rx0] * (1.0 - rdx) + rm2[rx0 + 1] * rdx) * scaleBackY;
+                }
+              }
+            }
             if (cachedModesHost) {
               cachedModesHost.cachedAutoModes = surfModes;
               cachedModesHost.cachedAutoW = dstW;

@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v57.0) — Quét tài liệu chuyên nghiệp: Bắt rìa chuẩn xác kể cả giấy trắng trên nền trắng, tách nền sạch chữ mặt sau, và tính năng Căn thẳng dòng mạnh mẽ cho dòng chữ & đường kẻ cong/nghiêng.",
+  "description": "ScanhoahocABC (v58.0) — Quét tài liệu chuyên nghiệp: Giữ nguyên bộ bắt rìa ổn định v56, nâng cấp thuật toán Căn thẳng dòng 2 bước siêu phẳng (khử sạch cong gắt sách dày & nghiêng) và tách nền sạch chữ mặt sau.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
