@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v56.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
+  <meta name="description" content="ScanhoahocABC (v57.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
   <style>
     :root {
       --primary: #2563eb;
@@ -1688,7 +1688,7 @@
         <button type="button" class="dd-mode-btn" data-mode="bw_sauvola">◐ Đen trắng</button>
         <button type="button" class="dd-mode-btn" data-mode="faint_boost">✒ Làm rõ chữ</button>
         <button type="button" class="dd-mode-btn" id="btnDdToggleAlpha">🪄 Tách nền</button>
-        <button type="button" class="dd-mode-btn" id="btnDdToggleLineAlign" title="Bật khi chụp trang sách dày bị uốn cong để kéo thẳng dòng chữ & đường kẻ">📏 Căn thẳng dòng & kẻ</button>
+        <button type="button" class="dd-mode-btn" id="btnDdToggleLineAlign" title="Tự động nắn thẳng dòng chữ và đường kẻ bị nghiêng hoặc uốn cong">📏 Căn thẳng dòng</button>
       </div>
 
       <div class="vpop-divider"></div>
@@ -5462,20 +5462,34 @@
       function estimate2DBookSurfaceModes(rgbaData, dstW, dstH) {
         const M = 32;
         const subW = M * 6; // 192
-        const Hs = 256;
+        const Hs = 320;
         const scaleY = dstH / Hs;
         const scaleX = dstW / subW;
 
-        // 1. Downsample luminance to (subW x Hs)
+        // 1. Dark-preserving vertical min downsampling to (subW x Hs) so thin 1-2px ruled lines & fine text are NEVER aliased away!
         const L0 = new Float32Array(subW * Hs);
+        const yStepHalf = Math.max(1, Math.floor(scaleY * 0.5));
         for (let sy = 0; sy < Hs; sy++) {
-          const y = Math.min(dstH - 1, Math.round((sy / (Hs - 1)) * (dstH - 1)));
-          const rOff = y * dstW;
+          const yc = Math.min(dstH - 1, Math.round((sy / (Hs - 1)) * (dstH - 1)));
+          const yLo = yc - yStepHalf > 0 ? yc - yStepHalf : 0;
+          const yHi = yc + yStepHalf < dstH - 1 ? yc + yStepHalf : dstH - 1;
+          const rLo = yLo * dstW, rMid = yc * dstW, rHi = yHi * dstW;
           const sOff = sy * subW;
           for (let sx = 0; sx < subW; sx++) {
             const x = Math.min(dstW - 1, Math.round((sx / (subW - 1)) * (dstW - 1)));
-            const idx4 = (rOff + x) * 4;
-            L0[sOff + sx] = 0.299 * rgbaData[idx4] + 0.587 * rgbaData[idx4 + 1] + 0.114 * rgbaData[idx4 + 2];
+            const i0 = (rMid + x) << 2;
+            let minL = 0.299 * rgbaData[i0] + 0.587 * rgbaData[i0 + 1] + 0.114 * rgbaData[i0 + 2];
+            if (yLo !== yc) {
+              const i1 = (rLo + x) << 2;
+              const l1 = 0.299 * rgbaData[i1] + 0.587 * rgbaData[i1 + 1] + 0.114 * rgbaData[i1 + 2];
+              if (l1 < minL) minL = l1;
+            }
+            if (yHi !== yc) {
+              const i2 = (rHi + x) << 2;
+              const l2 = 0.299 * rgbaData[i2] + 0.587 * rgbaData[i2 + 1] + 0.114 * rgbaData[i2 + 2];
+              if (l2 < minL) minL = l2;
+            }
+            L0[sOff + sx] = minL;
           }
         }
 
@@ -5569,8 +5583,8 @@
         // v51.0: Full responsiveness for physical thick-book arches (sin(pi), sin(2pi), sin(3pi));
         // strictly block high-frequency 4-cycle ripples (sin(4pi)) so lines straighten cleanly without waves!
         const regH = [0.002, 0.010, 0.024, 0.055, 1e6];
-        // v52.0: Strong vertical regularization prevents Zone 1 & Zone 2 from overfitting text/diacritic jitter into waves!
-        const regV = [1.0, 6.5, 45.0];
+        // v57.0: Responsive Zone 1 (1.2) straightens top-up/bottom-down opposite book curves cleanly while keeping Zone 2 wave-free!
+        const regV = [1.0, 1.2, 18.0];
         const nParams = V_MODES * K;
         const A_sys = Array.from({ length: nParams }, (_, r) => {
           const row = new Float64Array(nParams);
@@ -5867,10 +5881,10 @@
           if (localMax > maxSurfaceDisp) maxSurfaceDisp = localMax;
         }
 
-        // Strict Flat-Paper Wave Guard: require genuine coherent page-wide book arch (>= 4.5px non-linear curve)!
-        if (maxCurveDisp0 < 4.5) return null;
+        // v57.0: Since "Căn thẳng dòng" is explicitly toggled by the user, straighten ANY real tilt, arch, or top/bottom curve (>= 1.8px)!
+        if (maxSurfaceDisp < 1.8) return null;
 
-        const shrinkGain = Math.min(1.0, (maxCurveDisp0 - 3.0) / 3.0);
+        const shrinkGain = Math.min(1.0, (maxSurfaceDisp - 1.0) / 2.0);
         for (let x = 0; x < dstW; x++) {
           mode0[x] *= shrinkGain;
           mode1[x] *= shrinkGain;
@@ -9423,15 +9437,16 @@
             if (!page) return;
             page.settings.autoLineDewarp = !(page.settings.autoLineDewarp === true);
             syncControlsFromPage(page);
-            updateGeometryAndProcess(page, true);
+            updateGeometryAndProcess(page, false);
             scheduleSavePage(page, false);
             renderStage();
             renderFullScreenEditor();
-            showToast(
-              page.settings.autoLineDewarp
-                ? "📏 Đã bật tự động nhận diện & căn thẳng dòng chữ/đường kẻ khớp trang giấy!"
-                : "Đã tắt tự động căn thẳng dòng chữ/đường kẻ."
-            );
+            if (page.settings.autoLineDewarp) {
+              const applied = Boolean(page.cachedAutoModes);
+              showToast(applied ? "📏 Đã căn thẳng dòng chữ & đường kẻ!" : "📏 Các dòng chữ trên trang đã thẳng sẵn!");
+            } else {
+              showToast("Đã tắt Căn thẳng dòng.");
+            }
           });
         }
 
