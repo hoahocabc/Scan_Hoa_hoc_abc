@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v62.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
+  <meta name="description" content="ScanhoahocABC (v63.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
   <style>
     :root {
       --primary: #2563eb;
@@ -3759,7 +3759,7 @@
           }));
         } else {
           // 360px working resolution for crisp rim localization on all object sizes
-          const maxDim = skipFullResRefine ? 280 : 320;
+          const maxDim = skipFullResRefine ? 240 : 320;
           const scale = Math.min(1, maxDim / Math.max(origW, origH));
           const w = Math.max(72, Math.round(origW * scale));
           const h = Math.max(72, Math.round(origH * scale));
@@ -4120,46 +4120,61 @@
             const om27 = oneMinusTArr[27], t27 = tLineArr[27];
             const om35 = oneMinusTArr[35], t35 = tLineArr[35];
 
-            const vStep = 2;
+            const vStep = skipFullResRefine ? 3 : 2;
             const maxKeptFull = skipFullResRefine ? 4 : 7;
             const maxKeptTot = skipFullResRefine ? 5 : 8;
+            function evalVLine(xt, xb) {
+              if (
+                bmap[r4 + ((xt * om4 + xb * t4 + 0.5) | 0)] <= 0.26 &&
+                bmap[r12 + ((xt * om12 + xb * t12 + 0.5) | 0)] <= 0.26 &&
+                bmap[r19 + ((xt * om19 + xb * t19 + 0.5) | 0)] <= 0.26 &&
+                bmap[r27 + ((xt * om27 + xb * t27 + 0.5) | 0)] <= 0.26 &&
+                bmap[r35 + ((xt * om35 + xb * t35 + 0.5) | 0)] <= 0.26
+              ) return;
+              let sumV = 0, hits = 0;
+              for (let k = 0; k < N; k++) {
+                const x = (xt * oneMinusTArr[k] + xb * tLineArr[k] + 0.5) | 0;
+                const v = bmap[vRowOffArr[k] + x];
+                sharedVArr[k] = v;
+                sumV += v;
+                if (v > 0.26) hits++;
+                else if (hits + (N - 1 - k) < 8) break;
+              }
+              if (hits > 12) {
+                const meanSc = sumV / N;
+                const cont = hits / N;
+                const outerPref = isLeft ? 1.0 - (xt + xb) * inv2W : (xt + xb) * inv2W;
+                fullCands.push({ sc: meanSc * 0.58 + cont * 0.42 + outerPref * 0.03, xt, xb });
+              } else if (hits >= 8) {
+                let winSum = 0, maxWinSum = 0;
+                for (let k = 0; k < N; k++) {
+                  winSum += sharedVArr[k];
+                  if (k >= winLen) winSum -= sharedVArr[k - winLen];
+                  if (k >= winLen - 1 && winSum > maxWinSum) maxWinSum = winSum;
+                }
+                if (maxWinSum / winLen > 0.65) {
+                  const outerPref = isLeft ? 1.0 - (xt + xb) * inv2W : (xt + xb) * inv2W;
+                  winCands.push({ sc: (maxWinSum / winLen) * 0.85 + outerPref * 0.02, xt, xb });
+                }
+              }
+            }
             for (let xt = x0Min; xt < x0Max; xt += vStep) {
               const xbMin = Math.max(x0Min, xt - maxTiltX);
               const xbMax = Math.min(x0Max, xt + maxTiltX);
-              for (let xb = xbMin; xb < xbMax; xb += vStep) {
-                if (
-                  bmap[r4 + ((xt * om4 + xb * t4 + 0.5) | 0)] <= 0.26 &&
-                  bmap[r12 + ((xt * om12 + xb * t12 + 0.5) | 0)] <= 0.26 &&
-                  bmap[r19 + ((xt * om19 + xb * t19 + 0.5) | 0)] <= 0.26 &&
-                  bmap[r27 + ((xt * om27 + xb * t27 + 0.5) | 0)] <= 0.26 &&
-                  bmap[r35 + ((xt * om35 + xb * t35 + 0.5) | 0)] <= 0.26
-                ) continue;
-
-                let sumV = 0, hits = 0;
-                for (let k = 0; k < N; k++) {
-                  const x = (xt * oneMinusTArr[k] + xb * tLineArr[k] + 0.5) | 0;
-                  const v = bmap[vRowOffArr[k] + x];
-                  sharedVArr[k] = v;
-                  sumV += v;
-                  if (v > 0.26) hits++;
-                  else if (hits + (N - 1 - k) < 8) break;
-                }
-                if (hits > 12) {
-                  const meanSc = sumV / N;
-                  const cont = hits / N;
-                  const outerPref = isLeft ? 1.0 - (xt + xb) * inv2W : (xt + xb) * inv2W;
-                  const totalSc = meanSc * 0.58 + cont * 0.42 + outerPref * 0.03;
-                  fullCands.push({ sc: totalSc, xt, xb });
-                } else if (hits >= 8) {
-                  let winSum = 0, maxWinSum = 0;
-                  for (let k = 0; k < N; k++) {
-                    winSum += sharedVArr[k];
-                    if (k >= winLen) winSum -= sharedVArr[k - winLen];
-                    if (k >= winLen - 1 && winSum > maxWinSum) maxWinSum = winSum;
-                  }
-                  if (maxWinSum / winLen > 0.65) {
-                    const outerPref = isLeft ? 1.0 - (xt + xb) * inv2W : (xt + xb) * inv2W;
-                    winCands.push({ sc: (maxWinSum / winLen) * 0.85 + outerPref * 0.02, xt, xb });
+              for (let xb = xbMin; xb < xbMax; xb += vStep) evalVLine(xt, xb);
+            }
+            if (skipFullResRefine && fullCands.length > 0) {
+              fullCands.sort((a, b) => b.sc - a.sc);
+              const seeds = fullCands.slice(0, 8);
+              for (let s = 0; s < seeds.length; s++) {
+                const sd = seeds[s];
+                for (let dt = -1; dt <= 1; dt++) {
+                  const nxt = sd.xt + dt;
+                  if (nxt < x0Min || nxt >= x0Max) continue;
+                  for (let db = -1; db <= 1; db++) {
+                    if (dt === 0 && db === 0) continue;
+                    const nxb = sd.xb + db;
+                    if (nxb >= x0Min && nxb < x0Max) evalVLine(nxt, nxb);
                   }
                 }
               }
@@ -4209,46 +4224,61 @@
             const om27 = oneMinusTArr[27], t27 = tLineArr[27];
             const om35 = oneMinusTArr[35], t35 = tLineArr[35];
 
-            const hStep = 2;
+            const hStep = skipFullResRefine ? 3 : 2;
             const maxKeptFull = skipFullResRefine ? 4 : 7;
             const maxKeptTot = skipFullResRefine ? 5 : 8;
+            function evalHLine(yl, yr) {
+              if (
+                bmap[((yl * om4 + yr * t4 + 0.5) | 0) * w + c4] <= 0.26 &&
+                bmap[((yl * om12 + yr * t12 + 0.5) | 0) * w + c12] <= 0.26 &&
+                bmap[((yl * om19 + yr * t19 + 0.5) | 0) * w + c19] <= 0.26 &&
+                bmap[((yl * om27 + yr * t27 + 0.5) | 0) * w + c27] <= 0.26 &&
+                bmap[((yl * om35 + yr * t35 + 0.5) | 0) * w + c35] <= 0.26
+              ) return;
+              let sumV = 0, hits = 0;
+              for (let k = 0; k < N; k++) {
+                const y = (yl * oneMinusTArr[k] + yr * tLineArr[k] + 0.5) | 0;
+                const v = bmap[y * w + hColOffArr[k]];
+                sharedVArr[k] = v;
+                sumV += v;
+                if (v > 0.26) hits++;
+                else if (hits + (N - 1 - k) < 8) break;
+              }
+              if (hits > 12) {
+                const meanSc = sumV / N;
+                const cont = hits / N;
+                const outerPref = isTop ? 1.0 - (yl + yr) * inv2H : (yl + yr) * inv2H;
+                fullCands.push({ sc: meanSc * 0.58 + cont * 0.42 + outerPref * 0.03, yl, yr });
+              } else if (hits >= 8) {
+                let winSum = 0, maxWinSum = 0;
+                for (let k = 0; k < N; k++) {
+                  winSum += sharedVArr[k];
+                  if (k >= winLen) winSum -= sharedVArr[k - winLen];
+                  if (k >= winLen - 1 && winSum > maxWinSum) maxWinSum = winSum;
+                }
+                if (maxWinSum / winLen > 0.65) {
+                  const outerPref = isTop ? 1.0 - (yl + yr) * inv2H : (yl + yr) * inv2H;
+                  winCands.push({ sc: (maxWinSum / winLen) * 0.85 + outerPref * 0.02, yl, yr });
+                }
+              }
+            }
             for (let yl = y0Min; yl < y0Max; yl += hStep) {
               const yrMin = Math.max(y0Min, yl - maxTiltY);
               const yrMax = Math.min(y0Max, yl + maxTiltY);
-              for (let yr = yrMin; yr < yrMax; yr += hStep) {
-                if (
-                  bmap[((yl * om4 + yr * t4 + 0.5) | 0) * w + c4] <= 0.26 &&
-                  bmap[((yl * om12 + yr * t12 + 0.5) | 0) * w + c12] <= 0.26 &&
-                  bmap[((yl * om19 + yr * t19 + 0.5) | 0) * w + c19] <= 0.26 &&
-                  bmap[((yl * om27 + yr * t27 + 0.5) | 0) * w + c27] <= 0.26 &&
-                  bmap[((yl * om35 + yr * t35 + 0.5) | 0) * w + c35] <= 0.26
-                ) continue;
-
-                let sumV = 0, hits = 0;
-                for (let k = 0; k < N; k++) {
-                  const y = (yl * oneMinusTArr[k] + yr * tLineArr[k] + 0.5) | 0;
-                  const v = bmap[y * w + hColOffArr[k]];
-                  sharedVArr[k] = v;
-                  sumV += v;
-                  if (v > 0.26) hits++;
-                  else if (hits + (N - 1 - k) < 8) break;
-                }
-                if (hits > 12) {
-                  const meanSc = sumV / N;
-                  const cont = hits / N;
-                  const outerPref = isTop ? 1.0 - (yl + yr) * inv2H : (yl + yr) * inv2H;
-                  const totalSc = meanSc * 0.58 + cont * 0.42 + outerPref * 0.03;
-                  fullCands.push({ sc: totalSc, yl, yr });
-                } else if (hits >= 8) {
-                  let winSum = 0, maxWinSum = 0;
-                  for (let k = 0; k < N; k++) {
-                    winSum += sharedVArr[k];
-                    if (k >= winLen) winSum -= sharedVArr[k - winLen];
-                    if (k >= winLen - 1 && winSum > maxWinSum) maxWinSum = winSum;
-                  }
-                  if (maxWinSum / winLen > 0.65) {
-                    const outerPref = isTop ? 1.0 - (yl + yr) * inv2H : (yl + yr) * inv2H;
-                    winCands.push({ sc: (maxWinSum / winLen) * 0.85 + outerPref * 0.02, yl, yr });
+              for (let yr = yrMin; yr < yrMax; yr += hStep) evalHLine(yl, yr);
+            }
+            if (skipFullResRefine && fullCands.length > 0) {
+              fullCands.sort((a, b) => b.sc - a.sc);
+              const seeds = fullCands.slice(0, 8);
+              for (let s = 0; s < seeds.length; s++) {
+                const sd = seeds[s];
+                for (let dl = -1; dl <= 1; dl++) {
+                  const nyl = sd.yl + dl;
+                  if (nyl < y0Min || nyl >= y0Max) continue;
+                  for (let dr = -1; dr <= 1; dr++) {
+                    if (dl === 0 && dr === 0) continue;
+                    const nyr = sd.yr + dr;
+                    if (nyr >= y0Min && nyr < y0Max) evalHLine(nyl, nyr);
                   }
                 }
               }
@@ -4559,6 +4589,20 @@
                     const tyR = Math.min(h - 2, Math.max(1, Math.round(tr.y - uRy * s)));
                     if (bLeft[tyL * w + txL] > 0.55 && bRight[tyR * w + txR] > 0.55) ovShoot += 0.45;
                   }
+                  const uTx = vTx / lenT, uTy = vTy / lenT;
+                  const uBx = vBx / lenB, uBy = vBy / lenB;
+                  for (let s = 4; s <= 14; s += 5) {
+                    const rxT = Math.round(tr.x + uTx * s), ryT = Math.round(tr.y + uTy * s);
+                    const rxB = Math.round(br.x + uBx * s), ryB = Math.round(br.y + uBy * s);
+                    if (rxT >= 1 && rxT <= w - 2 && ryT >= 1 && ryT <= h - 2 && rxB >= 1 && rxB <= w - 2 && ryB >= 1 && ryB <= h - 2) {
+                      if (bTop[ryT * w + rxT] > 0.55 && bBot[ryB * w + rxB] > 0.55) ovShoot += 0.35;
+                    }
+                    const lxT = Math.round(tl.x - uTx * s), lyT = Math.round(tl.y - uTy * s);
+                    const lxB = Math.round(bl.x - uBx * s), lyB = Math.round(bl.y - uBy * s);
+                    if (lxT >= 1 && lxT <= w - 2 && lyT >= 1 && lyT <= h - 2 && lxB >= 1 && lxB <= w - 2 && lyB >= 1 && lyB <= h - 2) {
+                      if (bTop[lyT * w + lxT] > 0.55 && bBot[lyB * w + lxB] > 0.55) ovShoot += 0.35;
+                    }
+                  }
 
                   const supT = eT.edgeSup, supR = eR.edgeSup, supB = eB.edgeSup, supL = eL.edgeSup;
                   const minSup = Math.min(supT, supB, supL, supR);
@@ -4566,7 +4610,7 @@
                   const minTip = Math.min(eT.minTipSup, eR.minTipSup, eB.minTipSup, eL.minTipSup);
                   const minRimContrast = Math.min(eT.rimContrastFrac, eR.rimContrastFrac, eB.rimContrastFrac, eL.rimContrastFrac);
 
-                  const areaBonus = (minSup >= 0.55 && minThird >= 0.40) ? 0.72 * Math.sqrt((spanW * spanH) / (w * h)) : 0.0;
+                  const areaBonus = (minSup >= 0.48 && minThird >= 0.36) ? 0.72 * Math.sqrt((spanW * spanH) / (w * h)) : 0.0;
                   const allRimBonus = minThird * 1.05 + minTip * 0.48 + minRimContrast * 0.55 + areaBonus - Math.max(0.0, 0.45 - minThird) * 2.0 - Math.max(0.0, 0.38 - minTip) * 0.90;
 
                   const aspect = Math.min(spanW, spanH) / (Math.max(spanW, spanH) || 1.0);
@@ -9229,9 +9273,9 @@
             if (overlay.height !== vh) overlay.height = vh;
             frameCount++;
             const now = Date.now();
-            if (now - lastDetectTs >= 70) {
+            if (now - lastDetectTs >= 50) {
               lastDetectTs = now;
-              const maxSide = 280;
+              const maxSide = 240;
               const sc = Math.min(1, maxSide / Math.max(vw, vh));
               const targetW = Math.max(72, Math.round(vw * sc));
               const targetH = Math.max(72, Math.round(vh * sc));
@@ -9274,7 +9318,7 @@
                   if (sameAsPending) {
                     state._camPendingCount = (state._camPendingCount || 0) + 1;
                     state._camPendingJump = nextCorners;
-                    if (state._camPendingCount >= 3) {
+                    if (state._camPendingCount >= 2) {
                       state.lastCameraCorners = nextCorners;
                       state._camPendingJump = null;
                       state._camPendingCount = 0;
@@ -9288,7 +9332,7 @@
                   state._camPendingCount = 0;
                   // Deadband lock: rock-steady when holding still (alpha=0.14), smooth tracking when moving (alpha=0.30)
                   if (relJump >= 0.004) {
-                    const alpha = relJump < 0.015 ? 0.14 : 0.30;
+                    const alpha = relJump < 0.012 ? 0.12 : 0.42;
                     state.lastCameraCorners = state.lastCameraCorners.map((prev, idx) => ({
                       x: Math.round(prev.x * (1.0 - alpha) + nextCorners[idx].x * alpha),
                       y: Math.round(prev.y * (1.0 - alpha) + nextCorners[idx].y * alpha)
