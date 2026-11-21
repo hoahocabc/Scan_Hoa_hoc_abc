@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v52.0) — Quét tài liệu & sách dày siêu nét: Giữ thẳng tuyệt đối trên giấy phẳng (không lượn sóng), tự động làm thẳng dòng sách dày cong, tách 2 trang theo gáy giữa và xóa sạch vết đen giữa dòng chữ.",
+  "description": "ScanhoahocABC (v53.0) — Quét tài liệu & sách mở: Mặc định hiển thị Ảnh gốc độ nét cao tự nhiên không lem/không đen chữ mặt sau, bắt chính xác rìa võng giữa cuốn sách mở, giữ thẳng tuyệt đối trên giấy phẳng.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",

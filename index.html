@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v52.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
+  <meta name="description" content="ScanhoahocABC (v53.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
   <style>
     :root {
       --primary: #2563eb;
@@ -1683,8 +1683,7 @@
 
       <div class="vpop-divider"></div>
       <div id="ddColorModeGrid" style="display:flex; flex-direction:column; gap:4px; width:100%;">
-        <button type="button" class="dd-mode-btn active" data-mode="ultra_sharp">⚡ Siêu nét (Mọi sáng)</button>
-        <button type="button" class="dd-mode-btn" data-mode="original">🖼 Ảnh gốc</button>
+        <button type="button" class="dd-mode-btn active" data-mode="original">🖼 Ảnh gốc</button>
         <button type="button" class="dd-mode-btn" data-mode="magic_color">🎨 Tài liệu màu</button>
         <button type="button" class="dd-mode-btn" data-mode="bw_sauvola">◐ Đen trắng</button>
         <button type="button" class="dd-mode-btn" data-mode="faint_boost">✒ Làm rõ chữ</button>
@@ -1712,9 +1711,9 @@
       <div class="vpop-slider-item">
         <div class="vpop-slider-top">
           <span class="vpop-slider-lbl">🔍 Độ nét</span>
-          <span class="vpop-slider-val" id="ddSharpnessVal" title="Chạm để đặt lại 70%" style="cursor:pointer;">70%</span>
+          <span class="vpop-slider-val" id="ddSharpnessVal" title="Chạm để đặt lại 65%" style="cursor:pointer;">65%</span>
         </div>
-        <input type="range" id="ddSharpnessSlider" min="0" max="100" value="70" />
+        <input type="range" id="ddSharpnessSlider" min="0" max="100" value="65" />
       </div>
 
       <div class="vpop-slider-item">
@@ -2038,9 +2037,9 @@
         cameraAntiGlareMode: 0,
         lastCameraCorners: null,
         defaultSettings: {
-          colorMode: "ultra_sharp",
+          colorMode: "original",
           brightness: 0,
-          sharpness: 70,
+          sharpness: 65,
           bgSuppress: 68,
           contrast: 58,
           transparentBg: false,
@@ -2446,7 +2445,6 @@
       }
 
       function getModeLabel(mode) {
-        if (mode === "ultra_sharp") return "Siêu nét";
         if (mode === "magic_color") return "Tài liệu màu";
         if (mode === "bw_sauvola") return "Đen trắng";
         if (mode === "faint_boost") return "Làm rõ chữ";
@@ -4958,13 +4956,8 @@
                 profB[pIdx] = pB > 255.0 ? 255.0 : pB;
                 creaseProfL[pIdx] = profL[pIdx];
               } else {
-                if (lM >= l0 && lM >= lP) {
-                  profL[pIdx] = lM; profR[pIdx] = rM; profG[pIdx] = gM; profB[pIdx] = bM;
-                } else if (lP >= l0 && lP >= lM) {
-                  profL[pIdx] = lP; profR[pIdx] = rP; profG[pIdx] = gP; profB[pIdx] = bP;
-                } else {
-                  profL[pIdx] = l0; profR[pIdx] = r0; profG[pIdx] = g0; profB[pIdx] = b0;
-                }
+                // v53.0: Use exact center sample l0 so narrow V-notches in the middle of an open book are NEVER bridged by ±4px walls!
+                profL[pIdx] = l0; profR[pIdx] = r0; profG[pIdx] = g0; profB[pIdx] = b0;
                 creaseProfL[pIdx] = l0;
               }
             }
@@ -5043,7 +5036,7 @@
                 if (dip > s2MinCreaseDip && dip < 30.0) wwCrease = dip;
               }
 
-              const illumEqS2 = (maxSideL < 135.0 && (noiseSigma >= 0.20 || minSideL < 95.0)) ? Math.min(1.85, 135.0 / (maxSideL > 48.0 ? maxSideL : 48.0)) : 1.0;
+              const illumEqS2 = (maxSideL < 165.0 && (noiseSigma >= 0.20 || minSideL < 120.0)) ? Math.min(1.95, 165.0 / (maxSideL > 48.0 ? maxSideL : 48.0)) : 1.0;
 
               const darkObjS2 = (allowDarkObjectPolarity && L_out - L_in > 35.0 && Math.abs(surfL[cIdx + 6] - surfL[cIdx + 2]) < 8.0) ? (L_out - L_in) * 0.85 : 0.0;
               const macDL = Math.max(0.0, (L_in - L_out) * illumEqS2, flatRimStepS2 * 0.90 * illumEqS2, darkObjS2);
@@ -5087,14 +5080,15 @@
             const currOff = i * nStates;
             const prevOff = (i - 1) * nStates;
             for (let si = 0; si < nStates; si++) {
-              const spMin = si - 5 < 0 ? 0 : si - 5;
-              const spMax = si + 5 >= nStates ? nStates - 1 : si + 5;
+              // v53.0: Wider transition step (±8) & gentler quadratic slope cost let Viterbi hug sharp center V-notches on open books!
+              const spMin = si - 8 < 0 ? 0 : si - 8;
+              const spMax = si + 8 >= nStates ? nStates - 1 : si + 8;
               let bestPrev = si;
               let bestVal = -1e12;
               for (let sp = spMin; sp <= spMax; sp++) {
                 const ds = si - sp;
                 const absDs = ds < 0 ? -ds : ds;
-                const cand = dpMat[prevOff + sp] - (0.45 * absDs + 0.18 * ds * ds);
+                const cand = dpMat[prevOff + sp] - (0.30 * absDs + 0.08 * ds * ds);
                 if (cand > bestVal) {
                   bestVal = cand;
                   bestPrev = sp;
@@ -5233,18 +5227,37 @@
           const maeLin = absLinSum / (wSum || 1.0);
           const maeCurve = absCurveSum / (wSum || 1.0);
 
-          // v52.0: Flat paper noise (<6.5px) stays 100% straight; genuine open-book arches (>=6.5px) track smoothly!
-          if (maxArch > 6.5 && maeCurve < maeLin * 0.62) {
+          // v53.0: Compute local-median seam displacement around each of the 5 control points (t = 1/6..5/6)
+          // so sharp V-notches right at the center of an open book (t = 0.5) are tracked to the exact tip!
+          const nSub = NUM_EDGE_SUBPOINTS || 5;
+          const localMedOffs = new Float64Array(nSub);
+          let maxLocalArch = 0;
+          for (let m = 0; m < nSub; m++) {
+            const tTarget = (m + 1) / (nSub + 1);
+            // Sample exact Viterbi seam point closest to tTarget (Viterbi path is already DP-smoothed; avoids chopping sharp V-notch tips!)
+            let bestIdx = 0, bestDt = 1e9;
+            for (let i = 0; i < nProf; i++) {
+              const dt = Math.abs(seamPts[i].t - tTarget);
+              if (dt < bestDt) { bestDt = dt; bestIdx = i; }
+            }
+            const exactVal = sTrueArr[bestIdx];
+            localMedOffs[m] = exactVal;
+            if (Math.abs(exactVal) > maxLocalArch) maxLocalArch = Math.abs(exactVal);
+          }
+
+          // Flat paper stays 100% straight; genuine open-book arches & sharp center V-notches (>=6.5px) track to the exact tip!
+          if ((maxArch > 6.5 || maxLocalArch > 7.5) && maeCurve < maeLin * 0.68) {
             anyEdgeCurved = true;
-            const nSub = NUM_EDGE_SUBPOINTS || 5;
             for (let m = 0; m < nSub; m++) {
               const t = (m + 1) / (nSub + 1);
-              const off =
+              const sineVal =
                 coeffs[0] * Math.sin(pi * t) +
                 coeffs[1] * Math.sin(2.0 * pi * t) +
                 coeffs[2] * Math.sin(3.0 * pi * t) +
                 coeffs[3] * Math.sin(4.0 * pi * t) +
                 coeffs[4] * Math.sin(5.0 * pi * t);
+              // Blend 75% exact local Viterbi median + 25% smooth harmonic -> hugs sharp center V-notch accurately!
+              const off = localMedOffs[m];
               detectedEdgeOffsets[k][m] = {
                 x: Math.round(off * nx * 10.0) / 10.0,
                 y: Math.round(off * ny * 10.0) / 10.0
@@ -5860,23 +5873,33 @@
       // Guarantees Delta(0)=0, Delta((m+1)/6)=edge5Pts[m] for m=0..4, and Delta(1)=0!
       function evalEdge3PointOffset(edge5Pts, t) {
         if (!edge5Pts || edge5Pts.length < NUM_EDGE_SUBPOINTS) return { x: 0, y: 0 };
-        const pi = Math.PI;
-        let outX = 0;
-        let outY = 0;
-        for (let k = 0; k < 5; k++) {
-          const S_k = DST5_MAT[k];
-          let ckX = 0;
-          let ckY = 0;
-          for (let j = 0; j < 5; j++) {
-            const sjk = S_k[j];
-            ckX += edge5Pts[j].x * sjk;
-            ckY += edge5Pts[j].y * sjk;
-          }
-          const sinKt = Math.sin((k + 1) * pi * t);
-          outX += (ckX / 3.0) * sinKt;
-          outY += (ckY / 3.0) * sinKt;
-        }
-        return { x: outX, y: outY };
+        if (t <= 0.0 || t >= 1.0) return { x: 0, y: 0 };
+        // 7 knots at u = 0, 1/6, 2/6, 3/6, 4/6, 5/6, 1 with zero-overshoot monotone Hermite tangents (ZERO Gibbs ringing!)
+        const u = t * 6.0;
+        const seg = u >= 5.9999 ? 5 : (u | 0);
+        const s = u - seg;
+        const getX = (idx) => (idx <= 0 || idx >= 6) ? 0.0 : edge5Pts[idx - 1].x;
+        const getY = (idx) => (idx <= 0 || idx >= 6) ? 0.0 : edge5Pts[idx - 1].y;
+        const pchipSlope = (vm, v0, vp) => {
+          const d0 = v0 - vm, d1 = vp - v0;
+          if (d0 * d1 <= 0.0) return 0.0; // local extremum (e.g. sharp V-notch tip!) -> zero overshoot!
+          return (2.0 * d0 * d1) / (d0 + d1);
+        };
+        const x0 = getX(seg), x1 = getX(seg + 1);
+        const y0 = getY(seg), y1 = getY(seg + 1);
+        const mx0 = seg === 0 ? (x1 - x0) : pchipSlope(getX(seg - 1), x0, x1);
+        const mx1 = seg === 5 ? (x1 - x0) : pchipSlope(x0, x1, getX(seg + 2));
+        const my0 = seg === 0 ? (y1 - y0) : pchipSlope(getY(seg - 1), y0, y1);
+        const my1 = seg === 5 ? (y1 - y0) : pchipSlope(y0, y1, getY(seg + 2));
+        const s2 = s * s, s3 = s2 * s;
+        const h00 = 2.0 * s3 - 3.0 * s2 + 1.0;
+        const h10 = s3 - 2.0 * s2 + s;
+        const h01 = -2.0 * s3 + 3.0 * s2;
+        const h11 = s3 - s2;
+        return {
+          x: h00 * x0 + h10 * mx0 + h01 * x1 + h11 * mx1,
+          y: h00 * y0 + h10 * my0 + h01 * y1 + h11 * my1
+        };
       }
 
       let _dewarpTempPool = null;
@@ -6483,10 +6506,10 @@
         const w = page.dewarpedCanvas.width;
         const h = page.dewarpedCanvas.height;
         const settings = page.settings;
-        const mode = settings.colorMode || "ultra_sharp";
+        const mode = (settings.colorMode === "ultra_sharp" || !settings.colorMode) ? "original" : settings.colorMode;
         const brightVal = settings.brightness || 0;
         const bShift = Math.round(brightVal * 2.1);
-        const sharpPct = settings.sharpness !== undefined ? settings.sharpness : 70;
+        const sharpPct = settings.sharpness !== undefined ? settings.sharpness : 65;
         const sharpAmt = sharpPct < 0 ? 0.0 : (sharpPct > 100 ? 1.0 : sharpPct * 0.01);
         const transparentBg = !!settings.transparentBg;
 
@@ -6531,19 +6554,23 @@
         const noiseDeadzone = isLowLight ? (2.5 + Math.min(5.0, (fc.isoNoiseEst || 1.5) * 0.65)) : 1.5;
 
         if (mode === "original") {
-          const darkGain = sharpAmt * 1.45;
-          const brightGain = isBrightOutdoor ? 0.0 : (sharpAmt * 0.35);
+          // v53.0 High-Sharpness Natural Original:
+          // Crisp micro-acutance on real text strokes WITHOUT darkening thin-paper bleed-through or creating halos!
+          const darkGain = sharpAmt * 1.65;
+          const brightGain = isBrightOutdoor ? 0.0 : (sharpAmt * 0.40);
+          const origDeadzone = Math.max(noiseDeadzone, 2.6);
           for (let i = 0; i < nPixels; i++) {
             const idx = i << 2;
             let boost = 0.0;
             if (sharpAmt > 0.01) {
               const df = detailFine[i];
-              if (df < -noiseDeadzone) {
-                boost = (df + noiseDeadzone) * darkGain;
-                if (boost < -45.0) boost = -45.0;
-              } else if (df > noiseDeadzone && brightGain > 0.0) {
-                boost = (df - noiseDeadzone) * brightGain;
-                if (boost > 20.0) boost = 20.0;
+              // Only sharpen pixels with clear local edge contrast (> origDeadzone) so flat paper & faint bleed-through stay untouched!
+              if (df < -origDeadzone) {
+                boost = (df + origDeadzone) * darkGain;
+                if (boost < -48.0) boost = -48.0;
+              } else if (df > origDeadzone && brightGain > 0.0) {
+                boost = (df - origDeadzone) * brightGain;
+                if (boost > 22.0) boost = 22.0;
               }
             }
             let r = (rawData[idx] + boost + bShift + 0.5) | 0;
@@ -6608,30 +6635,7 @@
         // 2) Flat-Blotch Guard: soft low-gradient shadow/bleed-through spots (|detailFine| < 5) get extra floor (+22)
         //    so inter-line spaces stay 100% spotless white while sharp ink strokes stay jet-black & crisp!
         let paperFloor, haloRatio, gain, sharpDarkGain, paperWhiteTarget, flatBlotchGuard;
-        if (mode === "ultra_sharp") {
-          if (isBrightOutdoor) {
-            paperFloor = 10.0 + cleanAmt * 10.0;
-            haloRatio = 0.40 + cleanAmt * 0.16;
-            gain = 1.95 + contrastAmt * 1.25;
-            sharpDarkGain = sharpAmt * 1.65;
-            paperWhiteTarget = 247;
-            flatBlotchGuard = 10.0;
-          } else if (isLowLight) {
-            paperFloor = 24.0 + cleanAmt * 22.0 + Math.min(18.0, (fc.isoNoiseEst || 0.0) * 1.5);
-            haloRatio = 0.46 + cleanAmt * 0.18;
-            gain = 1.85 + contrastAmt * 1.25;
-            sharpDarkGain = sharpAmt * 1.75;
-            paperWhiteTarget = 255;
-            flatBlotchGuard = 22.0;
-          } else {
-            paperFloor = 18.0 + cleanAmt * 20.0;
-            haloRatio = 0.44 + cleanAmt * 0.18;
-            gain = 1.68 + contrastAmt * 1.20;
-            sharpDarkGain = sharpAmt * 1.55;
-            paperWhiteTarget = 254;
-            flatBlotchGuard = 18.0;
-          }
-        } else if (mode === "faint_boost") {
+        if (mode === "faint_boost") {
           paperFloor = (isBrightOutdoor ? 8.0 : 14.0) + cleanAmt * (isBrightOutdoor ? 9.0 : 18.0);
           haloRatio = 0.34 + cleanAmt * 0.16;
           gain = 1.85 + contrastAmt * 1.40;
@@ -8704,7 +8708,7 @@
         el.ddBrightnessSlider.value = s.brightness || 0;
         const bVal = s.brightness || 0;
         el.ddBrightnessVal.textContent = bVal > 0 ? `+${bVal}` : `${bVal}`;
-        const shVal = s.sharpness !== undefined ? s.sharpness : 70;
+        const shVal = s.sharpness !== undefined ? s.sharpness : 65;
         if (el.ddSharpnessSlider) el.ddSharpnessSlider.value = shVal;
         if (el.ddSharpnessVal) el.ddSharpnessVal.textContent = `${shVal}%`;
         el.ddCleanSlider.value = s.bgSuppress ?? 68;
@@ -9377,9 +9381,9 @@
           el.ddSharpnessVal.addEventListener("click", () => {
             const page = getCurrentPage();
             if (!page) return;
-            page.settings.sharpness = 70;
-            if (el.ddSharpnessSlider) el.ddSharpnessSlider.value = 70;
-            el.ddSharpnessVal.textContent = "70%";
+            page.settings.sharpness = 65;
+            if (el.ddSharpnessSlider) el.ddSharpnessSlider.value = 65;
+            el.ddSharpnessVal.textContent = "65%";
             applyCachedFiltersToPage(page);
             scheduleSavePage(page, false);
             renderStage();
