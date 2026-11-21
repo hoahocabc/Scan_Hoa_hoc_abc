@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v63.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
+  <meta name="description" content="ScanhoahocABC (v64.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
   <style>
     :root {
       --primary: #2563eb;
@@ -4225,8 +4225,8 @@
             const om35 = oneMinusTArr[35], t35 = tLineArr[35];
 
             const hStep = skipFullResRefine ? 3 : 2;
-            const maxKeptFull = skipFullResRefine ? 4 : 7;
-            const maxKeptTot = skipFullResRefine ? 5 : 8;
+            const maxKeptFull = skipFullResRefine ? 6 : 8;
+            const maxKeptTot = skipFullResRefine ? 7 : 9;
             function evalHLine(yl, yr) {
               if (
                 bmap[((yl * om4 + yr * t4 + 0.5) | 0) * w + c4] <= 0.26 &&
@@ -4286,18 +4286,19 @@
             fullCands.sort((a, b) => b.sc - a.sc);
             winCands.sort((a, b) => b.sc - a.sc);
             const kept = [];
-            // v45.0: Reserve up to 2 slots for the outermost strong edge candidates (prevents internal banners/boxes from evicting curved book top/bottom rim!)
-            const outerStrongH = fullCands.filter((c) => c.sc >= 0.55);
+            // v64.0: Reserve up to 3 slots for outermost top/bottom candidates down to sc>=0.38 (protects bright-glare, far, & curved top rims from eviction!)
+            const outerStrongH = fullCands.filter((c) => c.sc >= 0.38);
             outerStrongH.sort((a, b) => isTop ? ((a.yl + a.yr) - (b.yl + b.yr)) : ((b.yl + b.yr) - (a.yl + a.yr)));
+            const minHSep = (skipFullResRefine && isTop) ? Math.max(5.5, h * 0.024) : 3.5;
             for (let i = 0; i < outerStrongH.length && kept.length < 2; i++) {
               const c = outerStrongH[i];
               const cMid = 0.5 * (c.yl + c.yr);
-              if (kept.every((k) => Math.abs(cMid - 0.5 * (k.yl + k.yr)) > 3.5)) kept.push(c);
+              if (kept.every((k) => Math.abs(cMid - 0.5 * (k.yl + k.yr)) > minHSep)) kept.push(c);
             }
             for (let i = 0; i < fullCands.length; i++) {
               const c = fullCands[i];
               const cMid = 0.5 * (c.yl + c.yr);
-              if (kept.every((k) => Math.abs(cMid - 0.5 * (k.yl + k.yr)) > 3.5 && Math.abs(c.yl - k.yl) + Math.abs(c.yr - k.yr) > 6)) {
+              if (kept.every((k) => Math.abs(cMid - 0.5 * (k.yl + k.yr)) > minHSep && Math.abs(c.yl - k.yl) + Math.abs(c.yr - k.yr) > 8)) {
                 kept.push(c);
                 if (kept.length >= maxKeptFull) break;
               }
@@ -4305,7 +4306,7 @@
             for (let i = 0; i < winCands.length; i++) {
               const c = winCands[i];
               const cMid = 0.5 * (c.yl + c.yr);
-              if (kept.every((k) => Math.abs(cMid - 0.5 * (k.yl + k.yr)) > 3.5 && Math.abs(c.yl - k.yl) + Math.abs(c.yr - k.yr) > 6)) {
+              if (kept.every((k) => Math.abs(cMid - 0.5 * (k.yl + k.yr)) > minHSep && Math.abs(c.yl - k.yl) + Math.abs(c.yr - k.yr) > 8)) {
                 kept.push(c);
                 if (kept.length >= maxKeptTot) break;
               }
@@ -4576,18 +4577,31 @@
                   let ovShoot = 0;
                   const uLx = vLx / lenL, uLy = vLy / lenL;
                   const uRx = vRx / lenR, uRy = vRy / lenR;
-                  for (let s = 10; s <= 26; s += 8) {
+                  const paperContFloor = Math.max(125.0, p85InteriorL - 22.0);
+                  for (let s = 6; s <= 24; s += 6) {
                     const bxL = Math.min(w - 2, Math.max(1, Math.round(bl.x + uLx * s)));
                     const byL = Math.min(h - 2, Math.max(1, Math.round(bl.y + uLy * s)));
                     const bxR = Math.min(w - 2, Math.max(1, Math.round(br.x + uRx * s)));
                     const byR = Math.min(h - 2, Math.max(1, Math.round(br.y + uRy * s)));
-                    if (bLeft[byL * w + bxL] > 0.55 && bRight[byR * w + bxR] > 0.55) ovShoot += 0.45;
+                    const bL_dn = bLeft[byL * w + bxL], bR_dn = bRight[byR * w + bxR];
+                    if (bL_dn > 0.52 && bR_dn > 0.52) {
+                      ovShoot += 0.72;
+                    } else if (!allowDarkObjectPolarity && (bL_dn > 0.68 || bR_dn > 0.68)) {
+                      const mxB = (bxL + bxR) >> 1, myB = (byL + byR) >> 1;
+                      if (L_surf[myB * w + mxB] >= paperContFloor && N_surf[myB * w + mxB] >= 195.0) ovShoot += 0.52;
+                    }
 
                     const txL = Math.min(w - 2, Math.max(1, Math.round(tl.x - uLx * s)));
                     const tyL = Math.min(h - 2, Math.max(1, Math.round(tl.y - uLy * s)));
                     const txR = Math.min(w - 2, Math.max(1, Math.round(tr.x - uRx * s)));
                     const tyR = Math.min(h - 2, Math.max(1, Math.round(tr.y - uRy * s)));
-                    if (bLeft[tyL * w + txL] > 0.55 && bRight[tyR * w + txR] > 0.55) ovShoot += 0.45;
+                    const bL_up = bLeft[tyL * w + txL], bR_up = bRight[tyR * w + txR];
+                    if (bL_up > 0.52 && bR_up > 0.52) {
+                      ovShoot += 0.72;
+                    } else if (!allowDarkObjectPolarity && (bL_up > 0.68 || bR_up > 0.68)) {
+                      const mxT = (txL + txR) >> 1, myT = (tyL + tyR) >> 1;
+                      if (L_surf[myT * w + mxT] >= paperContFloor && N_surf[myT * w + mxT] >= 195.0) ovShoot += 0.52;
+                    }
                   }
                   const uTx = vTx / lenT, uTy = vTy / lenT;
                   const uBx = vBx / lenB, uBy = vBy / lenB;

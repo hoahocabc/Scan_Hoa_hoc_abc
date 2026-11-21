@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v63.0) — Quét tài liệu chuyên nghiệp: Bắt rìa nhanh, chuẩn xác & ổn định trên cả nền đá tối lẫn nền gạch sáng, bám chuẩn rìa gáy 2 trang cùng Căn thẳng dòng lưới 8 dải.",
+  "description": "ScanhoahocABC (v64.0) — Quét tài liệu chuyên nghiệp: Bắt rìa cạnh trên chính xác & ổn định (chống tụt vào đường kẻ bảng/tiêu đề và chống lóa sáng), nhanh mượt cùng Căn thẳng dòng lưới 8 dải.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
