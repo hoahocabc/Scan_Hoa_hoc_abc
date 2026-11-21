@@ -1,7 +1,7 @@
 {
   "name": "ScanhoahocABC",
   "short_name": "ScanhoahocABC",
-  "description": "ScanhoahocABC (v60.0) — Quét tài liệu chuyên nghiệp: Bắt rìa nhanh, chính xác và ổn định cả trên Live Camera lẫn ảnh chụp thật (bám chuẩn trang sách trên nền gạch trắng-xám, bỏ qua mạch gạch & trang kề).",
+  "description": "ScanhoahocABC (v61.0) — Quét tài liệu chuyên nghiệp: Bắt rìa chuẩn cả khi đưa camera ra xa & vùng ánh sáng mạnh phía trên, cùng Căn thẳng dòng đồng đều cả nửa trên và nửa dưới trang.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
