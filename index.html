@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="ScanhoahocABC (v51.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
+  <meta name="description" content="ScanhoahocABC (v52.0) — Quét tài liệu & sách dày siêu nét: Nhận diện đường phân cách gáy giữa & tách 2 trang, làm thẳng dòng chữ/đường kẻ sách cong, xóa sạch vết đen giữa dòng chữ, chạm lấy nét và chống lóa ngoài trời." />
   <style>
     :root {
       --primary: #2563eb;
@@ -5233,7 +5233,8 @@
           const maeLin = absLinSum / (wSum || 1.0);
           const maeCurve = absCurveSum / (wSum || 1.0);
 
-          if (maxArch > 3.0 && maeCurve < maeLin * 0.72) {
+          // v52.0: Flat paper noise (<6.5px) stays 100% straight; genuine open-book arches (>=6.5px) track smoothly!
+          if (maxArch > 6.5 && maeCurve < maeLin * 0.62) {
             anyEdgeCurved = true;
             const nSub = NUM_EDGE_SUBPOINTS || 5;
             for (let m = 0; m < nSub; m++) {
@@ -5527,7 +5528,8 @@
         // v51.0: Full responsiveness for physical thick-book arches (sin(pi), sin(2pi), sin(3pi));
         // strictly block high-frequency 4-cycle ripples (sin(4pi)) so lines straighten cleanly without waves!
         const regH = [0.002, 0.010, 0.024, 0.055, 1e6];
-        const regV = [1.0, 0.62, 0.82];
+        // v52.0: Strong vertical regularization prevents Zone 1 & Zone 2 from overfitting text/diacritic jitter into waves!
+        const regV = [1.0, 6.5, 45.0];
         const nParams = V_MODES * K;
         const A_sys = Array.from({ length: nParams }, (_, r) => {
           const row = new Float64Array(nParams);
@@ -5783,16 +5785,8 @@
               }
             }
           }
-          if (vMatched >= 5) {
-            const cV = solveLinearSystem(Av, bv);
-            for (let y = 0; y < dstH; y++) {
-              const ty = y / (dstH - 1);
-              const rawShift = cV[0] * (ty - 0.5) + cV[1] * Math.sin(Math.PI * ty) + cV[2] * Math.sin(2.0 * Math.PI * ty);
-              if (Math.abs(rawShift) > 0.35) {
-                horizShiftY[y] = Math.max(-42.0, Math.min(42.0, rawShift));
-              }
-            }
-          }
+          // v52.0: Keep horizShiftY strictly 0 to prevent S-bending straight vertical margins on indented paragraphs!
+          void vMatched;
         }
 
         if (totalMatchedPairs < 10) {
@@ -5805,10 +5799,18 @@
         const mode1 = new Float32Array(dstW);
         const mode2 = new Float32Array(dstW);
 
+        // v52.0: Measure PURE non-linear arch curvature in Zone 0 (EXCLUDING linear tilt u-0.5!)
+        // so a 100% flat sheet with slight residual skew (0.5..3 deg) NEVER triggers wave warping!
+        let maxCurveDisp0 = 0;
         let maxSurfaceDisp = 0;
         for (let x = 0; x < dstW; x++) {
           const u = x / (dstW - 1);
           const B = evalCoupledHorizBasis5(u);
+          // Pure non-linear book arch (sin(pi*u), sin(2*pi*u), sin(3*pi*u))
+          const curve0 = B[1] * coeffs[1] + B[2] * coeffs[2] + B[3] * coeffs[3];
+          const absC0 = curve0 < 0 ? -curve0 : curve0;
+          if (absC0 > maxCurveDisp0) maxCurveDisp0 = absC0;
+
           let s0 = 0, s1 = 0, s2 = 0;
           for (let j = 0; j < K; j++) {
             s0 += B[j] * coeffs[j];
@@ -5824,10 +5826,10 @@
           if (localMax > maxSurfaceDisp) maxSurfaceDisp = localMax;
         }
 
-        // Smart curvature gate: flat pages (<2.2px) stay 0.0px untouched; curved thick books (>=2.2px) straighten fully!
-        if (maxSurfaceDisp < 2.2) return null;
+        // Strict Flat-Paper Wave Guard: require genuine coherent page-wide book arch (>= 4.5px non-linear curve)!
+        if (maxCurveDisp0 < 4.5) return null;
 
-        const shrinkGain = Math.min(1.0, (maxSurfaceDisp - 1.5) / 1.5);
+        const shrinkGain = Math.min(1.0, (maxCurveDisp0 - 3.0) / 3.0);
         for (let x = 0; x < dstW; x++) {
           mode0[x] *= shrinkGain;
           mode1[x] *= shrinkGain;
